@@ -1,0 +1,71 @@
+export const initialSchedules = [
+  {
+    id: '1',
+    processType: 'CPD Compliance Check',
+    targetCycle: '2025–2026 CPD Cycle',
+    executionDateTime: '2026-06-30T23:59',
+    status: 'Active',
+  },
+  {
+    id: '2',
+    processType: 'Learning Plan Reminder',
+    targetCycle: '2025–2026 CPD Cycle',
+    executionDateTime: '2026-03-01T09:00',
+    status: 'Active',
+  },
+  {
+    id: '3',
+    processType: 'Cycle Rollover',
+    targetCycle: '2026–2027 CPD Cycle',
+    executionDateTime: '2026-07-01T00:00',
+    status: 'Inactive',
+  },
+];
+
+export const initialExecutionHistory = [
+  {
+    id: '1',
+    process: 'CPD Compliance Check',
+    cycle: '2024–2025 CPD Cycle',
+    executedAt: '2025-06-30T23:59:00',
+    triggeredBy: 'System (Scheduled)',
+    status: 'Success',
+    errorDetails: null,
+  },
+  {
+    id: '2',
+    process: 'Learning Plan Reminder',
+    cycle: '2024–2025 CPD Cycle',
+    executedAt: '2025-03-01T09:00:00',
+    triggeredBy: 'System (Scheduled)',
+    status: 'Success',
+    errorDetails: null,
+  },
+  {
+    id: '3',
+    process: 'Cycle Rollover',
+    cycle: '2025–2026 CPD Cycle',
+    executedAt: '2025-07-01T00:01:12',
+    triggeredBy: 'System (Scheduled)',
+    status: 'Partial',
+    errorDetails: '3 of 247 member profiles could not be rolled over due to incomplete data. Member IDs: 10234, 10891, 11002.',
+  },
+  {
+    id: '4',
+    process: 'CPD Compliance Check',
+    cycle: '2024–2025 CPD Cycle',
+    executedAt: '2025-06-15T14:30:00',
+    triggeredBy: 'Admin (Manual)',
+    status: 'Failure',
+    errorDetails: 'Database connection timeout after 30s. The compliance check could not complete. No member records were modified.',
+  },
+  {
+    id: '5',
+    process: 'Learning Plan Reminder',
+    cycle: '2024–2025 CPD Cycle',
+    executedAt: '2024-09-01T09:00:00',
+    triggeredBy: 'System (Scheduled)',
+    status: 'Success',
+    errorDetails: null,
+  },
+];

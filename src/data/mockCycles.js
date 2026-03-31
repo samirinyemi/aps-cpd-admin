@@ -1,0 +1,38 @@
+export const initialCycles = [
+  {
+    id: '1',
+    name: '2024–2025 CPD Cycle',
+    startDate: '2024-07-01',
+    endDate: '2025-06-30',
+    minRequiredHours: 30,
+    minPeerHours: 10,
+    status: 'Closed',
+  },
+  {
+    id: '2',
+    name: '2025–2026 CPD Cycle',
+    startDate: '2025-07-01',
+    endDate: '2026-06-30',
+    minRequiredHours: 30,
+    minPeerHours: 10,
+    status: 'Open',
+  },
+  {
+    id: '3',
+    name: '2026–2027 CPD Cycle',
+    startDate: '2026-07-01',
+    endDate: '2027-06-30',
+    minRequiredHours: 30,
+    minPeerHours: 12,
+    status: 'Pending',
+  },
+  {
+    id: '4',
+    name: '2027–2028 CPD Cycle',
+    startDate: '2027-07-01',
+    endDate: '2028-06-30',
+    minRequiredHours: 35,
+    minPeerHours: 12,
+    status: 'Pending',
+  },
+];
