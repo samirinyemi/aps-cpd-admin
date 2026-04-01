@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { initialCycles } from './data/mockCycles';
 import { initialPrograms } from './data/mockPrograms';
-import { initialSchedules, initialExecutionHistory } from './data/mockSchedules';
 import { initialCpdProfiles } from './data/mockCpdProfiles';
 import { initialRegistrarProfiles } from './data/mockRegistrarProfiles';
 
@@ -12,7 +11,7 @@ import CycleList from './pages/admin/CycleList';
 import CycleForm from './pages/admin/CycleForm';
 import ProgramList from './pages/admin/ProgramList';
 import ProgramForm from './pages/admin/ProgramForm';
-import ScheduleManager from './pages/admin/ScheduleManager';
+import CycleDetail from './pages/admin/CycleDetail';
 import CpdProfilesList from './pages/internal/CpdProfilesList';
 import CpdProfileDetail from './pages/internal/CpdProfileDetail';
 import CpdActivitiesList from './pages/internal/CpdActivitiesList';
@@ -30,8 +29,6 @@ function RequireAuth({ children, adminOnly = false }) {
 function AppRoutes() {
   const [cycles, setCycles] = useState(initialCycles);
   const [programs, setPrograms] = useState(initialPrograms);
-  const [schedules, setSchedules] = useState(initialSchedules);
-  const [executionHistory] = useState(initialExecutionHistory);
   const [cpdProfiles] = useState(initialCpdProfiles);
   const [registrarProfiles] = useState(initialRegistrarProfiles);
 
@@ -49,8 +46,8 @@ function AppRoutes() {
       <Route path="/admin/cpd/cycles/:id/edit" element={
         <RequireAuth adminOnly><CycleForm cycles={cycles} setCycles={setCycles} /></RequireAuth>
       } />
-      <Route path="/admin/cpd/schedules" element={
-        <RequireAuth adminOnly><ScheduleManager schedules={schedules} setSchedules={setSchedules} executionHistory={executionHistory} /></RequireAuth>
+      <Route path="/admin/cpd/cycles/:id" element={
+        <RequireAuth adminOnly><CycleDetail cycles={cycles} setCycles={setCycles} /></RequireAuth>
       } />
 
       {/* Admin: Registrar Programs */}

@@ -7,6 +7,12 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 10,
     status: 'Closed',
+    scheduledOpenDate: null,
+    scheduledCloseDate: null,
+    statusHistory: [
+      { action: 'Opened', date: '2024-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
+      { action: 'Closed', date: '2025-06-30T23:59:00', triggeredBy: 'System (Scheduled)' },
+    ],
   },
   {
     id: '2',
@@ -16,6 +22,11 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 10,
     status: 'Open',
+    scheduledOpenDate: null,
+    scheduledCloseDate: '2026-06-30T23:59',
+    statusHistory: [
+      { action: 'Opened', date: '2025-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
+    ],
   },
   {
     id: '3',
@@ -25,6 +36,9 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 12,
     status: 'Pending',
+    scheduledOpenDate: '2026-07-01T00:00',
+    scheduledCloseDate: null,
+    statusHistory: [],
   },
   {
     id: '4',
@@ -34,5 +48,8 @@ export const initialCycles = [
     minRequiredHours: 35,
     minPeerHours: 12,
     status: 'Pending',
+    scheduledOpenDate: null,
+    scheduledCloseDate: null,
+    statusHistory: [],
   },
 ];

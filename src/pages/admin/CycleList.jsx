@@ -94,6 +94,7 @@ export default function CycleList({ cycles, setCycles }) {
         columns={columns}
         data={cycles}
         emptyMessage="No CPD cycles have been created yet."
+        onRowClick={(row) => navigate(`/admin/cpd/cycles/${row.id}`)}
       />
 
       <ConfirmDialog

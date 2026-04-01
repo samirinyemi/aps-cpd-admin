@@ -6,7 +6,6 @@ const adminNav = [
     label: 'CPD Configuration',
     children: [
       { label: 'CPD Cycles', to: '/admin/cpd/cycles' },
-      { label: 'Schedule Manager', to: '/admin/cpd/schedules' },
     ],
   },
   {
