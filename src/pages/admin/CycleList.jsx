@@ -1,12 +1,139 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
-import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import EmptyState from '../../components/EmptyState';
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-AU', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function CalendarIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="14" height="14" rx="2" />
+      <path d="M3 8h14M7 2v4M13 2v4" />
+    </svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.5 3.5a2.12 2.12 0 013 3L7 17l-4 1 1-4L14.5 3.5z" />
+    </svg>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="6,3 18,10 6,17" />
+    </svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="4" width="12" height="12" rx="1" />
+    </svg>
+  );
+}
+
+function ActionButtons({ cycle, onNavigate, onAction }) {
+  if (cycle.status === 'Closed') return null;
+  return (
+    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => onNavigate(cycle, 'edit')}
+        className="p-2 rounded-md text-aps-blue bg-aps-blue-light/60 hover:bg-aps-blue-light transition-colors"
+        title="Edit cycle"
+      >
+        <EditIcon />
+      </button>
+      {cycle.status === 'Pending' && (
+        <button
+          onClick={() => onAction('Open', cycle)}
+          className="p-2 rounded-md text-status-open bg-status-open-bg hover:opacity-80 transition-colors"
+          title="Open cycle"
+        >
+          <PlayIcon />
+        </button>
+      )}
+      {cycle.status === 'Open' && (
+        <button
+          onClick={() => onAction('Close', cycle)}
+          className="p-2 rounded-md text-status-closed bg-status-closed-bg hover:opacity-80 transition-colors"
+          title="Close cycle"
+        >
+          <StopIcon />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CycleCard({ cycle, layout, onNavigate, onAction }) {
+  const isGrid = layout === 'grid';
+
+  if (isGrid) {
+    return (
+      <div
+        onClick={() => onNavigate(cycle)}
+        className="bg-white border border-gray-200 rounded-lg p-5 cursor-pointer hover:border-aps-blue/40 hover:shadow-sm transition-all flex flex-col"
+      >
+        <h3 className="text-base font-semibold text-gray-900">{cycle.name}</h3>
+        <p className="text-sm text-gray-500 mt-1.5 flex-1">
+          {cycle.minRequiredHours} required hours &middot; {cycle.minPeerHours} peer hours
+        </p>
+
+        <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-4">
+          <CalendarIcon />
+          {formatDate(cycle.startDate)} — {formatDate(cycle.endDate)}
+        </div>
+
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+          <StatusBadge status={cycle.status} />
+          <ActionButtons cycle={cycle} onNavigate={onNavigate} onAction={onAction} />
+        </div>
+      </div>
+    );
+  }
+
+  // List layout
+  return (
+    <div
+      onClick={() => onNavigate(cycle)}
+      className="bg-white border border-gray-200 rounded-lg p-5 cursor-pointer hover:border-aps-blue/40 hover:shadow-sm transition-all"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-semibold text-gray-900">{cycle.name}</h3>
+          <p className="text-sm text-gray-500 mt-1">
+            {cycle.minRequiredHours} required hours &middot; {cycle.minPeerHours} peer hours
+          </p>
+        </div>
+        <ActionButtons cycle={cycle} onNavigate={onNavigate} onAction={onAction} />
+      </div>
+
+      <div className="flex items-center gap-3 mt-3">
+        <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+          <CalendarIcon />
+          {formatDate(cycle.startDate)} — {formatDate(cycle.endDate)}
+        </span>
+        <StatusBadge status={cycle.status} />
+      </div>
+    </div>
+  );
+}
 
 export default function CycleList({ cycles, setCycles }) {
   const navigate = useNavigate();
+  const [layout, setLayout] = useState('list');
   const [dialog, setDialog] = useState({ open: false, action: null, cycle: null });
 
   function handleAction(action, cycle) {
@@ -31,71 +158,87 @@ export default function CycleList({ cycles, setCycles }) {
     setDialog({ open: false });
   }
 
-  const columns = [
-    { key: 'name', label: 'Name' },
-    { key: 'startDate', label: 'Start Date' },
-    { key: 'endDate', label: 'End Date' },
-    { key: 'minRequiredHours', label: 'Min Required Hrs' },
-    { key: 'minPeerHours', label: 'Min Peer Hrs' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (row) => <StatusBadge status={row.status} />,
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      sortable: false,
-      render: (row) => {
-        if (row.status === 'Closed') return null;
-        return (
-          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => navigate(`/admin/cpd/cycles/${row.id}/edit`)}
-              className="text-xs px-2.5 py-1 text-aps-blue border border-aps-blue rounded hover:bg-aps-blue-light"
-            >
-              Edit
-            </button>
-            {row.status === 'Pending' && (
-              <button
-                onClick={() => handleAction('Open', row)}
-                className="text-xs px-2.5 py-1 text-status-open border border-status-open rounded hover:bg-status-open-bg"
-              >
-                Open
-              </button>
-            )}
-            {row.status === 'Open' && (
-              <button
-                onClick={() => handleAction('Close', row)}
-                className="text-xs px-2.5 py-1 text-status-closed border border-status-closed rounded hover:bg-status-closed-bg"
-              >
-                Close
-              </button>
-            )}
-          </div>
-        );
-      },
-    },
-  ];
+  function handleNavigate(cycle, mode) {
+    if (mode === 'edit') {
+      navigate(`/admin/cpd/cycles/${cycle.id}/edit`);
+    } else {
+      navigate(`/admin/cpd/cycles/${cycle.id}`);
+    }
+  }
 
   return (
     <PageShell>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">CPD Cycles</h1>
-        <button
-          onClick={() => navigate('/admin/cpd/cycles/new')}
-          className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
-        >
-          Create new cycle
-        </button>
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">CPD Cycles</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{cycles.length} learning plan{cycles.length !== 1 ? 's' : ''} found</p>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Layout toggle */}
+          <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+            <button
+              onClick={() => setLayout('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${
+                layout === 'list'
+                  ? 'bg-aps-blue text-white'
+                  : 'bg-white text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M3 4h14v2H3V4zm0 5h14v2H3V9zm0 5h14v2H3v-2z" />
+              </svg>
+              List
+            </button>
+            <button
+              onClick={() => setLayout('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border-l border-gray-300 ${
+                layout === 'grid'
+                  ? 'bg-aps-blue text-white'
+                  : 'bg-white text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" />
+              </svg>
+              Grid
+            </button>
+          </div>
+          <button
+            onClick={() => navigate('/admin/cpd/cycles/new')}
+            className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+          >
+            Create new cycle
+          </button>
+        </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={cycles}
-        emptyMessage="No CPD cycles have been created yet."
-        onRowClick={(row) => navigate(`/admin/cpd/cycles/${row.id}`)}
-      />
+      {cycles.length === 0 ? (
+        <EmptyState message="No CPD cycles have been created yet." />
+      ) : layout === 'grid' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {cycles.map((cycle) => (
+            <CycleCard
+              key={cycle.id}
+              cycle={cycle}
+              layout="grid"
+              onNavigate={handleNavigate}
+              onAction={handleAction}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {cycles.map((cycle) => (
+            <CycleCard
+              key={cycle.id}
+              cycle={cycle}
+              layout="list"
+              onNavigate={handleNavigate}
+              onAction={handleAction}
+            />
+          ))}
+        </div>
+      )}
 
       <ConfirmDialog
         open={dialog.open}

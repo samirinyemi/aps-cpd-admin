@@ -2,6 +2,16 @@ import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
+import ConfirmDialog from '../../components/ConfirmDialog';
+
+function formatDateTime(dt) {
+  if (!dt) return '';
+  const d = new Date(dt);
+  return d.toLocaleString('en-AU', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
 
 export default function CycleForm({ cycles, setCycles }) {
   const { id } = useParams();
@@ -15,9 +25,12 @@ export default function CycleForm({ cycles, setCycles }) {
     endDate: existing?.endDate || '',
     minRequiredHours: existing?.minRequiredHours ?? '',
     minPeerHours: existing?.minPeerHours ?? '',
+    scheduledOpenDate: existing?.scheduledOpenDate || '',
+    scheduledCloseDate: existing?.scheduledCloseDate || '',
   });
 
   const [errors, setErrors] = useState({});
+  const [dialog, setDialog] = useState({ open: false });
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -66,6 +79,8 @@ export default function CycleForm({ cycles, setCycles }) {
       ...form,
       minRequiredHours: Number(form.minRequiredHours),
       minPeerHours: Number(form.minPeerHours),
+      scheduledOpenDate: form.scheduledOpenDate || null,
+      scheduledCloseDate: form.scheduledCloseDate || null,
     };
 
     if (isEdit) {
@@ -75,11 +90,50 @@ export default function CycleForm({ cycles, setCycles }) {
     } else {
       setCycles((prev) => [
         ...prev,
-        { ...cycleData, id: String(Date.now()), status: 'Pending' },
+        {
+          ...cycleData,
+          id: String(Date.now()),
+          status: 'Pending',
+          statusHistory: [],
+        },
       ]);
     }
 
-    navigate('/admin/cpd/cycles');
+    navigate(isEdit ? `/admin/cpd/cycles/${id}` : '/admin/cpd/cycles');
+  }
+
+  function handleStatusAction(action) {
+    setDialog({
+      open: true,
+      title: `${action} Cycle`,
+      message: `Are you sure you want to ${action.toLowerCase()} "${existing?.name}"? Any unsaved changes to the form will be lost.`,
+      confirmLabel: action,
+      onConfirm: () => {
+        const newStatus = action === 'Open' ? 'Open' : 'Closed';
+        setCycles((prev) =>
+          prev.map((c) =>
+            c.id === id
+              ? {
+                  ...c,
+                  status: newStatus,
+                  scheduledOpenDate: action === 'Open' ? null : c.scheduledOpenDate,
+                  scheduledCloseDate: action === 'Close' ? null : c.scheduledCloseDate,
+                  statusHistory: [
+                    ...(c.statusHistory || []),
+                    {
+                      action: action === 'Open' ? 'Opened' : 'Closed',
+                      date: new Date().toISOString(),
+                      triggeredBy: 'Admin (Manual)',
+                    },
+                  ],
+                }
+              : c
+          )
+        );
+        setDialog({ open: false });
+        navigate(`/admin/cpd/cycles/${id}`);
+      },
+    });
   }
 
   // Redirect if trying to edit a Closed cycle
@@ -93,6 +147,9 @@ export default function CycleForm({ cycles, setCycles }) {
       errors[field] ? 'border-red-400' : 'border-gray-300'
     }`;
 
+  const canScheduleOpen = !isEdit || existing?.status === 'Pending';
+  const canScheduleClose = !isEdit || existing?.status === 'Pending' || existing?.status === 'Open';
+
   return (
     <PageShell>
       {/* Breadcrumb */}
@@ -100,96 +157,190 @@ export default function CycleForm({ cycles, setCycles }) {
         <button onClick={() => navigate('/admin/cpd/cycles')} className="hover:text-aps-blue">
           CPD Cycles
         </button>
+        {isEdit && existing && (
+          <>
+            <span className="mx-2">/</span>
+            <button onClick={() => navigate(`/admin/cpd/cycles/${id}`)} className="hover:text-aps-blue">
+              {existing.name}
+            </button>
+          </>
+        )}
         <span className="mx-2">/</span>
-        <span className="text-gray-900">{isEdit ? 'Edit Cycle' : 'Create Cycle'}</span>
+        <span className="text-gray-900">{isEdit ? 'Edit' : 'Create'}</span>
       </nav>
 
       <h1 className="text-xl font-semibold text-gray-900 mb-6">
         {isEdit ? 'Edit CPD Cycle' : 'Create CPD Cycle'}
       </h1>
 
-      <form onSubmit={handleSave} className="bg-white border border-gray-200 rounded-lg p-6 space-y-6">
-        {/* Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Name</label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => update('name', e.target.value)}
-            className={inputClass('name')}
-            placeholder="e.g. 2026–2027 CPD Cycle"
-          />
-          {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+      <form onSubmit={handleSave}>
+        {/* Section 1: Cycle Details */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6 mb-6">
+          <h2 className="text-base font-semibold text-gray-900">Cycle Details</h2>
+
+          {/* Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Name</label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => update('name', e.target.value)}
+              className={inputClass('name')}
+              placeholder="e.g. 2026–2027 CPD Cycle"
+            />
+            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+          </div>
+
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Date</label>
+              <input
+                type="date"
+                value={form.startDate}
+                onChange={(e) => update('startDate', e.target.value)}
+                className={inputClass('startDate')}
+              />
+              {errors.startDate && <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">End Date</label>
+              <input
+                type="date"
+                value={form.endDate}
+                onChange={(e) => update('endDate', e.target.value)}
+                className={inputClass('endDate')}
+              />
+              {errors.endDate && <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>}
+            </div>
+          </div>
+          {(errors.dates || overlapError) && (
+            <p className="text-sm text-red-600 -mt-4">{errors.dates || overlapError}</p>
+          )}
+
+          {/* Hours */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Min Required Hours</label>
+              <input
+                type="number"
+                min="0"
+                value={form.minRequiredHours}
+                onChange={(e) => update('minRequiredHours', e.target.value)}
+                className={inputClass('minRequiredHours')}
+              />
+              {errors.minRequiredHours && <p className="mt-1 text-sm text-red-600">{errors.minRequiredHours}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Min Peer Hours</label>
+              <input
+                type="number"
+                min="0"
+                value={form.minPeerHours}
+                onChange={(e) => update('minPeerHours', e.target.value)}
+                className={inputClass('minPeerHours')}
+              />
+              {errors.minPeerHours && <p className="mt-1 text-sm text-red-600">{errors.minPeerHours}</p>}
+            </div>
+          </div>
+
+          {/* Status (read-only) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Status <span className="text-gray-400 font-normal">— System managed</span>
+            </label>
+            <div className="h-14 px-4 flex items-center border border-gray-200 rounded-md bg-gray-50">
+              <StatusBadge status={existing?.status || 'Pending'} />
+            </div>
+          </div>
         </div>
 
-        {/* Dates */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Start Date</label>
-            <input
-              type="date"
-              value={form.startDate}
-              onChange={(e) => update('startDate', e.target.value)}
-              className={inputClass('startDate')}
-            />
-            {errors.startDate && <p className="mt-1 text-sm text-red-600">{errors.startDate}</p>}
+        {/* Section 2: Schedule (edit mode only, non-Closed) */}
+        {isEdit && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6 mb-6">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Schedule</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Set when this cycle should automatically open or close.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {canScheduleOpen && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Scheduled Activation
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={form.scheduledOpenDate}
+                    onChange={(e) => update('scheduledOpenDate', e.target.value)}
+                    className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
+                  />
+                  {existing?.scheduledOpenDate && form.scheduledOpenDate !== existing.scheduledOpenDate && (
+                    <p className="mt-1 text-xs text-gray-400">
+                      Currently: {formatDateTime(existing.scheduledOpenDate)}
+                    </p>
+                  )}
+                </div>
+              )}
+              {canScheduleClose && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Scheduled Deactivation
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={form.scheduledCloseDate}
+                    onChange={(e) => update('scheduledCloseDate', e.target.value)}
+                    className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
+                  />
+                  {existing?.scheduledCloseDate && form.scheduledCloseDate !== existing.scheduledCloseDate && (
+                    <p className="mt-1 text-xs text-gray-400">
+                      Currently: {formatDateTime(existing.scheduledCloseDate)}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">End Date</label>
-            <input
-              type="date"
-              value={form.endDate}
-              onChange={(e) => update('endDate', e.target.value)}
-              className={inputClass('endDate')}
-            />
-            {errors.endDate && <p className="mt-1 text-sm text-red-600">{errors.endDate}</p>}
-          </div>
-        </div>
-        {(errors.dates || overlapError) && (
-          <p className="text-sm text-red-600 -mt-4">{errors.dates || overlapError}</p>
         )}
 
-        {/* Hours */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Min Required Hours</label>
-            <input
-              type="number"
-              min="0"
-              value={form.minRequiredHours}
-              onChange={(e) => update('minRequiredHours', e.target.value)}
-              className={inputClass('minRequiredHours')}
-            />
-            {errors.minRequiredHours && <p className="mt-1 text-sm text-red-600">{errors.minRequiredHours}</p>}
+        {/* Section 3: Status Actions (edit mode only) */}
+        {isEdit && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+            <h2 className="text-base font-semibold text-gray-900 mb-1">Status Actions</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Change the cycle status. This action takes effect immediately.
+            </p>
+            <div className="flex gap-3">
+              {existing?.status === 'Pending' && (
+                <button
+                  type="button"
+                  onClick={() => handleStatusAction('Open')}
+                  className="px-4 py-2 text-sm font-medium text-white bg-status-open rounded-md hover:opacity-90"
+                >
+                  Open Cycle
+                </button>
+              )}
+              {existing?.status === 'Open' && (
+                <button
+                  type="button"
+                  onClick={() => handleStatusAction('Close')}
+                  className="px-4 py-2 text-sm font-medium text-white bg-status-closed rounded-md hover:opacity-90"
+                >
+                  Close Cycle
+                </button>
+              )}
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Min Peer Hours</label>
-            <input
-              type="number"
-              min="0"
-              value={form.minPeerHours}
-              onChange={(e) => update('minPeerHours', e.target.value)}
-              className={inputClass('minPeerHours')}
-            />
-            {errors.minPeerHours && <p className="mt-1 text-sm text-red-600">{errors.minPeerHours}</p>}
-          </div>
-        </div>
+        )}
 
-        {/* Status (read-only) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Status <span className="text-gray-400 font-normal">— System managed</span>
-          </label>
-          <div className="h-14 px-4 flex items-center border border-gray-200 rounded-md bg-gray-50">
-            <StatusBadge status={existing?.status || 'Pending'} />
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex justify-end gap-3 pt-2">
+        {/* Save / Cancel */}
+        <div className="flex justify-end gap-3">
           <button
             type="button"
-            onClick={() => navigate('/admin/cpd/cycles')}
+            onClick={() => navigate(isEdit ? `/admin/cpd/cycles/${id}` : '/admin/cpd/cycles')}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
           >
             Cancel
@@ -202,6 +353,15 @@ export default function CycleForm({ cycles, setCycles }) {
           </button>
         </div>
       </form>
+
+      <ConfirmDialog
+        open={dialog.open}
+        title={dialog.title}
+        message={dialog.message}
+        confirmLabel={dialog.confirmLabel}
+        onConfirm={dialog.onConfirm}
+        onCancel={() => setDialog({ open: false })}
+      />
     </PageShell>
   );
 }

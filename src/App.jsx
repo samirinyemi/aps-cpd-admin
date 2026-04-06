@@ -11,6 +11,7 @@ import CycleList from './pages/admin/CycleList';
 import CycleForm from './pages/admin/CycleForm';
 import ProgramList from './pages/admin/ProgramList';
 import ProgramForm from './pages/admin/ProgramForm';
+import ProgramDetail from './pages/admin/ProgramDetail';
 import CycleDetail from './pages/admin/CycleDetail';
 import CpdProfilesList from './pages/internal/CpdProfilesList';
 import CpdProfileDetail from './pages/internal/CpdProfileDetail';
@@ -59,6 +60,9 @@ function AppRoutes() {
       } />
       <Route path="/admin/registrar/programs/:id/edit" element={
         <RequireAuth adminOnly><ProgramForm programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+      <Route path="/admin/registrar/programs/:id" element={
+        <RequireAuth adminOnly><ProgramDetail programs={programs} /></RequireAuth>
       } />
 
       {/* Internal: CPD Management */}
