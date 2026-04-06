@@ -362,6 +362,7 @@ export default function ProgramForm({ programs, setPrograms }) {
   const [placeModal, setPlaceModal] = useState({ open: false, data: null });
   const [supervisorPicker, setSupervisorPicker] = useState(false);
   const [placePicker, setPlacePicker] = useState(false);
+  const [primaryConflict, setPrimaryConflict] = useState({ open: false, incoming: null, existing: null });
   const [deleteDialog, setDeleteDialog] = useState({ open: false });
 
   // Build pools of existing supervisors/places from other programs, excluding already-added ones
@@ -419,10 +420,51 @@ export default function ProgramForm({ programs, setPrograms }) {
     }
   }
 
+  // Primary supervisor conflict check
+  function checkPrimaryConflict(incomingData, isFromPool) {
+    if (incomingData.supervisionType !== 'Primary') return false;
+    const existingPrimary = supervisors.find(
+      (s) => s.supervisionType === 'Primary' && s.id !== incomingData.id
+    );
+    if (existingPrimary) {
+      setPrimaryConflict({ open: true, incoming: { ...incomingData, _isFromPool: isFromPool }, existing: existingPrimary });
+      return true;
+    }
+    return false;
+  }
+
+  function handleConfirmPrimaryOverwrite() {
+    const { incoming, existing } = primaryConflict;
+    // Demote existing primary to Secondary
+    setSupervisors((prev) =>
+      prev.map((s) => (s.id === existing.id ? { ...s, supervisionType: 'Secondary' } : s))
+    );
+    // Now add/update the incoming supervisor
+    if (incoming.id && !incoming._isFromPool) {
+      // Editing existing supervisor
+      const { _isFromPool, ...data } = incoming;
+      setSupervisors((prev) => prev.map((s) => (s.id === data.id ? data : s)));
+    } else {
+      // Adding new (from form or pool)
+      const { _isFromPool, _poolKey, ...rest } = incoming;
+      const id = rest.id && !_isFromPool ? rest.id : `s-${Date.now()}`;
+      setSupervisors((prev) => [...prev, { ...rest, id }]);
+    }
+    setPrimaryConflict({ open: false, incoming: null, existing: null });
+    setSupervisorModal({ open: false, data: null });
+    setSupervisorPicker(false);
+  }
+
+  function handleCancelPrimaryConflict() {
+    setPrimaryConflict({ open: false, incoming: null, existing: null });
+  }
+
   // Select existing from pool
   function handleSelectExistingSupervisor(poolItem) {
     const { _poolKey, id, ...rest } = poolItem;
-    setSupervisors((prev) => [...prev, { ...rest, id: `s-${Date.now()}` }]);
+    const newSup = { ...rest, id: `s-${Date.now()}` };
+    if (checkPrimaryConflict({ ...newSup, _poolKey }, true)) return;
+    setSupervisors((prev) => [...prev, newSup]);
     setSupervisorPicker(false);
   }
 
@@ -434,6 +476,7 @@ export default function ProgramForm({ programs, setPrograms }) {
 
   // Supervisor CRUD
   function handleSaveSupervisor(data) {
+    if (checkPrimaryConflict(data, false)) return;
     if (data.id) {
       setSupervisors((prev) => prev.map((s) => (s.id === data.id ? data : s)));
     } else {
@@ -777,6 +820,47 @@ export default function ProgramForm({ programs, setPrograms }) {
         onCreate={() => { setPlacePicker(false); setPlaceModal({ open: true, data: null }); }}
         onCancel={() => setPlacePicker(false)}
       />
+
+      {/* Primary Supervisor Conflict Dialog */}
+      {primaryConflict.open && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={handleCancelPrimaryConflict} />
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 7v4M10 14h.01" />
+                  <path d="M8.68 3.04L1.73 15.5A1.5 1.5 0 003.05 17.75h13.9a1.5 1.5 0 001.32-2.25L11.32 3.04a1.5 1.5 0 00-2.64 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Existing Primary Supervisor</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-2">
+              <span className="font-medium text-gray-900">
+                {primaryConflict.existing?.title} {primaryConflict.existing?.firstName} {primaryConflict.existing?.lastName}
+              </span>{' '}
+              is currently the primary supervisor for this program.
+            </p>
+            <p className="text-sm text-gray-600 mb-5">
+              Would you like to replace them with{' '}
+              <span className="font-medium text-gray-900">
+                {primaryConflict.incoming?.title} {primaryConflict.incoming?.firstName} {primaryConflict.incoming?.lastName}
+              </span>
+              ? The current primary supervisor will be changed to Secondary.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={handleCancelPrimaryConflict}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                Keep current primary
+              </button>
+              <button type="button" onClick={handleConfirmPrimaryOverwrite}
+                className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark">
+                Replace primary
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Form Modals */}
       <SupervisorModal
