@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { initialCycles } from './data/mockCycles';
 import { initialPrograms } from './data/mockPrograms';
+import { initialAoPEPrograms } from './data/mockAoPEPrograms';
 import { initialCpdProfiles } from './data/mockCpdProfiles';
 import { initialRegistrarProfiles } from './data/mockRegistrarProfiles';
 
@@ -19,6 +20,9 @@ import CpdActivitiesList from './pages/internal/CpdActivitiesList';
 import RegistrarProfilesList from './pages/internal/RegistrarProfilesList';
 import RegistrarProfileDetail from './pages/internal/RegistrarProfileDetail';
 import RegistrarActivitiesList from './pages/internal/RegistrarActivitiesList';
+import AoPEList from './pages/admin/AoPEList';
+import AoPEDetail from './pages/admin/AoPEDetail';
+import AoPEForm from './pages/admin/AoPEForm';
 
 function RequireAuth({ children, adminOnly = false }) {
   const { role } = useAuth();
@@ -31,6 +35,7 @@ function AppRoutes() {
   const [cycles, setCycles] = useState(initialCycles);
   const [programs, setPrograms] = useState(initialPrograms);
   const [cpdProfiles] = useState(initialCpdProfiles);
+  const [aoPEPrograms, setAoPEPrograms] = useState(initialAoPEPrograms);
   const [registrarProfiles] = useState(initialRegistrarProfiles);
 
   return (
@@ -63,6 +68,20 @@ function AppRoutes() {
       } />
       <Route path="/admin/registrar/programs/:id" element={
         <RequireAuth adminOnly><ProgramDetail programs={programs} /></RequireAuth>
+      } />
+
+      {/* Admin: AoPE Compliance Configuration */}
+      <Route path="/admin/registrar/aope" element={
+        <RequireAuth adminOnly><AoPEList aoPEPrograms={aoPEPrograms} /></RequireAuth>
+      } />
+      <Route path="/admin/registrar/aope/new" element={
+        <RequireAuth adminOnly><AoPEForm aoPEPrograms={aoPEPrograms} setAoPEPrograms={setAoPEPrograms} /></RequireAuth>
+      } />
+      <Route path="/admin/registrar/aope/:id/edit" element={
+        <RequireAuth adminOnly><AoPEForm aoPEPrograms={aoPEPrograms} setAoPEPrograms={setAoPEPrograms} /></RequireAuth>
+      } />
+      <Route path="/admin/registrar/aope/:id" element={
+        <RequireAuth adminOnly><AoPEDetail aoPEPrograms={aoPEPrograms} /></RequireAuth>
       } />
 
       {/* Internal: CPD Management */}

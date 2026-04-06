@@ -9,8 +9,11 @@ const adminNav = [
     ],
   },
   {
-    label: 'Registrar Programs',
-    to: '/admin/registrar/programs',
+    label: 'Registrar Configuration',
+    children: [
+      { label: 'AoPE Compliance', to: '/admin/registrar/aope' },
+      { label: 'Registrar Programs', to: '/admin/registrar/programs' },
+    ],
   },
   {
     label: 'CPD Management',
