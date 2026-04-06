@@ -23,6 +23,9 @@ import RegistrarActivitiesList from './pages/internal/RegistrarActivitiesList';
 import AoPEList from './pages/admin/AoPEList';
 import AoPEDetail from './pages/admin/AoPEDetail';
 import AoPEForm from './pages/admin/AoPEForm';
+import LogSupervision from './pages/admin/LogSupervision';
+import LogPractice from './pages/admin/LogPractice';
+import LogCPD from './pages/admin/LogCPD';
 
 function RequireAuth({ children, adminOnly = false }) {
   const { role } = useAuth();
@@ -67,7 +70,18 @@ function AppRoutes() {
         <RequireAuth adminOnly><ProgramForm programs={programs} setPrograms={setPrograms} /></RequireAuth>
       } />
       <Route path="/admin/registrar/programs/:id" element={
-        <RequireAuth adminOnly><ProgramDetail programs={programs} /></RequireAuth>
+        <RequireAuth adminOnly><ProgramDetail programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+
+      {/* Admin: Activity Logging */}
+      <Route path="/admin/registrar/log-supervision" element={
+        <RequireAuth adminOnly><LogSupervision programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+      <Route path="/admin/registrar/log-practice" element={
+        <RequireAuth adminOnly><LogPractice programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+      <Route path="/admin/registrar/log-cpd" element={
+        <RequireAuth adminOnly><LogCPD programs={programs} /></RequireAuth>
       } />
 
       {/* Admin: AoPE Compliance Configuration */}

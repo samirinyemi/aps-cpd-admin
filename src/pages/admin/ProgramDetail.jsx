@@ -21,6 +21,13 @@ function Field({ label, value, children }) {
   );
 }
 
+function formatDuration(h, m) {
+  const parts = [];
+  if (h) parts.push(`${h}h`);
+  if (m) parts.push(`${m}m`);
+  return parts.join(' ') || '0h';
+}
+
 export default function ProgramDetail({ programs }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -143,7 +150,7 @@ export default function ProgramDetail({ programs }) {
       </section>
 
       {/* Places of Practice */}
-      <section className="bg-white border border-gray-200 rounded-lg p-6">
+      <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
         <h2 className="text-base font-semibold text-gray-900 mb-4">
           Places of Practice
           <span className="text-sm font-normal text-gray-400 ml-2">({program.placesOfPractice.length})</span>
@@ -169,6 +176,78 @@ export default function ProgramDetail({ programs }) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+      </section>
+
+      {/* Activities */}
+      <section className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-gray-900">
+            Activities
+            <span className="text-sm font-normal text-gray-400 ml-2">({(program.activities || []).length})</span>
+          </h2>
+          {!isReadOnly && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate(`/admin/registrar/log-supervision?programId=${program.id}`)}
+                className="px-3 py-1.5 text-xs font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+              >
+                Log Supervision
+              </button>
+              <button
+                onClick={() => navigate(`/admin/registrar/log-practice?programId=${program.id}`)}
+                className="px-3 py-1.5 text-xs font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700"
+              >
+                Log Practice
+              </button>
+              <button
+                onClick={() => navigate(`/admin/registrar/log-cpd?programId=${program.id}`)}
+                className="px-3 py-1.5 text-xs font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Log CPD Hours
+              </button>
+            </div>
+          )}
+        </div>
+        {(program.activities || []).length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">No activities logged yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Date</th>
+                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Type</th>
+                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Supervisor / Place</th>
+                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Supervision Type</th>
+                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Duration</th>
+                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Direct Contact</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...(program.activities || [])].sort((a, b) => b.completionDate.localeCompare(a.completionDate)).map((a) => (
+                  <tr key={a.id} className="border-b border-gray-100">
+                    <td className="py-3 pr-4">{formatDate(a.completionDate)}</td>
+                    <td className="py-3 pr-4">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        a.activityType === 'Supervision' ? 'bg-aps-blue/10 text-aps-blue'
+                          : a.activityType === 'Practice' ? 'bg-amber-100 text-amber-700'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {a.activityType}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4">{a.supervisorName || a.employerName || '—'}</td>
+                    <td className="py-3 pr-4">{a.supervisionType || '—'}</td>
+                    <td className="py-3 pr-4">{formatDuration(a.hours, a.minutes)}</td>
+                    <td className="py-3 pr-4">
+                      {a.activityType === 'Practice' ? formatDuration(a.directContactHours, a.directContactMinutes) : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

@@ -13,6 +13,9 @@ const adminNav = [
     children: [
       { label: 'AoPE Compliance', to: '/admin/registrar/aope' },
       { label: 'Registrar Programs', to: '/admin/registrar/programs' },
+      { label: 'Log Supervision', to: '/admin/registrar/log-supervision' },
+      { label: 'Log Practice Hours', to: '/admin/registrar/log-practice' },
+      { label: 'Log CPD Hours', to: '/admin/registrar/log-cpd' },
     ],
   },
   {

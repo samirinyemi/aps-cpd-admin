@@ -67,6 +67,13 @@ export const initialPrograms = [
         state: 'VIC',
       },
     ],
+    activities: [
+      { id: 'act-1', activityType: 'Supervision', completionDate: '2025-01-15', hours: 2, minutes: 0, supervisionType: 'Individual', supervisorId: 's1', supervisorName: 'Dr James Mitchell', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Clinical Psychology' },
+      { id: 'act-2', activityType: 'Supervision', completionDate: '2025-01-22', hours: 1, minutes: 30, supervisionType: 'Group', supervisorId: 's2', supervisorName: 'Prof Linda Nguyen', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Clinical Psychology' },
+      { id: 'act-3', activityType: 'Practice', completionDate: '2025-02-05', hours: 8, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: 5, directContactMinutes: 30, placeId: 'p1', employerName: 'Melbourne Health', allocation: 'Clinical Psychology' },
+      { id: 'act-4', activityType: 'Supervision', completionDate: '2025-02-12', hours: 2, minutes: 0, supervisionType: 'Individual', supervisorId: 's1', supervisorName: 'Dr James Mitchell', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Clinical Psychology' },
+      { id: 'act-5', activityType: 'Practice', completionDate: '2025-03-01', hours: 40, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: 25, directContactMinutes: 0, placeId: 'p1', employerName: 'Melbourne Health', allocation: 'Clinical Psychology' },
+    ],
   },
   {
     id: '2',
@@ -103,6 +110,11 @@ export const initialPrograms = [
         postcode: '2000',
         state: 'NSW',
       },
+    ],
+    activities: [
+      { id: 'act-6', activityType: 'Supervision', completionDate: '2025-01-10', hours: 1, minutes: 30, supervisionType: 'Individual', supervisorId: 's3', supervisorName: 'Dr Karen Patel', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Organisational Psychology' },
+      { id: 'act-7', activityType: 'Practice', completionDate: '2025-02-01', hours: 20, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: 12, directContactMinutes: 0, placeId: 'p2', employerName: 'Deloitte Australia', allocation: 'Organisational Psychology' },
+      { id: 'act-8', activityType: 'Supervision', completionDate: '2025-02-14', hours: 1, minutes: 0, supervisionType: 'Group', supervisorId: 's3', supervisorName: 'Dr Karen Patel', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Organisational Psychology' },
     ],
   },
   {
@@ -162,6 +174,12 @@ export const initialPrograms = [
         state: 'QLD',
       },
     ],
+    activities: [
+      { id: 'act-9', activityType: 'Supervision', completionDate: '2024-08-15', hours: 2, minutes: 0, supervisionType: 'Individual', supervisorId: 's4', supervisorName: "Dr Michael O'Brien", directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Forensic Psychology' },
+      { id: 'act-10', activityType: 'Practice', completionDate: '2024-09-10', hours: 35, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: 20, directContactMinutes: 0, placeId: 'p3', employerName: 'QLD Corrective Services', allocation: 'Forensic Psychology' },
+      { id: 'act-11', activityType: 'Supervision', completionDate: '2024-10-01', hours: 1, minutes: 30, supervisionType: 'Individual', supervisorId: 's5', supervisorName: 'Dr Amanda Foster', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Forensic Psychology' },
+      { id: 'act-12', activityType: 'Practice', completionDate: '2024-11-15', hours: 45, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: 30, directContactMinutes: 0, placeId: 'p4', employerName: 'Brisbane Psychology Group', allocation: 'Forensic Psychology' },
+    ],
   },
   {
     id: '4',
@@ -199,5 +217,6 @@ export const initialPrograms = [
         state: 'SA',
       },
     ],
+    activities: [],
   },
 ];
