@@ -223,6 +223,120 @@ function PlaceModal({ open, place, onSave, onCancel }) {
   );
 }
 
+// ---- Existing Picker Modal ----
+function ExistingPickerModal({ open, type, items, onSelect, onCreate, onCancel }) {
+  const [search, setSearch] = useState('');
+  if (!open) return null;
+
+  const filtered = items.filter((item) => {
+    const q = search.toLowerCase();
+    if (type === 'supervisor') {
+      return `${item.firstName} ${item.lastName} ${item.ahpraNumber}`.toLowerCase().includes(q);
+    }
+    return `${item.employerName} ${item.positionTitle}`.toLowerCase().includes(q);
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
+      <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+          {type === 'supervisor' ? 'Add Supervisor' : 'Add Place of Practice'}
+        </h3>
+        <p className="text-sm text-gray-500 mb-4">Choose from existing or create a new one.</p>
+
+        {items.length > 0 && (
+          <>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={type === 'supervisor' ? 'Search by name or AHPRA number...' : 'Search by employer or position...'}
+              className="w-full h-10 px-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue mb-3"
+            />
+            <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
+              {filtered.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">No matches found.</p>
+              ) : filtered.map((item) => (
+                <button
+                  key={item._poolKey}
+                  type="button"
+                  onClick={() => onSelect(item)}
+                  className="w-full text-left border border-gray-200 rounded-lg p-3 hover:border-aps-blue/40 hover:bg-aps-blue-light/30 transition-colors"
+                >
+                  {type === 'supervisor' ? (
+                    <>
+                      <p className="text-sm font-medium text-gray-900">
+                        {item.title} {item.firstName} {item.lastName}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs text-gray-500">AHPRA: {item.ahpraNumber}</span>
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                          item.supervisionType === 'Primary' ? 'bg-aps-blue/10 text-aps-blue' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {item.supervisionType}
+                        </span>
+                        <span className="text-xs text-gray-500">{item.supervisorAoPE}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium text-gray-900">{item.employerName}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {item.positionTitle && `${item.positionTitle} · `}
+                        {item.suburb}, {item.state}
+                      </p>
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        <div className={`${items.length > 0 ? 'border-t border-gray-200 pt-4' : ''} flex items-center justify-between`}>
+          <button type="button" onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+            Cancel
+          </button>
+          <button type="button" onClick={onCreate}
+            className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark">
+            Create new {type === 'supervisor' ? 'supervisor' : 'place'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Helper: collect unique pool from all programs ----
+function buildSupervisorPool(programs, excludeIds) {
+  const seen = new Map();
+  programs.forEach((prog) => {
+    (prog.supervisors || []).forEach((s) => {
+      // Use AHPRA number as dedup key since it's unique per person
+      if (!seen.has(s.ahpraNumber) && !excludeIds.has(s.ahpraNumber)) {
+        seen.set(s.ahpraNumber, { ...s, _poolKey: `${prog.id}-${s.id}` });
+      }
+    });
+  });
+  return Array.from(seen.values());
+}
+
+function buildPlacePool(programs, excludeKeys) {
+  const seen = new Map();
+  programs.forEach((prog) => {
+    (prog.placesOfPractice || []).forEach((p) => {
+      // Use employer + address as dedup key
+      const key = `${p.employerName}|${p.addressLine1}|${p.suburb}`.toLowerCase();
+      if (!seen.has(key) && !excludeKeys.has(key)) {
+        seen.set(key, { ...p, _poolKey: `${prog.id}-${p.id}` });
+      }
+    });
+  });
+  return Array.from(seen.values());
+}
+
 // ---- Main Form ----
 export default function ProgramForm({ programs, setPrograms }) {
   const { id } = useParams();
@@ -246,7 +360,15 @@ export default function ProgramForm({ programs, setPrograms }) {
   const [errors, setErrors] = useState({});
   const [supervisorModal, setSupervisorModal] = useState({ open: false, data: null });
   const [placeModal, setPlaceModal] = useState({ open: false, data: null });
+  const [supervisorPicker, setSupervisorPicker] = useState(false);
+  const [placePicker, setPlacePicker] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState({ open: false });
+
+  // Build pools of existing supervisors/places from other programs, excluding already-added ones
+  const currentSupervisorAhpras = new Set(supervisors.map((s) => s.ahpraNumber));
+  const currentPlaceKeys = new Set(places.map((p) => `${p.employerName}|${p.addressLine1}|${p.suburb}`.toLowerCase()));
+  const supervisorPool = buildSupervisorPool(programs, currentSupervisorAhpras);
+  const placePool = buildPlacePool(programs, currentPlaceKeys);
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -295,6 +417,19 @@ export default function ProgramForm({ programs, setPrograms }) {
       setPrograms((prev) => [...prev, { ...programData, id: newId }]);
       navigate('/admin/registrar/programs');
     }
+  }
+
+  // Select existing from pool
+  function handleSelectExistingSupervisor(poolItem) {
+    const { _poolKey, id, ...rest } = poolItem;
+    setSupervisors((prev) => [...prev, { ...rest, id: `s-${Date.now()}` }]);
+    setSupervisorPicker(false);
+  }
+
+  function handleSelectExistingPlace(poolItem) {
+    const { _poolKey, id, ...rest } = poolItem;
+    setPlaces((prev) => [...prev, { ...rest, id: `p-${Date.now()}` }]);
+    setPlacePicker(false);
   }
 
   // Supervisor CRUD
@@ -523,7 +658,7 @@ export default function ProgramForm({ programs, setPrograms }) {
               Supervisors
               <span className="text-sm font-normal text-gray-400 ml-2">({supervisors.length})</span>
             </h2>
-            <button type="button" onClick={() => setSupervisorModal({ open: true, data: null })}
+            <button type="button" onClick={() => setSupervisorPicker(true)}
               className="px-3 py-1.5 text-xs font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark">
               Add supervisor
             </button>
@@ -573,7 +708,7 @@ export default function ProgramForm({ programs, setPrograms }) {
               Places of Practice
               <span className="text-sm font-normal text-gray-400 ml-2">({places.length})</span>
             </h2>
-            <button type="button" onClick={() => setPlaceModal({ open: true, data: null })}
+            <button type="button" onClick={() => setPlacePicker(true)}
               className="px-3 py-1.5 text-xs font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark">
               Add place
             </button>
@@ -625,7 +760,25 @@ export default function ProgramForm({ programs, setPrograms }) {
         </div>
       </form>
 
-      {/* Modals */}
+      {/* Picker Modals */}
+      <ExistingPickerModal
+        open={supervisorPicker}
+        type="supervisor"
+        items={supervisorPool}
+        onSelect={handleSelectExistingSupervisor}
+        onCreate={() => { setSupervisorPicker(false); setSupervisorModal({ open: true, data: null }); }}
+        onCancel={() => setSupervisorPicker(false)}
+      />
+      <ExistingPickerModal
+        open={placePicker}
+        type="place"
+        items={placePool}
+        onSelect={handleSelectExistingPlace}
+        onCreate={() => { setPlacePicker(false); setPlaceModal({ open: true, data: null }); }}
+        onCancel={() => setPlacePicker(false)}
+      />
+
+      {/* Form Modals */}
       <SupervisorModal
         open={supervisorModal.open}
         supervisor={supervisorModal.data}
