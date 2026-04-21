@@ -150,7 +150,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
                 value={selectedCycleId}
                 onChange={(e) => setSelectedCycleId(e.target.value)}
                 disabled={availableCycles.length === 0}
-                className="h-10 px-3 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue disabled:bg-gray-50 disabled:text-gray-500"
+                className="h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue disabled:bg-gray-50 disabled:text-gray-500"
               >
                 {availableCycles.length === 0 && <option value="">No cycles available</option>}
                 {availableCycles.map((c) => (

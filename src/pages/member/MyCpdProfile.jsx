@@ -169,7 +169,7 @@ export default function MyCpdProfile({ cpdProfiles, setCpdProfiles }) {
                 <select
                   value={form.boardRegistration}
                   onChange={(e) => update('boardRegistration', e.target.value)}
-                  className="w-full h-10 px-3 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
+                  className="w-full h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
                 >
                   <option value="General">General</option>
                   <option value="Provisional">Provisional</option>

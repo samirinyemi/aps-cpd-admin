@@ -106,7 +106,7 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = 
             <select
               value={selectedCycleId}
               onChange={(e) => setSelectedCycleId(e.target.value)}
-              className="w-full h-10 px-3 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
+              className="w-full h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
             >
               {availableCycles.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}{c.status !== 'Open' ? ` (${c.status})` : ''}</option>
@@ -118,7 +118,7 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = 
             <select
               value={kindFilter}
               onChange={(e) => setKindFilter(e.target.value)}
-              className="w-full h-10 px-3 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
+              className="w-full h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
             >
               <option value="">All kinds</option>
               {kinds.map((k) => <option key={k} value={k}>{k}</option>)}
@@ -129,7 +129,7 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = 
             <select
               value={aoPEFilter}
               onChange={(e) => setAoPEFilter(e.target.value)}
-              className="w-full h-10 px-3 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
+              className="w-full h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
             >
               <option value="">All AoPEs</option>
               {(profile.aoPEs || []).map((a) => <option key={a} value={a}>{a}</option>)}
