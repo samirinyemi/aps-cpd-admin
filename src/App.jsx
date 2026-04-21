@@ -30,6 +30,11 @@ import SupervisorForm from './pages/admin/SupervisorForm';
 import PracticeLocationList from './pages/admin/PracticeLocationList';
 import PracticeLocationForm from './pages/admin/PracticeLocationForm';
 import MyCpd from './pages/member/MyCpd';
+import MyCpdProfile from './pages/member/MyCpdProfile';
+import MyLearningPlan from './pages/member/MyLearningPlan';
+import MyCpdLog from './pages/member/MyCpdLog';
+import MyCpdActivities from './pages/member/MyCpdActivities';
+import MyCpdReport from './pages/member/MyCpdReport';
 import MyRegistrarPrograms from './pages/member/MyRegistrarPrograms';
 import MemberRegistrarShortcut from './pages/member/MemberRegistrarShortcut';
 
@@ -151,6 +156,21 @@ function AppRoutes() {
       {/* Member: self-service */}
       <Route path="/member/cpd" element={
         <RequireAuth memberOnly><MyCpd cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} programs={programs} aoPEPrograms={aoPEPrograms} cycles={cycles} /></RequireAuth>
+      } />
+      <Route path="/member/cpd/profile" element={
+        <RequireAuth memberOnly><MyCpdProfile cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
+      } />
+      <Route path="/member/cpd/learning-plan" element={
+        <RequireAuth memberOnly><MyLearningPlan cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
+      } />
+      <Route path="/member/cpd/log" element={
+        <RequireAuth memberOnly><MyCpdLog cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} cycles={cycles} /></RequireAuth>
+      } />
+      <Route path="/member/cpd/activities" element={
+        <RequireAuth memberOnly><MyCpdActivities cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} cycles={cycles} /></RequireAuth>
+      } />
+      <Route path="/member/cpd/report" element={
+        <RequireAuth memberOnly><MyCpdReport /></RequireAuth>
       } />
       <Route path="/member/registrar" element={
         <RequireAuth memberOnly><MyRegistrarPrograms programs={programs} aoPEPrograms={aoPEPrograms} cpdProfiles={cpdProfiles} /></RequireAuth>

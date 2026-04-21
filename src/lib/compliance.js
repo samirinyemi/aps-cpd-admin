@@ -41,6 +41,79 @@ export function formatPercent(num, den) {
  * Uses the HLBR US-1304 formula: (MAP + MAS + MACPD) / (MPP + MPS + MPCPD).
  * Returns 0 when inputs are missing.
  */
+/**
+ * Member-side CPD Summary metrics per HLBR US-500 through US-506.
+ * Aggregates a member's CPD activities for a given cycle and computes the
+ * dashboard metric values.
+ *
+ *   loggedTotalHours   = sum(cpdHrs)  for activities in this cycle
+ *   loggedPeerHours    = sum(peerHrs) for activities in this cycle
+ *   loggedActiveHours  = sum(actionHrs) + Peer-Consultation active portions
+ *   perAoPE            = map of AoPE -> { logged, required, met }
+ *
+ * Required-hour split (US-505):
+ *   If profile has 1 AoPE   → minimum 16h (doc floor)
+ *   If profile has >1 AoPE  → cycle.minRequiredHours / count(aoPEs)
+ */
+export function computeCpdCycleMetrics(profile, cycle) {
+  if (!profile || !cycle) return null;
+  const activities = (profile.activities || []).filter((a) => a.cycleId === cycle.id);
+
+  const sum = (xs, pick) => xs.reduce((acc, a) => acc + (Number(pick(a)) || 0), 0);
+
+  const loggedTotal = sum(activities, (a) => a.cpdHrs);
+  const loggedPeer = sum(activities, (a) => a.peerHrs);
+  // "Active Hours" per US-504 = action time + peer-consultation active portion
+  // (in our data we store peerHrs and actionHrs separately on Peer Consultation)
+  const loggedActive = sum(activities, (a) => a.actionHrs);
+
+  const aoPEs = Array.isArray(profile.aoPEs) ? profile.aoPEs : [];
+  const perAoPERequired = aoPEs.length > 1
+    ? Math.round((cycle.minRequiredHours || 0) / aoPEs.length)
+    : 16;
+
+  const perAoPE = aoPEs.map((aope) => {
+    const logged = activities
+      .filter((a) => a.allocation === aope)
+      .reduce((acc, a) => acc + (Number(a.cpdHrs) || 0), 0);
+    return {
+      aoPE: aope,
+      logged: Math.round(logged * 100) / 100,
+      required: perAoPERequired,
+      met: logged >= perAoPERequired,
+    };
+  });
+
+  // Learning plan status per US-501
+  const learningNeeds = profile.learningNeeds || [];
+  const learningPlanStatus = profile.learningPlanMethod === 'Offline'
+    ? 'Offline'
+    : learningNeeds.length === 0
+      ? 'Not Started'
+      : profile.learningPlanReviewedAt
+        ? 'Reviewed'
+        : 'Developed';
+
+  return {
+    learningPlanStatus,
+    baseMin: {
+      logged: Math.round(loggedTotal * 100) / 100,
+      required: cycle.minRequiredHours || 0,
+      met: loggedTotal >= (cycle.minRequiredHours || 0),
+    },
+    peerConsultation: {
+      logged: Math.round(loggedPeer * 100) / 100,
+      required: cycle.minPeerHours || 0,
+      met: loggedPeer >= (cycle.minPeerHours || 0),
+    },
+    activeHours: {
+      logged: Math.round(loggedActive * 100) / 100,
+    },
+    perAoPE,
+    cpdExemption: Boolean(profile.cpdExemption),
+  };
+}
+
 export function compliancePercent(program, template, cpdActivities = []) {
   const metrics = computeCompliance(program, template, cpdActivities);
   if (!metrics) return 0;
