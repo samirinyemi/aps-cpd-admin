@@ -13,6 +13,114 @@ function formatDateTime(dt) {
   });
 }
 
+function ScheduleStatusBadge({ status }) {
+  const styles = {
+    Pending: 'bg-gray-100 text-gray-700 border border-gray-200',
+    Executed: 'bg-status-open-bg text-status-open border border-status-open/30',
+    Cancelled: 'bg-status-closed-bg text-status-closed border border-status-closed/30',
+  };
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${styles[status] || styles.Pending}`}>
+      {status}
+    </span>
+  );
+}
+
+function ActionBadge({ action }) {
+  const styles =
+    action === 'Open'
+      ? 'bg-status-open-bg text-status-open border border-status-open/30'
+      : 'bg-aps-blue-light text-aps-blue border border-aps-blue/20';
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${styles}`}>
+      {action === 'Open' ? 'Open Cycle' : 'Close Cycle'}
+    </span>
+  );
+}
+
+function AddScheduleModal({ open, onSave, onCancel }) {
+  const [action, setAction] = useState('Open');
+  const [dateTime, setDateTime] = useState('');
+
+  if (!open) return null;
+
+  function handleSave() {
+    onSave({ action, dateTime });
+    setAction('Open');
+    setDateTime('');
+  }
+
+  function handleCancel() {
+    setAction('Open');
+    setDateTime('');
+    onCancel();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={handleCancel} />
+      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Schedule</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Action</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setAction('Open')}
+                className={`px-4 py-3 text-sm font-medium rounded-md border transition-colors ${
+                  action === 'Open'
+                    ? 'border-aps-blue bg-aps-blue-light text-aps-blue'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Open Cycle
+              </button>
+              <button
+                type="button"
+                onClick={() => setAction('Close')}
+                className={`px-4 py-3 text-sm font-medium rounded-md border transition-colors ${
+                  action === 'Close'
+                    ? 'border-aps-blue bg-aps-blue-light text-aps-blue'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Close Cycle
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Date & Time</label>
+            <input
+              type="datetime-local"
+              value={dateTime}
+              onChange={(e) => setDateTime(e.target.value)}
+              className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!dateTime}
+            className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Add schedule
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CycleForm({ cycles, setCycles }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -25,12 +133,55 @@ export default function CycleForm({ cycles, setCycles }) {
     endDate: existing?.endDate || '',
     minRequiredHours: existing?.minRequiredHours ?? '',
     minPeerHours: existing?.minPeerHours ?? '',
-    scheduledOpenDate: existing?.scheduledOpenDate || '',
-    scheduledCloseDate: existing?.scheduledCloseDate || '',
   });
 
   const [errors, setErrors] = useState({});
   const [dialog, setDialog] = useState({ open: false });
+  const [addModalOpen, setAddModalOpen] = useState(false);
+
+  const schedules = existing?.schedules || [];
+  // Close actions appear before Open actions, then by dateTime ascending.
+  const actionOrder = { Close: 0, Open: 1 };
+  const sortedSchedules = [...schedules].sort((a, b) => {
+    const orderA = actionOrder[a.action] ?? 99;
+    const orderB = actionOrder[b.action] ?? 99;
+    if (orderA !== orderB) return orderA - orderB;
+    return a.dateTime.localeCompare(b.dateTime);
+  });
+
+  function handleAddSchedule(entry) {
+    const newSchedule = {
+      id: `sch-${id}-${Date.now()}`,
+      action: entry.action,
+      dateTime: entry.dateTime,
+      status: 'Pending',
+    };
+    setCycles((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, schedules: [...(c.schedules || []), newSchedule] } : c
+      )
+    );
+    setAddModalOpen(false);
+  }
+
+  function handleRemoveSchedule(schedule) {
+    setDialog({
+      open: true,
+      title: 'Remove Schedule',
+      message: `Are you sure you want to remove this scheduled ${schedule.action.toLowerCase()} event for "${existing?.name}"?`,
+      confirmLabel: 'Remove',
+      onConfirm: () => {
+        setCycles((prev) =>
+          prev.map((c) =>
+            c.id === id
+              ? { ...c, schedules: (c.schedules || []).filter((s) => s.id !== schedule.id) }
+              : c
+          )
+        );
+        setDialog({ open: false });
+      },
+    });
+  }
 
   function update(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -79,8 +230,6 @@ export default function CycleForm({ cycles, setCycles }) {
       ...form,
       minRequiredHours: Number(form.minRequiredHours),
       minPeerHours: Number(form.minPeerHours),
-      scheduledOpenDate: form.scheduledOpenDate || null,
-      scheduledCloseDate: form.scheduledCloseDate || null,
     };
 
     if (isEdit) {
@@ -94,6 +243,7 @@ export default function CycleForm({ cycles, setCycles }) {
           ...cycleData,
           id: String(Date.now()),
           status: 'Pending',
+          schedules: [],
           statusHistory: [],
         },
       ]);
@@ -109,19 +259,19 @@ export default function CycleForm({ cycles, setCycles }) {
       message: `Are you sure you want to ${action.toLowerCase()} "${existing?.name}"? Any unsaved changes to the form will be lost.`,
       confirmLabel: action,
       onConfirm: () => {
-        const newStatus = action === 'Open' ? 'Open' : 'Closed';
+        const newStatus = action === 'Close' ? 'Closed' : 'Open';
+        const historyAction =
+          action === 'Open' ? 'Opened' : action === 'Close' ? 'Closed' : 'Reopened';
         setCycles((prev) =>
           prev.map((c) =>
             c.id === id
               ? {
                   ...c,
                   status: newStatus,
-                  scheduledOpenDate: action === 'Open' ? null : c.scheduledOpenDate,
-                  scheduledCloseDate: action === 'Close' ? null : c.scheduledCloseDate,
                   statusHistory: [
                     ...(c.statusHistory || []),
                     {
-                      action: action === 'Open' ? 'Opened' : 'Closed',
+                      action: historyAction,
                       date: new Date().toISOString(),
                       triggeredBy: 'Admin (Manual)',
                     },
@@ -136,19 +286,10 @@ export default function CycleForm({ cycles, setCycles }) {
     });
   }
 
-  // Redirect if trying to edit a Closed cycle
-  if (isEdit && existing?.status === 'Closed') {
-    navigate('/admin/cpd/cycles');
-    return null;
-  }
-
   const inputClass = (field) =>
     `w-full h-14 px-4 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue ${
       errors[field] ? 'border-red-400' : 'border-gray-300'
     }`;
-
-  const canScheduleOpen = !isEdit || existing?.status === 'Pending';
-  const canScheduleClose = !isEdit || existing?.status === 'Pending' || existing?.status === 'Open';
 
   return (
     <PageShell>
@@ -255,58 +396,7 @@ export default function CycleForm({ cycles, setCycles }) {
           </div>
         </div>
 
-        {/* Section 2: Schedule (edit mode only, non-Closed) */}
-        {isEdit && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-6 mb-6">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">Schedule</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Set when this cycle should automatically open or close.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {canScheduleOpen && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Scheduled Activation
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={form.scheduledOpenDate}
-                    onChange={(e) => update('scheduledOpenDate', e.target.value)}
-                    className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
-                  />
-                  {existing?.scheduledOpenDate && form.scheduledOpenDate !== existing.scheduledOpenDate && (
-                    <p className="mt-1 text-xs text-gray-400">
-                      Currently: {formatDateTime(existing.scheduledOpenDate)}
-                    </p>
-                  )}
-                </div>
-              )}
-              {canScheduleClose && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Scheduled Deactivation
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={form.scheduledCloseDate}
-                    onChange={(e) => update('scheduledCloseDate', e.target.value)}
-                    className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
-                  />
-                  {existing?.scheduledCloseDate && form.scheduledCloseDate !== existing.scheduledCloseDate && (
-                    <p className="mt-1 text-xs text-gray-400">
-                      Currently: {formatDateTime(existing.scheduledCloseDate)}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Section 3: Status Actions (edit mode only) */}
+        {/* Section 2: Status Actions (edit mode only) */}
         {isEdit && (
           <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
             <h2 className="text-base font-semibold text-gray-900 mb-1">Status Actions</h2>
@@ -332,7 +422,76 @@ export default function CycleForm({ cycles, setCycles }) {
                   Close Cycle
                 </button>
               )}
+              {existing?.status === 'Closed' && (
+                <button
+                  type="button"
+                  onClick={() => handleStatusAction('Reopen')}
+                  className="px-4 py-2 text-sm font-medium text-white bg-status-open rounded-md hover:opacity-90"
+                >
+                  Reopen Cycle
+                </button>
+              )}
             </div>
+          </div>
+        )}
+
+        {/* Section 3: Scheduled Events (edit mode only) */}
+        {isEdit && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+            <div className="flex items-start justify-between mb-1">
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Scheduled Events</h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Queue future open or close events for this cycle. Multiple schedules can be added.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAddModalOpen(true)}
+                className="px-3 py-1.5 text-xs font-medium text-aps-blue border border-aps-blue rounded hover:bg-aps-blue-light shrink-0 ml-4"
+              >
+                Add schedule
+              </button>
+            </div>
+
+            {sortedSchedules.length === 0 ? (
+              <div className="mt-4 py-8 text-center border border-dashed border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-400">No schedules queued for this cycle.</p>
+              </div>
+            ) : (
+              <div className="border border-gray-200 rounded-lg overflow-hidden mt-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">Action</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">Date & Time</th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
+                      <th className="px-4 py-3 text-right font-medium text-gray-600">&nbsp;</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedSchedules.map((s) => (
+                      <tr key={s.id} className="border-b border-gray-100 last:border-0">
+                        <td className="px-4 py-3"><ActionBadge action={s.action} /></td>
+                        <td className="px-4 py-3 text-gray-700">{formatDateTime(s.dateTime)}</td>
+                        <td className="px-4 py-3"><ScheduleStatusBadge status={s.status} /></td>
+                        <td className="px-4 py-3 text-right">
+                          {s.status === 'Pending' && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSchedule(s)}
+                              className="text-xs text-red-600 hover:underline"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
@@ -353,6 +512,12 @@ export default function CycleForm({ cycles, setCycles }) {
           </button>
         </div>
       </form>
+
+      <AddScheduleModal
+        open={addModalOpen}
+        onSave={handleAddSchedule}
+        onCancel={() => setAddModalOpen(false)}
+      />
 
       <ConfirmDialog
         open={dialog.open}

@@ -1,9 +1,9 @@
 export const initialCpdProfiles = [
   {
     id: '1',
-    memberName: 'Dr Sarah Mitchell',
-    memberNumber: 'APS-10234',
-    grade: 'Fellow',
+    memberName: 'Dr Sarah Chen',
+    memberNumber: 'PSY-2024-001',
+    grade: 'Registrar',
     cpdCycle: '2025–2026 CPD Cycle',
     boardRegistration: 'Clinical Psychology',
     regDate: '2015-03-12',
@@ -24,9 +24,9 @@ export const initialCpdProfiles = [
   },
   {
     id: '2',
-    memberName: 'Dr James Chen',
-    memberNumber: 'APS-10891',
-    grade: 'Member',
+    memberName: 'Mr David Thompson',
+    memberNumber: 'PSY-2024-015',
+    grade: 'Registrar',
     cpdCycle: '2025–2026 CPD Cycle',
     boardRegistration: 'Organisational Psychology',
     regDate: '2019-07-01',
@@ -45,9 +45,9 @@ export const initialCpdProfiles = [
   },
   {
     id: '3',
-    memberName: 'Dr Emily Watson',
-    memberNumber: 'APS-11002',
-    grade: 'Fellow',
+    memberName: 'Ms Emily Rodriguez',
+    memberNumber: 'PSY-2023-042',
+    grade: 'Registrar',
     cpdCycle: '2025–2026 CPD Cycle',
     boardRegistration: 'Clinical Neuropsychology',
     regDate: '2012-01-15',

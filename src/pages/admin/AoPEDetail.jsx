@@ -90,6 +90,7 @@ export default function AoPEDetail({ aoPEPrograms }) {
           <Field label="Required CPD Hours" value={program.requiredCPDHours.toLocaleString()} suffix="hours" />
         </dl>
       </section>
+
     </PageShell>
   );
 }

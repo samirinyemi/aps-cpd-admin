@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { useAuth } from '../../context/AuthContext';
 import {
   aoPEOptions,
+  candidateMembers,
   qualificationOptions,
   stateOptions,
   titleOptions,
@@ -338,16 +340,40 @@ function buildPlacePool(programs, excludeKeys) {
 }
 
 // ---- Main Form ----
-export default function ProgramForm({ programs, setPrograms }) {
+export default function ProgramForm({ programs, setPrograms, aoPEPrograms = [], memberRole = false }) {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { member: loggedInMember } = useAuth();
   const isEdit = Boolean(id);
   const existing = isEdit ? programs.find((p) => p.id === id) : null;
 
+  // Resolve initial template id: explicit reference, else match by AoPE name, else blank.
+  const initialTemplateId = existing
+    ? existing.aopeComplianceId
+      || aoPEPrograms.find((t) => t.areaOfPractice === existing.areaOfPractice)?.id
+      || ''
+    : '';
+
+  // If logged in as a Member, default the member block to the logged-in persona.
+  const memberDefaults = memberRole && loggedInMember
+    ? {
+        member: {
+          title: loggedInMember.title || '',
+          firstName: loggedInMember.firstName || '',
+          lastName: loggedInMember.lastName || '',
+        },
+        memberNumber: loggedInMember.memberNumber,
+        memberGrade: loggedInMember.grade || 'Registrar',
+      }
+    : {
+        member: existing?.member || { title: '', firstName: '', lastName: '' },
+        memberNumber: existing?.memberNumber || '',
+        memberGrade: existing?.memberGrade || 'Registrar',
+      };
+
   const [form, setForm] = useState({
-    member: existing?.member || { title: '', firstName: '', lastName: '' },
-    memberNumber: existing?.memberNumber || '',
-    memberGrade: existing?.memberGrade || 'Registrar',
+    ...memberDefaults,
+    aopeComplianceId: initialTemplateId,
     areaOfPractice: existing?.areaOfPractice || '',
     qualification: existing?.qualification || '',
     commencementDate: existing?.commencementDate || '',
@@ -376,16 +402,81 @@ export default function ProgramForm({ programs, setPrograms }) {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
-  function updateMember(field, value) {
-    setForm((prev) => ({
-      ...prev,
-      member: { ...prev.member, [field]: value },
+  // HLBR US-1402: a member can have multiple Registrar Programs (one per AoPE),
+  // but not two programs in the same AoPE. So the member picker shows everyone,
+  // and the AoPE dropdown filters by AoPEs the selected member already has.
+  // Build the full member directory from candidateMembers plus any seeded
+  // members already referenced by existing programs (deduped by memberNumber).
+  const seenMemberNumbers = new Set(candidateMembers.map((m) => m.memberNumber));
+  const extraMembers = programs
+    .filter((p) => !seenMemberNumbers.has(p.memberNumber))
+    .map((p) => ({
+      memberNumber: p.memberNumber,
+      title: p.member.title,
+      firstName: p.member.firstName,
+      lastName: p.member.lastName,
+      memberGrade: p.memberGrade,
     }));
+  // Deduplicate extras
+  const extraDedup = Array.from(
+    new Map(extraMembers.map((m) => [m.memberNumber, m])).values()
+  );
+  const availableMembers = [...candidateMembers, ...extraDedup].sort((a, b) =>
+    `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+  );
+
+  // For the currently selected member, which AoPE template ids are already taken?
+  // Excludes the program being edited so the current selection stays valid.
+  const takenAopeIdsForMember = (() => {
+    if (!form.memberNumber) return new Set();
+    const otherPrograms = programs.filter(
+      (p) => p.memberNumber === form.memberNumber && (!isEdit || p.id !== id)
+    );
+    return new Set(otherPrograms.map((p) => p.aopeComplianceId).filter(Boolean));
+  })();
+
+  const availableAoPEPrograms = aoPEPrograms.filter(
+    (t) => !takenAopeIdsForMember.has(t.id)
+  );
+
+  function handleSelectMember(memberNumber) {
+    const picked = availableMembers.find((m) => m.memberNumber === memberNumber);
+    if (!picked) {
+      setForm((prev) => ({
+        ...prev,
+        member: { title: '', firstName: '', lastName: '' },
+        memberNumber: '',
+        memberGrade: 'Registrar',
+        aopeComplianceId: '',
+        areaOfPractice: '',
+      }));
+      return;
+    }
+    // Check whether the currently-selected AoPE is still valid for the new member
+    const newTakenIds = new Set(
+      programs
+        .filter((p) => p.memberNumber === memberNumber && (!isEdit || p.id !== id))
+        .map((p) => p.aopeComplianceId)
+        .filter(Boolean)
+    );
+    setForm((prev) => {
+      const aopeStillValid = prev.aopeComplianceId && !newTakenIds.has(prev.aopeComplianceId);
+      return {
+        ...prev,
+        member: { title: picked.title, firstName: picked.firstName, lastName: picked.lastName },
+        memberNumber: picked.memberNumber,
+        memberGrade: picked.memberGrade,
+        aopeComplianceId: aopeStillValid ? prev.aopeComplianceId : '',
+        areaOfPractice: aopeStillValid ? prev.areaOfPractice : '',
+      };
+    });
+    setErrors((prev) => ({ ...prev, memberNumber: undefined, aopeComplianceId: undefined }));
   }
 
   function validate() {
     const errs = {};
-    if (!form.areaOfPractice) errs.areaOfPractice = 'Required';
+    if (!isEdit && !form.memberNumber) errs.memberNumber = 'Please select a member';
+    if (!form.aopeComplianceId) errs.aopeComplianceId = 'Required';
     if (!form.qualification) errs.qualification = 'Required';
     if (!form.commencementDate) errs.commencementDate = 'Required';
     if (form.holdsAoPE === null) errs.holdsAoPE = 'Required';
@@ -408,15 +499,16 @@ export default function ProgramForm({ programs, setPrograms }) {
       status: existing?.status || 'Open',
     };
 
+    const basePath = memberRole ? '/member/registrar' : '/admin/registrar/programs';
     if (isEdit) {
       setPrograms((prev) =>
         prev.map((p) => (p.id === id ? { ...p, ...programData } : p))
       );
-      navigate(`/admin/registrar/programs/${id}`);
+      navigate(`${basePath}/${id}`);
     } else {
       const newId = String(Date.now());
       setPrograms((prev) => [...prev, { ...programData, id: newId }]);
-      navigate('/admin/registrar/programs');
+      navigate(memberRole ? `${basePath}/${newId}` : basePath);
     }
   }
 
@@ -519,9 +611,12 @@ export default function ProgramForm({ programs, setPrograms }) {
     });
   }
 
+  const listPath = memberRole ? '/member/registrar' : '/admin/registrar/programs';
+  const detailPath = (pid) => (memberRole ? `/member/registrar/${pid}` : `/admin/registrar/programs/${pid}`);
+
   // Redirect if trying to edit a Closed program
   if (isEdit && existing?.status === 'Closed') {
-    navigate('/admin/registrar/programs');
+    navigate(listPath);
     return null;
   }
 
@@ -534,13 +629,13 @@ export default function ProgramForm({ programs, setPrograms }) {
     <PageShell>
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-500 mb-6">
-        <button onClick={() => navigate('/admin/registrar/programs')} className="hover:text-aps-blue">
-          Registrar Programs
+        <button onClick={() => navigate(listPath)} className="hover:text-aps-blue">
+          {memberRole ? 'My Registrar Programs' : 'Registrar Programs'}
         </button>
         {isEdit && existing && (
           <>
             <span className="mx-2">/</span>
-            <button onClick={() => navigate(`/admin/registrar/programs/${id}`)} className="hover:text-aps-blue">
+            <button onClick={() => navigate(detailPath(id))} className="hover:text-aps-blue">
               {existing.member.firstName} {existing.member.lastName}
             </button>
           </>
@@ -556,8 +651,40 @@ export default function ProgramForm({ programs, setPrograms }) {
       <form onSubmit={handleSave}>
         {/* Section 1: Member Information (non-editable in edit, inputs in create) */}
         <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Member Information</h2>
-          {isEdit ? (
+          <h2 className="text-base font-semibold text-gray-900 mb-4">
+            {memberRole ? 'Your Details' : 'Member Information'}
+          </h2>
+          {!isEdit && !memberRole && (
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Select Member <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={form.memberNumber}
+                onChange={(e) => handleSelectMember(e.target.value)}
+                className={inputClass('memberNumber')}
+              >
+                <option value="">Select a member...</option>
+                {availableMembers.map((m) => (
+                  <option key={m.memberNumber} value={m.memberNumber}>
+                    {m.title} {m.firstName} {m.lastName} — {m.memberNumber}
+                  </option>
+                ))}
+              </select>
+              {errors.memberNumber && (
+                <p className="mt-1 text-sm text-red-600">{errors.memberNumber}</p>
+              )}
+              <p className="mt-1.5 text-xs text-gray-500">
+                Member details are read-only and come from the member directory.
+              </p>
+            </div>
+          )}
+          {memberRole && (
+            <p className="text-xs text-gray-500 mb-4">
+              You're enrolling yourself into a new registrar program. These details come from your member record and can't be changed here.
+            </p>
+          )}
+          {(isEdit || form.memberNumber) ? (
             <dl className="grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-8">
               <div>
                 <dt className="text-sm text-gray-500">Member Name</dt>
@@ -575,41 +702,7 @@ export default function ProgramForm({ programs, setPrograms }) {
               </div>
             </dl>
           ) : (
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Title</label>
-                  <select value={form.member.title} onChange={(e) => updateMember('title', e.target.value)}
-                    className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue">
-                    <option value="">Select...</option>
-                    {titleOptions.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
-                  <input type="text" value={form.member.firstName} onChange={(e) => updateMember('firstName', e.target.value)}
-                    className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
-                  <input type="text" value={form.member.lastName} onChange={(e) => updateMember('lastName', e.target.value)}
-                    className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Member Number</label>
-                  <input type="text" value={form.memberNumber} onChange={(e) => update('memberNumber', e.target.value)}
-                    className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
-                    placeholder="e.g. PSY-2024-001" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Member Grade</label>
-                  <input type="text" value={form.memberGrade} onChange={(e) => update('memberGrade', e.target.value)}
-                    className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue" />
-                </div>
-              </div>
-            </div>
+            <p className="text-sm text-gray-400">No member selected yet.</p>
           )}
         </section>
 
@@ -621,12 +714,54 @@ export default function ProgramForm({ programs, setPrograms }) {
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 Area of Practice <span className="text-red-500">*</span>
               </label>
-              <select value={form.areaOfPractice} onChange={(e) => update('areaOfPractice', e.target.value)}
-                className={inputClass('areaOfPractice')}>
-                <option value="">Select area of practice...</option>
-                {aoPEOptions.map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
-              {errors.areaOfPractice && <p className="mt-1 text-sm text-red-600">{errors.areaOfPractice}</p>}
+              {aoPEPrograms.length === 0 ? (
+                <div className="border border-dashed border-amber-300 bg-amber-50 rounded-md p-3 text-sm text-amber-800">
+                  No AoPE compliance programs have been configured yet.{' '}
+                  <button
+                    type="button"
+                    onClick={() => navigate('/admin/registrar/aope/new')}
+                    className="font-medium underline hover:text-amber-900"
+                  >
+                    Create one
+                  </button>{' '}
+                  before starting a registrar program.
+                </div>
+              ) : form.memberNumber && availableAoPEPrograms.length === 0 ? (
+                <div className="border border-dashed border-amber-300 bg-amber-50 rounded-md p-3 text-sm text-amber-800">
+                  This member already has a registrar program in every configured AoPE. Pick a different member, or add a new AoPE compliance program.
+                </div>
+              ) : (
+                <select
+                  value={form.aopeComplianceId}
+                  onChange={(e) => {
+                    const templateId = e.target.value;
+                    const template = aoPEPrograms.find((t) => t.id === templateId);
+                    setForm((prev) => ({
+                      ...prev,
+                      aopeComplianceId: templateId,
+                      areaOfPractice: template?.areaOfPractice || '',
+                    }));
+                    setErrors((prev) => ({ ...prev, aopeComplianceId: undefined }));
+                  }}
+                  className={inputClass('aopeComplianceId') + ' bg-white'}
+                  disabled={!form.memberNumber}
+                >
+                  <option value="">
+                    {form.memberNumber ? 'Select area of practice...' : 'Select a member first...'}
+                  </option>
+                  {availableAoPEPrograms.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.areaOfPractice}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {errors.aopeComplianceId && (
+                <p className="mt-1 text-sm text-red-600">{errors.aopeComplianceId}</p>
+              )}
+              <p className="mt-1.5 text-xs text-gray-500">
+                Only AoPEs the member doesn't yet have a registrar program for are shown (HLBR US-1402).
+              </p>
             </div>
 
             <div>
@@ -659,13 +794,13 @@ export default function ProgramForm({ programs, setPrograms }) {
                   <input type="radio" name="holdsAoPE" checked={form.holdsAoPE === true}
                     onChange={() => update('holdsAoPE', true)}
                     className="w-4 h-4 text-aps-blue border-gray-300 focus:ring-aps-blue" />
-                  <span className="text-sm text-gray-700">Yes — working towards a second AoPE</span>
+                  <span className="text-sm text-gray-700">Yes (This means you are working towards a second AoPE)</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="radio" name="holdsAoPE" checked={form.holdsAoPE === false}
                     onChange={() => update('holdsAoPE', false)}
                     className="w-4 h-4 text-aps-blue border-gray-300 focus:ring-aps-blue" />
-                  <span className="text-sm text-gray-700">No — working towards first AoPE</span>
+                  <span className="text-sm text-gray-700">No (This means you are working towards your first AoPE)</span>
                 </label>
               </div>
               {errors.holdsAoPE && <p className="mt-1 text-sm text-red-600">{errors.holdsAoPE}</p>}
@@ -680,13 +815,13 @@ export default function ProgramForm({ programs, setPrograms }) {
                   <input type="radio" name="dualQual" checked={form.dualQualification === true}
                     onChange={() => update('dualQualification', true)}
                     className="w-4 h-4 text-aps-blue border-gray-300 focus:ring-aps-blue" />
-                  <span className="text-sm text-gray-700">Yes — two registrar programs needed</span>
+                  <span className="text-sm text-gray-700">Yes (This means you need to undertake two registrar programs for each area of practice to obtain an AoPE in each area)</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="radio" name="dualQual" checked={form.dualQualification === false}
                     onChange={() => update('dualQualification', false)}
                     className="w-4 h-4 text-aps-blue border-gray-300 focus:ring-aps-blue" />
-                  <span className="text-sm text-gray-700">No — one area of practice</span>
+                  <span className="text-sm text-gray-700">No (This means your qualifying degree is in one area of practice such as clinical neuropsychology, counselling, organisational etc.)</span>
                 </label>
               </div>
               {errors.dualQualification && <p className="mt-1 text-sm text-red-600">{errors.dualQualification}</p>}
@@ -792,7 +927,7 @@ export default function ProgramForm({ programs, setPrograms }) {
         {/* Save / Cancel */}
         <div className="flex justify-end gap-3">
           <button type="button"
-            onClick={() => navigate(isEdit ? `/admin/registrar/programs/${id}` : '/admin/registrar/programs')}
+            onClick={() => navigate(isEdit ? detailPath(id) : listPath)}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
             Cancel
           </button>
@@ -864,12 +999,14 @@ export default function ProgramForm({ programs, setPrograms }) {
 
       {/* Form Modals */}
       <SupervisorModal
+        key={`sup-${supervisorModal.data?.id || 'new'}-${supervisorModal.open}`}
         open={supervisorModal.open}
         supervisor={supervisorModal.data}
         onSave={handleSaveSupervisor}
         onCancel={() => setSupervisorModal({ open: false, data: null })}
       />
       <PlaceModal
+        key={`place-${placeModal.data?.id || 'new'}-${placeModal.open}`}
         open={placeModal.open}
         place={placeModal.data}
         onSave={handleSavePlace}

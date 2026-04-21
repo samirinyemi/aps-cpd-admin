@@ -31,7 +31,7 @@ Covers Member Services and PD Team. For this prototype, treat them as one role. 
 
 **IT Administrator side nav:**
 - CPD Configuration → CPD Cycles, Schedule Manager
-- Registrar Programs
+- Registrar Configuration → AoPE Compliance, Registrar Programs, Supervisors, Practice Locations, Log CPD Hours
 - Member CPD Profiles
 - Member Registrar Profiles
 - Reports
@@ -55,6 +55,13 @@ Covers Member Services and PD Team. For this prototype, treat them as one role. 
 /admin/registrar/programs            Registrar Program List
 /admin/registrar/programs/new        Create Registrar Program
 /admin/registrar/programs/:id/edit   Edit Registrar Program
+/admin/registrar/supervisors            Supervisors — list
+/admin/registrar/supervisors/new        Add Supervisor
+/admin/registrar/supervisors/:id        View/Edit Supervisor + assign to programs + log sessions
+/admin/registrar/practice-locations         Practice Locations — list
+/admin/registrar/practice-locations/new     Add Practice Location
+/admin/registrar/practice-locations/:id     View/Edit Practice Location + assign to programs + log hours
+/admin/registrar/log-cpd                Log CPD Hours
 
 /internal/cpd/profiles               Member CPD Profiles List
 /internal/cpd/profiles/:id           Member CPD Profile Detail
@@ -93,8 +100,8 @@ Build these first — everything else uses them.
 
 **CPD Cycle List** `/admin/cpd/cycles`  
 Table columns: Name · Start Date · End Date · Min Required Hours · Min Peer Hours · Status · Actions  
-Actions per row: Edit (Pending/Open only) · Open Cycle · Close Cycle  
-Closed rows: no actions, fully read-only  
+Actions per row: Edit · Open Cycle (Pending) · Close Cycle (Open) · Reopen Cycle (Closed)
+Closed rows: Edit + Reopen Cycle available — Closed is no longer terminal
 Top-right: "Create new cycle" button  
 Empty state when no cycles exist
 
@@ -118,12 +125,26 @@ Status badges: Success (green) · Partial (amber) · Failure (red)
 Table columns: Name · AoPE · Total Required Hours · Supervision Hours · Practice Hours · CPD Hours · Edit action  
 Top-right: "Create new program" button
 
-**Registrar Program Create/Edit** `/admin/registrar/programs/new` and `/:id/edit`  
-Three grouped sections:  
-Section 1 — Program Details: Name (text) · AoPE (dropdown, static list)  
-Section 2 — Supervision Requirements: Total Required Hours · Required Supervision Hours · Min Primary Hours · Max Secondary Hours · Max Secondary Non-AoPE · Max Group Hours · Direct Client Contact Hours  
-Section 3 — Practice Requirements: Required Practice Hours · Required CPD Hours  
+**Registrar Program Create/Edit** `/admin/registrar/programs/new` and `/:id/edit`
+Three grouped sections:
+Section 1 — Program Details: Name (text) · AoPE (dropdown, static list)
+Section 2 — Supervision Requirements: Total Required Hours · Required Supervision Hours · Min Primary Hours · Max Secondary Hours · Max Secondary Non-AoPE · Max Group Hours · Direct Client Contact Hours
+Section 3 — Practice Requirements: Required Practice Hours · Required CPD Hours
 All fields mandatory. Save disabled until complete. On save: return to list.
+
+**Supervisors** `/admin/registrar/supervisors`
+Flow: Supervisors → Listing → View/Edit → Assign to Existing Program → Log Session.
+A global catalogue of supervisors that exists independently of programs. A supervisor can be assigned to zero or more Open registrar programs, with a per-assignment Supervision Type (Primary or Secondary). Logging supervision sessions is done from the supervisor's own page (or per-row from the program detail page) — there is no separate Log Supervision screen.
+List: filter bar (search · AoPE · assigned/unassigned) · table columns Name · AHPRA · AoPE · Assigned Programs (chips) · Actions. Top-right: "Add supervisor" button.
+View/Edit `/admin/registrar/supervisors/:id`: editable fields (Title · First name · Last name · AHPRA · Supervisor AoPE · Email · Phone). Section "Assigned Programs" listing current attachments with an Unassign action per row. "Assign to Program" button opens a modal (Program dropdown restricted to Open programs + Supervision Type toggle). "Log session" button opens a modal (Program dropdown restricted to this supervisor's assigned Open programs · Date · Hours/Minutes · Individual/Group). Section "Recent Sessions" lists every supervision activity logged by this supervisor across all programs, with a Remove action per row. Editing core fields propagates to every program's nested supervisor copy.
+Add `/admin/registrar/supervisors/new`: same form without the Assigned Programs / Recent Sessions sections — after save, redirects to View/Edit so the user can start assigning.
+
+**Practice Locations** `/admin/registrar/practice-locations`
+Flow: Practice Locations → Listing → View/Edit → Assign to Existing Program → Log Hours.
+A global catalogue of practice locations (employer + address) that exists independently of programs. A location can be assigned to zero or more Open registrar programs. Logging practice hours is done from the location's own page (or per-row from the program detail page) — there is no separate Log Practice Hours screen.
+List: filter bar (search · state · assigned/unassigned) · table columns Employer · Position · Location (suburb, state) · Assigned Programs · Actions. Top-right: "Add location" button.
+View/Edit `/admin/registrar/practice-locations/:id`: editable fields (Employer · Position · Phone · Email · Address line 1 · Address line 2 · Suburb · Postcode · State). Section "Assigned Programs" listing current attachments with an Unassign action per row. "Assign to Program" button opens a modal (Program dropdown restricted to Open programs). "Log hours" button opens a modal (Program dropdown restricted to this location's assigned Open programs · Date · Total Duration hours/minutes · Direct Client Contact hours/minutes). Section "Recent Hours" lists every practice activity logged at this location across all programs, with a Remove action per row. Editing the location propagates to every program's nested place of practice copy.
+Add `/admin/registrar/practice-locations/new`: same form without the Assigned Programs / Recent Hours sections — after save, redirects to View/Edit.
 
 ---
 
@@ -177,11 +198,16 @@ Table + Export CSV · clickable rows
 
 - CPD Cycle status is always system-managed — read-only, labelled "System managed", never editable by user
 - Date overlap on CPD Cycle form → inline error under date fields, save blocked
-- Closed cycles: no Edit/Open/Close actions shown on the row
-- Open Cycle and Close Cycle always require a ConfirmDialog before running
+- Closed cycles support Edit and Reopen Cycle actions; Reopen returns the cycle to Open status
+- Open Cycle, Close Cycle, and Reopen Cycle always require a ConfirmDialog before running
+- A cycle can hold multiple queued open/close schedule entries (regardless of current status). Each schedule entry has an action (Open/Close), date/time, and status (Pending/Executed/Cancelled). Schedules are managed from the cycle detail page.
 - Journal Entry Notes are hidden on all Internal User screens (both CPD and Registrar)
 - Registrar Profile Detail is fully read-only when Program status ≠ Open
 - Registrar Activities conditional columns — see Section D above
+- Supervisors and Practice Locations are top-level catalogue entities; each can be assigned to zero or more Open programs. Assigning from the catalogue page pushes a copy into the target program's nested `supervisors` / `placesOfPractice` array. Editing a catalogue entry propagates core-field updates to every program that references it.
+- Logging supervision sessions and practice hours is **merged into the catalogue pages**: each Supervisor / Practice Location detail page has Log session / Log hours buttons that open a modal scoped to that entity. The Registrar Program detail page also exposes per-row Log session / Log hours buttons inside its Supervisors and Places of Practice sections — when launched from there, the modal locks the program selection to the current program. There are no standalone `/log-supervision` or `/log-practice` routes.
+- Unassigning a supervisor or location from a program removes it from the program's nested array but does NOT delete already-logged supervision or practice activities.
+- Assign to Program dropdowns only list programs whose status is Open (Closed programs are not valid assignment targets). The Log session / Log hours modals further restrict the program list to programs already assigned to that supervisor / location.
 
 ---
 

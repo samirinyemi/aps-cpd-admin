@@ -4,11 +4,11 @@ import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import DataTable from '../../components/DataTable';
 
-function Field({ label, value }) {
+function Field({ label, value, children }) {
   return (
     <div>
       <dt className="text-xs font-medium text-gray-500 mb-0.5">{label}</dt>
-      <dd className="text-sm text-gray-900">{value}</dd>
+      <dd className="text-sm text-gray-900">{children ?? value}</dd>
     </div>
   );
 }

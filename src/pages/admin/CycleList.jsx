@@ -45,7 +45,6 @@ function StopIcon() {
 }
 
 function ActionButtons({ cycle, onNavigate, onAction }) {
-  if (cycle.status === 'Closed') return null;
   return (
     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
       <button
@@ -71,6 +70,15 @@ function ActionButtons({ cycle, onNavigate, onAction }) {
           title="Close cycle"
         >
           <StopIcon />
+        </button>
+      )}
+      {cycle.status === 'Closed' && (
+        <button
+          onClick={() => onAction('Reopen', cycle)}
+          className="p-2 rounded-md text-status-open bg-status-open-bg hover:opacity-80 transition-colors"
+          title="Reopen cycle"
+        >
+          <PlayIcon />
         </button>
       )}
     </div>
@@ -148,10 +156,24 @@ export default function CycleList({ cycles, setCycles }) {
 
   function confirmAction() {
     const { action, cycle } = dialog;
+    const newStatus = action === 'Close' ? 'Closed' : 'Open';
+    const historyAction =
+      action === 'Open' ? 'Opened' : action === 'Close' ? 'Closed' : 'Reopened';
     setCycles((prev) =>
       prev.map((c) =>
         c.id === cycle.id
-          ? { ...c, status: action === 'Open' ? 'Open' : 'Closed' }
+          ? {
+              ...c,
+              status: newStatus,
+              statusHistory: [
+                ...(c.statusHistory || []),
+                {
+                  action: historyAction,
+                  date: new Date().toISOString(),
+                  triggeredBy: 'Admin (Manual)',
+                },
+              ],
+            }
           : c
       )
     );

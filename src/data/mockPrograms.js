@@ -12,14 +12,26 @@ export const aoPEOptions = [
 
 export const qualificationOptions = [
   'Masters degree (5th and 6th year accredited degree)',
-  'DPsych/PysD degree (5th to 7th year accredited degree)',
-  'Masters degree (with doctoral thesis e.g. Masters/PhD)',
-  'Bridging Qualification/Standalone program (6th year accredited degree)',
+  'DPsych/PysD degree (5th to 7th year accredited degree e.g. DPsych or PysD)',
+  'Masters degree (5th and 6th year accredited degree with doctoral thesis e.g. Masters/PhD)',
+  'Bridging Qualification/Standalone program (6th year accredited degree which includes bridging to a second endorsement)',
 ];
 
 export const stateOptions = ['ACT', 'NSW', 'NT', 'QLD', 'SA', 'TAS', 'VIC', 'WA'];
 
 export const titleOptions = ['Dr', 'Mr', 'Mrs', 'Ms', 'Miss', 'Prof', 'Other'];
+
+// Candidate members who can be enrolled into a registrar program.
+// In a real system this would come from the member directory; here it's a
+// static list the admin selects from when creating a new program.
+export const candidateMembers = [
+  { memberNumber: 'PSY-2025-014', title: 'Ms', firstName: 'Amelia', lastName: 'Brooks', memberGrade: 'Registrar' },
+  { memberNumber: 'PSY-2025-022', title: 'Mr', firstName: 'Noah', lastName: 'Patel', memberGrade: 'Registrar' },
+  { memberNumber: 'PSY-2025-031', title: 'Dr', firstName: 'Priya', lastName: 'Sharma', memberGrade: 'Registrar' },
+  { memberNumber: 'PSY-2025-045', title: 'Ms', firstName: 'Hannah', lastName: 'O\u2019Connor', memberGrade: 'Registrar' },
+  { memberNumber: 'PSY-2025-058', title: 'Mr', firstName: 'Lachlan', lastName: 'Reid', memberGrade: 'Registrar' },
+  { memberNumber: 'PSY-2025-063', title: 'Ms', firstName: 'Sophie', lastName: 'Nguyen', memberGrade: 'Registrar' },
+];
 
 export const initialPrograms = [
   {
@@ -27,8 +39,9 @@ export const initialPrograms = [
     member: { title: 'Dr', firstName: 'Sarah', lastName: 'Chen' },
     memberNumber: 'PSY-2024-001',
     memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-1',
     areaOfPractice: 'Clinical Psychology',
-    qualification: 'DPsych/PysD degree (5th to 7th year accredited degree)',
+    qualification: 'DPsych/PysD degree (5th to 7th year accredited degree e.g. DPsych or PysD)',
     commencementDate: '2024-07-01',
     holdsAoPE: false,
     dualQualification: false,
@@ -80,6 +93,7 @@ export const initialPrograms = [
     member: { title: 'Mr', firstName: 'David', lastName: 'Thompson' },
     memberNumber: 'PSY-2024-015',
     memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-3',
     areaOfPractice: 'Organisational Psychology',
     qualification: 'Masters degree (5th and 6th year accredited degree)',
     commencementDate: '2024-09-01',
@@ -122,8 +136,9 @@ export const initialPrograms = [
     member: { title: 'Ms', firstName: 'Emily', lastName: 'Rodriguez' },
     memberNumber: 'PSY-2023-042',
     memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-4',
     areaOfPractice: 'Forensic Psychology',
-    qualification: 'DPsych/PysD degree (5th to 7th year accredited degree)',
+    qualification: 'DPsych/PysD degree (5th to 7th year accredited degree e.g. DPsych or PysD)',
     commencementDate: '2023-07-01',
     holdsAoPE: true,
     dualQualification: true,
@@ -186,8 +201,9 @@ export const initialPrograms = [
     member: { title: 'Dr', firstName: 'Rachel', lastName: 'Kim' },
     memberNumber: 'PSY-2022-088',
     memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-2',
     areaOfPractice: 'Clinical Neuropsychology',
-    qualification: 'Masters degree (with doctoral thesis e.g. Masters/PhD)',
+    qualification: 'Masters degree (5th and 6th year accredited degree with doctoral thesis e.g. Masters/PhD)',
     commencementDate: '2022-07-01',
     holdsAoPE: false,
     dualQualification: false,

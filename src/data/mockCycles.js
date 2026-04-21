@@ -7,8 +7,10 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 10,
     status: 'Closed',
-    scheduledOpenDate: null,
-    scheduledCloseDate: null,
+    schedules: [
+      { id: 'sch-1-1', action: 'Open',  dateTime: '2024-07-01T00:00', status: 'Executed' },
+      { id: 'sch-1-2', action: 'Close', dateTime: '2025-06-30T23:59', status: 'Executed' },
+    ],
     statusHistory: [
       { action: 'Opened', date: '2024-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
       { action: 'Closed', date: '2025-06-30T23:59:00', triggeredBy: 'System (Scheduled)' },
@@ -22,8 +24,10 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 10,
     status: 'Open',
-    scheduledOpenDate: null,
-    scheduledCloseDate: '2026-06-30T23:59',
+    schedules: [
+      { id: 'sch-2-1', action: 'Open',  dateTime: '2025-07-01T00:00', status: 'Executed' },
+      { id: 'sch-2-2', action: 'Close', dateTime: '2026-06-30T23:59', status: 'Pending' },
+    ],
     statusHistory: [
       { action: 'Opened', date: '2025-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
     ],
@@ -36,8 +40,10 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 12,
     status: 'Pending',
-    scheduledOpenDate: '2026-07-01T00:00',
-    scheduledCloseDate: null,
+    schedules: [
+      { id: 'sch-3-1', action: 'Open',  dateTime: '2026-07-01T00:00', status: 'Pending' },
+      { id: 'sch-3-2', action: 'Close', dateTime: '2027-06-30T23:59', status: 'Pending' },
+    ],
     statusHistory: [],
   },
   {
@@ -48,8 +54,7 @@ export const initialCycles = [
     minRequiredHours: 35,
     minPeerHours: 12,
     status: 'Pending',
-    scheduledOpenDate: null,
-    scheduledCloseDate: null,
+    schedules: [],
     statusHistory: [],
   },
 ];
