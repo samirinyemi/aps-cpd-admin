@@ -131,6 +131,12 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles }) {
   const [layout, setLayout] = useState('list');
   const [range, setRange] = useState('month');
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
+
+  // Reset pagination whenever filters / cycle / layout change so users aren't
+  // stranded on a page that has no results.
+  useEffect(() => { setPage(1); }, [kindFilter, aoPEFilter, selectedCycle?.id]);
 
   // Stats scope: all of the member's activities across all cycles, constrained
   // by the selected time-range (uses completedDate).
@@ -275,42 +281,114 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles }) {
         </div>
       </section>
 
-      {/* Activity cards */}
-      {activities.length === 0 ? (
-        <section className="bg-white border border-dashed border-gray-200 rounded-lg p-10 text-center">
-          <p className="text-sm text-gray-500">No activities match the current filters.</p>
-        </section>
-      ) : layout === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[...activities]
-            .sort((a, b) => (b.completedDate || '').localeCompare(a.completedDate || ''))
-            .map((a) => (
-              <ActivityCard
-                key={a.id}
-                activity={a}
-                layout="grid"
-                onOpen={() => navigate(`/member/cpd/activities/${a.id}`)}
-                onEdit={() => navigate(`/member/cpd/activities/${a.id}?edit=1`)}
-                onDelete={() => setConfirmDelete(a)}
-              />
-            ))}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {[...activities]
-            .sort((a, b) => (b.completedDate || '').localeCompare(a.completedDate || ''))
-            .map((a) => (
-              <ActivityCard
-                key={a.id}
-                activity={a}
-                layout="list"
-                onOpen={() => navigate(`/member/cpd/activities/${a.id}`)}
-                onEdit={() => navigate(`/member/cpd/activities/${a.id}?edit=1`)}
-                onDelete={() => setConfirmDelete(a)}
-              />
-            ))}
-        </div>
-      )}
+      {/* Activity cards — paginated (10 per page) */}
+      {(() => {
+        const sorted = [...activities].sort((a, b) => (b.completedDate || '').localeCompare(a.completedDate || ''));
+        const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+        const currentPage = Math.min(page, totalPages);
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const pageItems = sorted.slice(start, start + PAGE_SIZE);
+        const windowStart = start + 1;
+        const windowEnd = start + pageItems.length;
+
+        if (sorted.length === 0) {
+          return (
+            <section className="bg-white border border-dashed border-gray-200 rounded-lg p-10 text-center">
+              <p className="text-sm text-gray-500">No activities match the current filters.</p>
+            </section>
+          );
+        }
+
+        return (
+          <>
+            {layout === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {pageItems.map((a) => (
+                  <ActivityCard
+                    key={a.id}
+                    activity={a}
+                    layout="grid"
+                    onOpen={() => navigate(`/member/cpd/activities/${a.id}`)}
+                    onEdit={() => navigate(`/member/cpd/activities/${a.id}?edit=1`)}
+                    onDelete={() => setConfirmDelete(a)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {pageItems.map((a) => (
+                  <ActivityCard
+                    key={a.id}
+                    activity={a}
+                    layout="list"
+                    onOpen={() => navigate(`/member/cpd/activities/${a.id}`)}
+                    onEdit={() => navigate(`/member/cpd/activities/${a.id}?edit=1`)}
+                    onDelete={() => setConfirmDelete(a)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Pagination footer */}
+            <div className="mt-6 flex items-center justify-between gap-3 flex-wrap text-xs text-gray-600">
+              <span>
+                Showing <span className="font-medium text-gray-900">{windowStart}</span>–<span className="font-medium text-gray-900">{windowEnd}</span>
+                {' '}of <span className="font-medium text-gray-900">{sorted.length}</span>
+              </span>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setPage(1)}
+                    disabled={currentPage === 1}
+                    className="px-2 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    ‹‹
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    ‹ Prev
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setPage(n)}
+                      className={`min-w-[32px] px-2 py-1 rounded border text-sm ${
+                        n === currentPage
+                          ? 'border-aps-blue bg-aps-blue text-white'
+                          : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Next ›
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-2 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    ››
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        );
+      })()}
 
       <ConfirmDialog
         open={Boolean(confirmDelete)}

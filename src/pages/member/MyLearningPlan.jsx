@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -92,6 +92,9 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
   const [formOpen, setFormOpen] = useState(false);
   const [editingNeed, setEditingNeed] = useState(null); // null when adding
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
+  useEffect(() => { setPage(1); }, [layout]);
 
   if (!profile) {
     return (
@@ -172,33 +175,69 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
             Add your first learning need
           </button>
         </section>
-      ) : layout === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {needs.map((n) => (
-            <NeedCard
-              key={n.id}
-              need={n}
-              layout="grid"
-              onOpen={() => navigate(`/member/cpd/learning-plan/${n.id}`)}
-              onEdit={() => { setEditingNeed(n); setFormOpen(true); }}
-              onDelete={() => setConfirmDelete(n)}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {needs.map((n) => (
-            <NeedCard
-              key={n.id}
-              need={n}
-              layout="list"
-              onOpen={() => navigate(`/member/cpd/learning-plan/${n.id}`)}
-              onEdit={() => { setEditingNeed(n); setFormOpen(true); }}
-              onDelete={() => setConfirmDelete(n)}
-            />
-          ))}
-        </div>
-      )}
+      ) : (() => {
+        // Paginated rendering — 10 per page per client spec.
+        const totalPages = Math.max(1, Math.ceil(needs.length / PAGE_SIZE));
+        const currentPage = Math.min(page, totalPages);
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const pageItems = needs.slice(start, start + PAGE_SIZE);
+        const windowStart = start + 1;
+        const windowEnd = start + pageItems.length;
+        return (
+          <>
+            {layout === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {pageItems.map((n) => (
+                  <NeedCard
+                    key={n.id}
+                    need={n}
+                    layout="grid"
+                    onOpen={() => navigate(`/member/cpd/learning-plan/${n.id}`)}
+                    onEdit={() => { setEditingNeed(n); setFormOpen(true); }}
+                    onDelete={() => setConfirmDelete(n)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {pageItems.map((n) => (
+                  <NeedCard
+                    key={n.id}
+                    need={n}
+                    layout="list"
+                    onOpen={() => navigate(`/member/cpd/learning-plan/${n.id}`)}
+                    onEdit={() => { setEditingNeed(n); setFormOpen(true); }}
+                    onDelete={() => setConfirmDelete(n)}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-between gap-3 flex-wrap text-xs text-gray-600">
+              <span>
+                Showing <span className="font-medium text-gray-900">{windowStart}</span>–<span className="font-medium text-gray-900">{windowEnd}</span>
+                {' '}of <span className="font-medium text-gray-900">{needs.length}</span>
+              </span>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button type="button" onClick={() => setPage(1)} disabled={currentPage === 1}
+                    className="px-2 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">‹‹</button>
+                  <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}
+                    className="px-3 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">‹ Prev</button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                    <button key={n} type="button" onClick={() => setPage(n)}
+                      className={`min-w-[32px] px-2 py-1 rounded border text-sm ${n === currentPage ? 'border-aps-blue bg-aps-blue text-white' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>{n}</button>
+                  ))}
+                  <button type="button" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+                    className="px-3 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">Next ›</button>
+                  <button type="button" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}
+                    className="px-2 py-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed">››</button>
+                </div>
+              )}
+            </div>
+          </>
+        );
+      })()}
 
       <LearningNeedFormModal
         open={formOpen}
