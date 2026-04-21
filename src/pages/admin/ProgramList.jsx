@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Pencil, Calendar, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import EmptyState from '../../components/EmptyState';
@@ -14,22 +15,9 @@ function getMemberName(p) {
   return `${p.member.title} ${p.member.firstName} ${p.member.lastName}`;
 }
 
-function CalendarIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="14" height="14" rx="2" />
-      <path d="M3 8h14M7 2v4M13 2v4" />
-    </svg>
-  );
-}
+const CalendarIcon = () => <Calendar size={14} strokeWidth={1.5} />;
 
-function EditIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14.5 3.5a2.12 2.12 0 013 3L7 17l-4 1 1-4L14.5 3.5z" />
-    </svg>
-  );
-}
+const EditIcon = () => <Pencil size={14} strokeWidth={1.5} />;
 
 function ProgramCard({ program, layout, onNavigate }) {
   const isGrid = layout === 'grid';
@@ -134,9 +122,7 @@ export default function ProgramList({ programs }) {
                 layout === 'list' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
               }`}
             >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M3 4h14v2H3V4zm0 5h14v2H3V9zm0 5h14v2H3v-2z" />
-              </svg>
+              <List size={14} strokeWidth={1.5} />
               List
             </button>
             <button
@@ -145,9 +131,7 @@ export default function ProgramList({ programs }) {
                 layout === 'grid' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
               }`}
             >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" />
-              </svg>
+              <LayoutGrid size={14} strokeWidth={1.5} />
               Grid
             </button>
           </div>

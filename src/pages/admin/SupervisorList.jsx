@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Pencil, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import EmptyState from '../../components/EmptyState';
 
@@ -7,13 +8,7 @@ function fullName(s) {
   return `${s.title} ${s.firstName} ${s.lastName}`;
 }
 
-function EditIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14.5 3.5a2.12 2.12 0 013 3L7 17l-4 1 1-4L14.5 3.5z" />
-    </svg>
-  );
-}
+const EditIcon = () => <Pencil size={14} strokeWidth={1.5} />;
 
 function SupervisorCard({ supervisor, layout, onView, onEdit, programLabel }) {
   const assigned = supervisor.assignedPrograms || [];
@@ -171,9 +166,7 @@ export default function SupervisorList({ supervisors, programs }) {
                 layout === 'list' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
               }`}
             >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M3 4h14v2H3V4zm0 5h14v2H3V9zm0 5h14v2H3v-2z" />
-              </svg>
+              <List size={14} strokeWidth={1.5} />
               List
             </button>
             <button
@@ -182,9 +175,7 @@ export default function SupervisorList({ supervisors, programs }) {
                 layout === 'grid' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
               }`}
             >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" />
-              </svg>
+              <LayoutGrid size={14} strokeWidth={1.5} />
               Grid
             </button>
           </div>

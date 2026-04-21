@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Pencil, Trash2, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import LearningNeedFormModal from '../../components/LearningNeedFormModal';
@@ -17,20 +18,8 @@ function StatusChip({ status }) {
   return <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${cls}`}>{status || 'Not Started'}</span>;
 }
 
-function EditIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14.5 3.5a2.12 2.12 0 013 3L7 17l-4 1 1-4L14.5 3.5z" />
-    </svg>
-  );
-}
-function TrashIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 6h12M8 6V4h4v2m1 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V6" />
-    </svg>
-  );
-}
+const EditIcon = () => <Pencil size={14} strokeWidth={1.5} />;
+const TrashIcon = () => <Trash2 size={14} strokeWidth={1.5} />;
 
 function NeedCard({ need, layout, onOpen, onEdit, onDelete }) {
   const stop = (e) => e.stopPropagation();
@@ -145,11 +134,11 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
         <div className="flex items-center gap-3">
           <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
               <button onClick={() => setLayout('list')} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${layout === 'list' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4h14v2H3V4zm0 5h14v2H3V9zm0 5h14v2H3v-2z" /></svg>
+                <List size={14} />
                 List
               </button>
               <button onClick={() => setLayout('grid')} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border-l border-gray-300 ${layout === 'grid' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
-                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" /></svg>
+                <LayoutGrid size={14} />
                 Grid
               </button>
             </div>

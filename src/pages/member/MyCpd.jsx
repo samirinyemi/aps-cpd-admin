@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AlertTriangle } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
@@ -106,10 +107,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
       {/* HLBR US-807: CPD Exemption alert */}
       {hasExemption && (
         <section className="mb-6 border border-amber-200 bg-amber-50 rounded-lg p-4 flex items-start gap-3">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#b45309" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
-            <path d="M10 2L2 17h16L10 2z" />
-            <path d="M10 8v4M10 15h.01" />
-          </svg>
+          <AlertTriangle size={18} strokeWidth={1.8} className="mt-0.5 shrink-0 text-amber-700" />
           <div>
             <p className="text-sm font-medium text-amber-900">CPD Exemption is active for this cycle</p>
             <p className="text-xs text-amber-800 mt-0.5">

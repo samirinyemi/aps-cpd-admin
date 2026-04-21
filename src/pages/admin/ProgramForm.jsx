@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Pencil, Trash2, AlertTriangle } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
@@ -862,15 +863,11 @@ export default function ProgramForm({ programs, setPrograms, aoPEPrograms = [], 
                     </span>
                     <button type="button" onClick={() => setSupervisorModal({ open: true, data: s })}
                       className="p-1.5 rounded text-aps-blue hover:bg-aps-blue-light" title="Edit">
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M14.5 3.5a2.12 2.12 0 013 3L7 17l-4 1 1-4L14.5 3.5z" />
-                      </svg>
+                      <Pencil size={14} strokeWidth={1.5} />
                     </button>
                     <button type="button" onClick={() => handleDeleteSupervisor(s)}
                       className="p-1.5 rounded text-red-500 hover:bg-red-50" title="Remove">
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M4 6h12M8 6V4h4v2m1 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V6" />
-                      </svg>
+                      <Trash2 size={14} strokeWidth={1.5} />
                     </button>
                   </div>
                 </div>
@@ -907,15 +904,11 @@ export default function ProgramForm({ programs, setPrograms, aoPEPrograms = [], 
                   <div className="flex items-center gap-2">
                     <button type="button" onClick={() => setPlaceModal({ open: true, data: p })}
                       className="p-1.5 rounded text-aps-blue hover:bg-aps-blue-light" title="Edit">
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M14.5 3.5a2.12 2.12 0 013 3L7 17l-4 1 1-4L14.5 3.5z" />
-                      </svg>
+                      <Pencil size={14} strokeWidth={1.5} />
                     </button>
                     <button type="button" onClick={() => handleDeletePlace(p)}
                       className="p-1.5 rounded text-red-500 hover:bg-red-50" title="Remove">
-                      <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M4 6h12M8 6V4h4v2m1 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V6" />
-                      </svg>
+                      <Trash2 size={14} strokeWidth={1.5} />
                     </button>
                   </div>
                 </div>
@@ -963,10 +956,7 @@ export default function ProgramForm({ programs, setPrograms, aoPEPrograms = [], 
           <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M10 7v4M10 14h.01" />
-                  <path d="M8.68 3.04L1.73 15.5A1.5 1.5 0 003.05 17.75h13.9a1.5 1.5 0 001.32-2.25L11.32 3.04a1.5 1.5 0 00-2.64 0z" />
-                </svg>
+                <AlertTriangle size={20} strokeWidth={1.5} className="text-amber-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900">Existing Primary Supervisor</h3>
             </div>

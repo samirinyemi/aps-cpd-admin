@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Info, Lock } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
@@ -205,10 +206,7 @@ function ImprovedView({ metrics, program, template }) {
       {/* Focus banner */}
       {biggestGap && biggestGap.pct < 100 && (
         <div className="mb-5 border border-aps-blue/20 bg-aps-blue-light/40 rounded-lg p-3 flex items-start gap-2">
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#185FA5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
-            <circle cx="10" cy="10" r="8" />
-            <path d="M10 6v5M10 14h.01" />
-          </svg>
+          <Info size={18} strokeWidth={1.8} className="mt-0.5 shrink-0 text-aps-blue" />
           <div>
             <p className="text-sm font-medium text-gray-900">Focus: {biggestGap.label}</p>
             <p className="text-xs text-gray-600 mt-0.5">
@@ -513,10 +511,7 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
       {isMemberRole && isReadOnly && (
         <section className="bg-gray-50 border border-gray-200 rounded-lg p-5 mb-6">
           <div className="flex items-start gap-3">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#6b7280" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
-              <rect x="3" y="5" width="14" height="12" rx="2" />
-              <path d="M7 5V3a2 2 0 014 0v2M3 10h14" />
-            </svg>
+            <Lock size={20} strokeWidth={1.75} className="mt-0.5 shrink-0 text-gray-500" />
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">This registrar program is Closed</p>
               <p className="text-xs text-gray-600 mt-0.5">
