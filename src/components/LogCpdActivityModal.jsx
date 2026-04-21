@@ -32,16 +32,47 @@ function toDecimalHours(hrs, mins) {
   return (Number(hrs) || 0) + (Number(mins) || 0) / 60;
 }
 
-export default function LogCpdActivityModal({ open, cycle, allocationOptions = [], defaultAllocation = '', onSave, onCancel }) {
+// When `existingActivity` is passed, the modal acts in edit mode:
+// form state is prefilled and the saved payload retains the same id.
+export default function LogCpdActivityModal({ open, cycle, allocationOptions = [], defaultAllocation = '', existingActivity, onSave, onCancel }) {
   const [form, setForm] = useState({ ...emptyForm });
   const [errors, setErrors] = useState({});
+  const isEdit = Boolean(existingActivity?.id);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    if (existingActivity) {
+      // Map existing activity back to the form shape. Hours carried as decimals in storage.
+      const splitDuration = (decimal) => {
+        const total = Math.round(Number(decimal || 0) * 60);
+        return { hrs: String(Math.floor(total / 60)), mins: String(total % 60) };
+      };
+      const kind = existingActivity.activityKind || existingActivity.activityType || '';
+      const peer = splitDuration(existingActivity.peerHrs);
+      const active = splitDuration(existingActivity.actionHrs);
+      const total = splitDuration(existingActivity.cpdHrs);
+      setForm({
+        activityKind: kind,
+        completedDate: existingActivity.completedDate || '',
+        allocation: existingActivity.allocation || defaultAllocation || '',
+        focus: existingActivity.focus || '',
+        colleagues: existingActivity.colleagues || '',
+        peerHrs: peer.hrs,
+        peerMins: peer.mins,
+        activeHrs: active.hrs,
+        activeMins: active.mins,
+        activityTitle: existingActivity.activityTitle || '',
+        details: existingActivity.details || '',
+        totalHrs: total.hrs,
+        totalMins: total.mins,
+        journalMode: existingActivity.journalMode || 'PD Tool',
+        journalNotes: existingActivity.journalNotes || '',
+      });
+    } else {
       setForm({ ...emptyForm, allocation: defaultAllocation || '' });
-      setErrors({});
     }
-  }, [open, defaultAllocation]);
+    setErrors({});
+  }, [open, defaultAllocation, existingActivity]);
 
   if (!open) return null;
 
@@ -105,8 +136,8 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
     const cpdHrs = peerHrs + actionHrs;
 
     const activity = {
-      id: `a-${Date.now()}`,
-      cycleId: cycle.id,
+      id: isEdit ? existingActivity.id : `a-${Date.now()}`,
+      cycleId: isEdit ? (existingActivity.cycleId || cycle.id) : cycle.id,
       allocation: form.allocation || null,
       activityKind: form.activityKind,
       // activityType retained for backward compatibility with any existing tables
@@ -121,7 +152,7 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
       actionHrs: Math.round(actionHrs * 100) / 100,
       cpdHrs: Math.round(cpdHrs * 100) / 100,
       completedDate: form.completedDate,
-      loggedDate: todayISO(),
+      loggedDate: isEdit ? (existingActivity.loggedDate || todayISO()) : todayISO(),
       journalMode: form.journalMode,
       journalNotes: form.journalNotes.trim(),
     };
@@ -135,9 +166,9 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
       <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Log CPD Activity</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">{isEdit ? 'Edit CPD Activity' : 'Log CPD Activity'}</h3>
         <p className="text-sm text-gray-500 mb-5">
-          Recorded against <span className="font-medium text-gray-700">{cycle?.name || 'the current cycle'}</span>.
+          {isEdit ? 'Update the details of this logged activity.' : <>Recorded against <span className="font-medium text-gray-700">{cycle?.name || 'the current cycle'}</span>.</>}
         </p>
 
         <div className="space-y-4 mb-6">
@@ -334,7 +365,7 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
             onClick={handleSave}
             className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
           >
-            Log activity
+            {isEdit ? 'Save changes' : 'Log activity'}
           </button>
         </div>
       </div>

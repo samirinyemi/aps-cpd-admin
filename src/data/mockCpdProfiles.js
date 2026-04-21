@@ -14,8 +14,29 @@ export const initialCpdProfiles = [
     aoPEs: ['Clinical Psychology'],
     requirementsMet: true,
     learningNeeds: [
-      { id: 'ln1', need: 'Evidence-based trauma interventions', priority: 'High', status: 'In Progress' },
-      { id: 'ln2', need: 'Supervision skills development', priority: 'Medium', status: 'Completed' },
+      {
+        id: 'ln1',
+        title: 'Evidence-based trauma interventions',
+        description: 'Deepen my application of trauma-focused CBT, EMDR, and phase-based approaches with complex PTSD clients.',
+        proposedDate: 'Across Q3 and Q4 — 2-day workshop plus monthly peer consultation.',
+        anticipatedOutcome: 'Confidently formulate and deliver phased trauma treatment for complex presentations.',
+        status: 'In Progress',
+        reviews: [
+          { id: 'rv1', reviewedAt: '2025-09-30', notes: 'Completed EMDR refresher and applied with two clients. Peer group helpful for case conceptualisation.' },
+          { id: 'rv2', reviewedAt: '2025-11-15', notes: 'Reviewed progress with supervisor. Next step: integrate somatic grounding techniques.' },
+        ],
+      },
+      {
+        id: 'ln2',
+        title: 'Supervision skills development',
+        description: 'Build my skills as a secondary supervisor with registrars — including reflective practice frameworks and feedback delivery.',
+        proposedDate: 'Semester 2 — monthly reading + quarterly supervision-of-supervision.',
+        anticipatedOutcome: 'Provide structured, reflective supervision to at least one registrar this cycle.',
+        status: 'Completed',
+        reviews: [
+          { id: 'rv3', reviewedAt: '2025-10-10', notes: 'Completed supervisor training course; registrar assignment started in October.' },
+        ],
+      },
     ],
     activities: [
       // 2021–2022 cycle
@@ -51,8 +72,8 @@ export const initialCpdProfiles = [
     aoPEs: ['Organisational Psychology'],
     requirementsMet: false,
     learningNeeds: [
-      { id: 'ln3', need: 'Leadership coaching frameworks', priority: 'High', status: 'In Progress' },
-      { id: 'ln4', need: 'Psychometric assessment updates', priority: 'Low', status: 'Not Started' },
+      { id: 'ln3', title: 'Leadership coaching frameworks', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
+      { id: 'ln4', title: 'Psychometric assessment updates', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started', reviews: [] },
     ],
     activities: [
       { id: 'a5', cycleId: '2', allocation: 'Organisational Psychology', activityType: 'Workshop', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2025-08-22', loggedDate: '2025-08-23', journalNotes: 'Full-day workshop on 360-degree feedback.' },
@@ -91,9 +112,9 @@ export const initialCpdProfiles = [
     aoPEs: ['Counselling Psychology'],
     requirementsMet: false,
     learningNeeds: [
-      { id: 'ln5', need: 'Cultural competency in counselling', priority: 'High', status: 'In Progress' },
-      { id: 'ln6', need: 'Grief and loss interventions', priority: 'Medium', status: 'Not Started' },
-      { id: 'ln7', need: 'Ethics in digital practice', priority: 'Low', status: 'Completed' },
+      { id: 'ln5', title: 'Cultural competency in counselling', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
+      { id: 'ln6', title: 'Grief and loss interventions', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started', reviews: [] },
+      { id: 'ln7', title: 'Ethics in digital practice', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Completed', reviews: [] },
     ],
     activities: [
       { id: 'a7', cycleId: '2', activityType: 'Peer Supervision', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-07-20', loggedDate: '2025-07-21', journalNotes: 'Group supervision with three peers on complex cases.' },
@@ -116,7 +137,7 @@ export const initialCpdProfiles = [
     aoPEs: ['Health Psychology'],
     requirementsMet: false,
     learningNeeds: [
-      { id: 'ln8', need: 'Chronic pain management approaches', priority: 'High', status: 'In Progress' },
+      { id: 'ln8', title: 'Chronic pain management approaches', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
     ],
     activities: [
       { id: 'a10', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-08-01', loggedDate: '2025-08-02', journalNotes: 'Online course on motivational interviewing in health settings.' },
@@ -138,8 +159,8 @@ export const initialCpdProfiles = [
     aoPEs: ['Forensic Psychology'],
     requirementsMet: true,
     learningNeeds: [
-      { id: 'ln9', need: 'Risk assessment tool updates', priority: 'High', status: 'Completed' },
-      { id: 'ln10', need: 'Expert witness testimony skills', priority: 'Medium', status: 'In Progress' },
+      { id: 'ln9', title: 'Risk assessment tool updates', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Completed', reviews: [] },
+      { id: 'ln10', title: 'Expert witness testimony skills', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
     ],
     activities: [
       { id: 'a12', cycleId: '2', activityType: 'Workshop', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-07-15', loggedDate: '2025-07-16', journalNotes: 'Workshop on HCR-20 V3 risk assessment updates.' },
@@ -164,8 +185,8 @@ export const initialCpdProfiles = [
     aoPEs: ['Educational & Developmental Psychology'],
     requirementsMet: false,
     learningNeeds: [
-      { id: 'ln11', need: 'Autism spectrum assessment in adolescents', priority: 'High', status: 'In Progress' },
-      { id: 'ln12', need: 'School-based intervention programs', priority: 'Medium', status: 'Not Started' },
+      { id: 'ln11', title: 'Autism spectrum assessment in adolescents', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
+      { id: 'ln12', title: 'School-based intervention programs', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started', reviews: [] },
     ],
     activities: [
       { id: 'a17', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-08-10', loggedDate: '2025-08-11', journalNotes: 'ADOS-2 refresher module.' },
@@ -186,7 +207,7 @@ export const initialCpdProfiles = [
     learningPlanMethod: 'Free Text',
     requirementsMet: true,
     learningNeeds: [
-      { id: 'ln13', need: 'Mental health in elite athletes', priority: 'High', status: 'Completed' },
+      { id: 'ln13', title: 'Mental health in elite athletes', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Completed', reviews: [] },
     ],
     activities: [
       { id: 'a19', cycleId: '2', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 8, cpdHrs: 8, completedDate: '2025-07-25', loggedDate: '2025-07-26', journalNotes: 'ASCA conference on sports psychology.' },
@@ -209,7 +230,7 @@ export const initialCpdProfiles = [
     learningPlanMethod: 'Template',
     requirementsMet: true,
     learningNeeds: [
-      { id: 'ln14', need: 'ACT-based interventions', priority: 'High', status: 'Completed' },
+      { id: 'ln14', title: 'ACT-based interventions', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Completed', reviews: [] },
     ],
     activities: [
       { id: 'a23', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2024-10-15', loggedDate: '2024-10-16', journalNotes: 'ACT foundations online course.' },
@@ -230,8 +251,8 @@ export const initialCpdProfiles = [
     learningPlanMethod: 'Free Text',
     requirementsMet: false,
     learningNeeds: [
-      { id: 'ln15', need: 'Community resilience frameworks', priority: 'High', status: 'In Progress' },
-      { id: 'ln16', need: 'Disaster mental health response', priority: 'Medium', status: 'Not Started' },
+      { id: 'ln15', title: 'Community resilience frameworks', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
+      { id: 'ln16', title: 'Disaster mental health response', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started', reviews: [] },
     ],
     activities: [
       { id: 'a25', cycleId: '2', activityType: 'Reading/Research', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-08-20', loggedDate: '2025-08-22', journalNotes: 'Literature review on community psychology interventions.' },

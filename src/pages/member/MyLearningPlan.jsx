@@ -1,28 +1,97 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import LearningNeedFormModal from '../../components/LearningNeedFormModal';
 import { useAuth } from '../../context/AuthContext';
 
 // HLBR §3.4.6 Manage Learning Plan — US-701 to US-706.
+// Card-based list with list/grid toggle, per-row edit + delete, add modal,
+// and click-through to the learning need detail page.
 
-const emptyNeed = {
-  need: '',
-  activities: '',
-  dates: '',
-  outcomes: '',
-};
+function StatusChip({ status }) {
+  const cls =
+    status === 'Completed' ? 'bg-green-50 text-green-700 border-green-200'
+    : status === 'In Progress' ? 'bg-amber-50 text-amber-700 border-amber-200'
+    : 'bg-gray-100 text-gray-600 border-gray-200';
+  return <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${cls}`}>{status || 'Not Started'}</span>;
+}
+
+function EditIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.5 3.5a2.12 2.12 0 013 3L7 17l-4 1 1-4L14.5 3.5z" />
+    </svg>
+  );
+}
+function TrashIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 6h12M8 6V4h4v2m1 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V6" />
+    </svg>
+  );
+}
+
+function NeedCard({ need, layout, onOpen, onEdit, onDelete }) {
+  const stop = (e) => e.stopPropagation();
+  const actions = (
+    <div className="flex items-center gap-1" onClick={stop}>
+      <button type="button" onClick={(e) => { stop(e); onEdit(); }} className="p-1.5 rounded text-aps-blue hover:bg-aps-blue-light" title="Edit"><EditIcon /></button>
+      <button type="button" onClick={(e) => { stop(e); onDelete(); }} className="p-1.5 rounded text-red-500 hover:bg-red-50" title="Delete"><TrashIcon /></button>
+    </div>
+  );
+
+  if (layout === 'grid') {
+    return (
+      <div onClick={onOpen} className="cursor-pointer bg-white border border-gray-200 rounded-lg p-5 hover:border-aps-blue/50 hover:shadow-sm transition">
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900">{need.title || need.need}</p>
+            <p className="text-xs text-gray-500 mt-1">{need.proposedDate || '—'}</p>
+          </div>
+          <StatusChip status={need.status} />
+        </div>
+        {need.description && (
+          <p className="text-xs text-gray-600 line-clamp-2 bg-gray-50 border border-gray-100 rounded p-2 mb-3">{need.description}</p>
+        )}
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-500">{(need.reviews || []).length} review{(need.reviews || []).length === 1 ? '' : 's'}</span>
+          {actions}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div onClick={onOpen} className="cursor-pointer bg-white border border-gray-200 rounded-lg p-4 hover:border-aps-blue/50 hover:shadow-sm transition flex items-start gap-4">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <p className="text-sm font-semibold text-gray-900">{need.title || need.need}</p>
+          <StatusChip status={need.status} />
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
+          <span><span className="text-gray-500">Proposed:</span> <span className="font-medium text-gray-900">{need.proposedDate || '—'}</span></span>
+          <span><span className="text-gray-500">Reviews:</span> <span className="font-medium text-gray-900">{(need.reviews || []).length}</span></span>
+        </div>
+        {need.description && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{need.description}</p>}
+      </div>
+      {actions}
+    </div>
+  );
+}
 
 export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
   const { member } = useAuth();
+  const navigate = useNavigate();
   const profile = useMemo(
     () => (cpdProfiles || []).find((p) => p.memberNumber === member?.memberNumber) || null,
     [cpdProfiles, member]
   );
 
-  const [method, setMethod] = useState(profile?.learningPlanMethod || 'PD Tool');
-  const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState({ ...emptyNeed });
-  const [errors, setErrors] = useState({});
+  const [layout, setLayout] = useState('list');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingNeed, setEditingNeed] = useState(null); // null when adding
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   if (!profile) {
     return (
@@ -41,222 +110,111 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
     );
   }
 
-  function changeMethod(next) {
-    setMethod(next);
-    persistProfile({ learningPlanMethod: next });
-  }
-
-  function validate() {
-    const errs = {};
-    if (!form.need.trim()) errs.need = 'Required';
-    if (!form.activities.trim()) errs.activities = 'Required';
-    if (!form.dates.trim()) errs.dates = 'Required';
-    if (!form.outcomes.trim()) errs.outcomes = 'Required';
-    return errs;
-  }
-
-  function startAdd() {
-    setEditingId('__new');
-    setForm({ ...emptyNeed });
-    setErrors({});
-  }
-
-  function startEdit(need) {
-    setEditingId(need.id);
-    setForm({
-      need: need.need || '',
-      activities: need.activities || '',
-      dates: need.dates || '',
-      outcomes: need.outcomes || '',
-    });
-    setErrors({});
-  }
-
-  function saveNeed() {
-    const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    const needs = profile.learningNeeds || [];
-    if (editingId === '__new') {
-      const newNeed = { id: `ln-${Date.now()}`, ...form, status: 'Not Started' };
-      persistProfile({ learningNeeds: [...needs, newNeed] });
-    } else {
-      persistProfile({
-        learningNeeds: needs.map((n) => (n.id === editingId ? { ...n, ...form } : n)),
-      });
-    }
-    setEditingId(null);
-  }
-
-  function deleteNeed(id) {
+  function handleSaveNeed(payload) {
+    const existing = profile.learningNeeds || [];
+    const isEdit = existing.some((n) => n.id === payload.id);
     persistProfile({
-      learningNeeds: (profile.learningNeeds || []).filter((n) => n.id !== id),
+      learningNeeds: isEdit
+        ? existing.map((n) => (n.id === payload.id ? payload : n))
+        : [...existing, payload],
     });
-    if (editingId === id) setEditingId(null);
+    setFormOpen(false);
+    setEditingNeed(null);
   }
 
-  function markReviewed() {
-    persistProfile({ learningPlanReviewedAt: new Date().toISOString() });
+  function handleDelete() {
+    if (!confirmDelete) return;
+    persistProfile({
+      learningNeeds: (profile.learningNeeds || []).filter((n) => n.id !== confirmDelete.id),
+    });
+    setConfirmDelete(null);
   }
+
+  const needs = profile.learningNeeds || [];
 
   return (
     <PageShell>
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Manage Learning Plan</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Record your planned learning activities and goals.</p>
+      <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">Manage Learning Plan</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Record your planned learning activities and goals.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+              <button onClick={() => setLayout('list')} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${layout === 'list' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M3 4h14v2H3V4zm0 5h14v2H3V9zm0 5h14v2H3v-2z" /></svg>
+                List
+              </button>
+              <button onClick={() => setLayout('grid')} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border-l border-gray-300 ${layout === 'grid' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
+                <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h6v6H3V3zm8 0h6v6h-6V3zM3 11h6v6H3v-6zm8 0h6v6h-6v-6z" /></svg>
+                Grid
+              </button>
+            </div>
+          <button
+            type="button"
+            onClick={() => { setEditingNeed(null); setFormOpen(true); }}
+            className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+          >
+            Add learning need
+          </button>
+        </div>
       </div>
 
-      <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-3">Documentation method</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[
-            { value: 'PD Tool', label: 'I will use the online system' },
-            { value: 'Offline', label: "I've documented my plan elsewhere" },
-          ].map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => changeMethod(opt.value)}
-              className={`px-3 py-2.5 text-sm font-medium rounded-md border transition-colors text-left ${
-                method === opt.value
-                  ? 'border-aps-blue bg-aps-blue-light text-aps-blue'
-                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {opt.label}
-            </button>
+      {needs.length === 0 ? (
+        <section className="bg-white border border-dashed border-gray-200 rounded-lg p-10 text-center">
+          <p className="text-sm text-gray-500 mb-2">No learning needs recorded yet.</p>
+          <p className="text-xs text-gray-400 mb-4">Capture the outcomes you want to achieve this cycle.</p>
+          <button
+            type="button"
+            onClick={() => { setEditingNeed(null); setFormOpen(true); }}
+            className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+          >
+            Add your first learning need
+          </button>
+        </section>
+      ) : layout === 'grid' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {needs.map((n) => (
+            <NeedCard
+              key={n.id}
+              need={n}
+              layout="grid"
+              onOpen={() => navigate(`/member/cpd/learning-plan/${n.id}`)}
+              onEdit={() => { setEditingNeed(n); setFormOpen(true); }}
+              onDelete={() => setConfirmDelete(n)}
+            />
           ))}
         </div>
-      </section>
-
-      {method === 'Offline' ? (
-        <section className="bg-white border border-dashed border-gray-200 rounded-lg p-8 text-center">
-          <p className="text-sm text-gray-600">
-            Your learning plan is documented offline. Switch to <span className="font-medium">PD Tool</span> above to capture learning needs here.
-          </p>
-        </section>
       ) : (
-        <>
-          <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-900">
-                Learning Needs
-                <span className="text-sm font-normal text-gray-400 ml-2">({(profile.learningNeeds || []).length})</span>
-              </h2>
-              {editingId === null && (
-                <button
-                  type="button"
-                  onClick={startAdd}
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-aps-blue rounded hover:bg-aps-blue-dark"
-                >
-                  Add learning need
-                </button>
-              )}
-            </div>
-
-            {editingId !== null && (
-              <div className="border border-aps-blue/30 bg-aps-blue-light/30 rounded-lg p-4 mb-4">
-                <p className="text-sm font-medium text-gray-900 mb-3">
-                  {editingId === '__new' ? 'New learning need' : 'Edit learning need'}
-                </p>
-                <div className="space-y-3">
-                  {[
-                    ['need', 'Learning need identified', 250],
-                    ['activities', 'Activities proposed to meet this need', 250],
-                    ['dates', 'Proposed dates for activities', 60],
-                    ['outcomes', 'Anticipated outcomes', 250],
-                  ].map(([field, label, max]) => (
-                    <div key={field}>
-                      <label className="block text-xs text-gray-600 mb-1">{label}</label>
-                      <input
-                        type="text"
-                        value={form[field]}
-                        maxLength={max}
-                        onChange={(e) => setForm((prev) => ({ ...prev, [field]: e.target.value }))}
-                        className={`w-full h-10 px-3 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue ${errors[field] ? 'border-red-400' : 'border-gray-300'}`}
-                      />
-                      {errors[field] && <p className="mt-1 text-xs text-red-600">{errors[field]}</p>}
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingId(null)}
-                    className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={saveNeed}
-                    className="px-3 py-1.5 text-xs font-medium text-white bg-aps-blue rounded hover:bg-aps-blue-dark"
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {(profile.learningNeeds || []).length === 0 ? (
-              <div className="py-8 text-center border border-dashed border-gray-200 rounded-lg">
-                <p className="text-sm text-gray-500">No learning needs recorded yet.</p>
-              </div>
-            ) : (
-              <ul className="space-y-2">
-                {(profile.learningNeeds || []).map((ln) => (
-                  <li key={ln.id} className="border border-gray-100 rounded-md p-3 bg-gray-50/40">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm text-gray-900 font-medium">{ln.need}</p>
-                        {ln.activities && <p className="text-xs text-gray-600 mt-1">Activities: {ln.activities}</p>}
-                        {ln.dates && <p className="text-xs text-gray-600 mt-1">Dates: {ln.dates}</p>}
-                        {ln.outcomes && <p className="text-xs text-gray-600 mt-1">Outcomes: {ln.outcomes}</p>}
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => startEdit(ln)}
-                          className="text-xs px-2 py-1 text-aps-blue hover:bg-aps-blue-light rounded"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteNeed(ln.id)}
-                          className="text-xs px-2 py-1 text-red-600 hover:bg-red-50 rounded"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="bg-white border border-gray-200 rounded-lg p-6">
-            <h2 className="text-base font-semibold text-gray-900 mb-3">Review of learning plan</h2>
-            {profile.learningPlanReviewedAt ? (
-              <p className="text-sm text-gray-700">
-                Last reviewed on{' '}
-                <span className="font-medium">
-                  {new Date(profile.learningPlanReviewedAt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </span>.
-              </p>
-            ) : (
-              <p className="text-sm text-gray-600 mb-3">You haven't reviewed your learning plan this cycle yet.</p>
-            )}
-            <button
-              type="button"
-              onClick={markReviewed}
-              className="mt-3 px-4 py-2 text-sm font-medium text-aps-blue border border-aps-blue rounded-md hover:bg-aps-blue-light"
-            >
-              Mark plan as reviewed today
-            </button>
-          </section>
-        </>
+        <div className="flex flex-col gap-3">
+          {needs.map((n) => (
+            <NeedCard
+              key={n.id}
+              need={n}
+              layout="list"
+              onOpen={() => navigate(`/member/cpd/learning-plan/${n.id}`)}
+              onEdit={() => { setEditingNeed(n); setFormOpen(true); }}
+              onDelete={() => setConfirmDelete(n)}
+            />
+          ))}
+        </div>
       )}
+
+      <LearningNeedFormModal
+        open={formOpen}
+        existingNeed={editingNeed}
+        onSave={handleSaveNeed}
+        onCancel={() => { setFormOpen(false); setEditingNeed(null); }}
+      />
+
+      <ConfirmDialog
+        open={Boolean(confirmDelete)}
+        title="Delete learning need"
+        message={confirmDelete ? `Delete "${confirmDelete.title || confirmDelete.need}"? This removes its reviews too and cannot be undone.` : ''}
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </PageShell>
   );
 }
