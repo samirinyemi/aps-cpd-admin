@@ -2,7 +2,11 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function GlobalNav() {
-  const { role } = useAuth();
+  const { role, member } = useAuth();
+
+  const pillLabel = role === 'Member' && member
+    ? `Member · ${member.firstName} ${member.lastName}`
+    : role;
 
   return (
     <header className="bg-aps-blue text-white">
@@ -14,7 +18,7 @@ export default function GlobalNav() {
         {role && (
           <div className="flex items-center gap-4">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20">
-              {role}
+              {pillLabel}
             </span>
             <Link
               to="/login"

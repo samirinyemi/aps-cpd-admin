@@ -13,8 +13,8 @@ const adminNav = [
     children: [
       { label: 'AoPE Compliance', to: '/admin/registrar/aope' },
       { label: 'Registrar Programs', to: '/admin/registrar/programs' },
-      { label: 'Log Supervision', to: '/admin/registrar/log-supervision' },
-      { label: 'Log Practice Hours', to: '/admin/registrar/log-practice' },
+      { label: 'Supervisors', to: '/admin/registrar/supervisors' },
+      { label: 'Practice Locations', to: '/admin/registrar/practice-locations' },
       { label: 'Log CPD Hours', to: '/admin/registrar/log-cpd' },
     ],
   },
@@ -35,6 +35,21 @@ const adminNav = [
   {
     label: 'Reports',
     to: '#',
+  },
+];
+
+const memberNav = [
+  { label: 'My CPD', to: '/member/cpd' },
+  {
+    label: 'Registrar',
+    children: [
+      { label: 'My Registrar Programs', to: '/member/registrar' },
+      { label: 'My Supervisors', to: '/member/registrar/supervisors' },
+      { label: 'My Places of Practice', to: '/member/registrar/places' },
+      { label: 'Log Supervision', to: '/member/registrar/log-supervision' },
+      { label: 'Log Practice', to: '/member/registrar/log-practice' },
+      { label: 'Log CPD', to: '/member/registrar/log-cpd' },
+    ],
   },
 ];
 
@@ -59,7 +74,7 @@ const internalNav = [
   },
 ];
 
-function NavItem({ item }) {
+function NavItem({ item, siblings = [] }) {
   const location = useLocation();
 
   if (item.children) {
@@ -69,14 +84,20 @@ function NavItem({ item }) {
           {item.label}
         </div>
         {item.children.map((child) => (
-          <NavItem key={child.to} item={child} />
+          <NavItem key={child.to} item={child} siblings={item.children} />
         ))}
       </div>
     );
   }
 
   // Match child routes (e.g. /internal/cpd/profiles/:id highlights /internal/cpd/profiles)
-  const isActive = item.to !== '#' && location.pathname.startsWith(item.to);
+  // but don't highlight a shorter sibling path when a longer sibling also matches.
+  const path = location.pathname;
+  const otherSiblings = siblings.filter((s) => s.to && s.to !== '#' && s.to !== item.to);
+  const longerSiblingMatches = otherSiblings.some(
+    (s) => s.to.length > item.to.length && path.startsWith(s.to)
+  );
+  const isActive = item.to !== '#' && path.startsWith(item.to) && !longerSiblingMatches;
 
   return (
     <NavLink
@@ -96,7 +117,10 @@ function NavItem({ item }) {
 
 export default function SideNavigation() {
   const { role } = useAuth();
-  const items = role === 'IT Administrator' ? adminNav : internalNav;
+  const items =
+    role === 'IT Administrator' ? adminNav
+    : role === 'Member' ? memberNav
+    : internalNav;
 
   return (
     <nav className="w-60 shrink-0 bg-white border-r border-gray-200 py-4">

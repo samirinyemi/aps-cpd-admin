@@ -6,6 +6,8 @@ import { initialPrograms } from './data/mockPrograms';
 import { initialAoPEPrograms } from './data/mockAoPEPrograms';
 import { initialCpdProfiles } from './data/mockCpdProfiles';
 import { initialRegistrarProfiles } from './data/mockRegistrarProfiles';
+import { initialSupervisors } from './data/mockSupervisors';
+import { initialPracticeLocations } from './data/mockPracticeLocations';
 
 import Login from './pages/Login';
 import CycleList from './pages/admin/CycleList';
@@ -23,14 +25,28 @@ import RegistrarActivitiesList from './pages/internal/RegistrarActivitiesList';
 import AoPEList from './pages/admin/AoPEList';
 import AoPEDetail from './pages/admin/AoPEDetail';
 import AoPEForm from './pages/admin/AoPEForm';
-import LogSupervision from './pages/admin/LogSupervision';
-import LogPractice from './pages/admin/LogPractice';
 import LogCPD from './pages/admin/LogCPD';
+import SupervisorList from './pages/admin/SupervisorList';
+import SupervisorForm from './pages/admin/SupervisorForm';
+import PracticeLocationList from './pages/admin/PracticeLocationList';
+import PracticeLocationForm from './pages/admin/PracticeLocationForm';
+import MyCpd from './pages/member/MyCpd';
+import MyRegistrarPrograms from './pages/member/MyRegistrarPrograms';
+import MemberRegistrarShortcut from './pages/member/MemberRegistrarShortcut';
 
-function RequireAuth({ children, adminOnly = false }) {
+function landingPathFor(role) {
+  if (role === 'IT Administrator') return '/admin/cpd/cycles';
+  if (role === 'Member') return '/member/cpd';
+  return '/internal/cpd/profiles';
+}
+
+function RequireAuth({ children, adminOnly = false, memberOnly = false }) {
   const { role } = useAuth();
   if (!role) return <Navigate to="/login" replace />;
-  if (adminOnly && role !== 'IT Administrator') return <Navigate to="/internal/cpd/profiles" replace />;
+  if (adminOnly && role !== 'IT Administrator') return <Navigate to={landingPathFor(role)} replace />;
+  if (memberOnly && role !== 'Member') return <Navigate to={landingPathFor(role)} replace />;
+  // Internal/admin-ish routes shouldn't be reachable by Members.
+  if (!memberOnly && role === 'Member') return <Navigate to="/member/cpd" replace />;
   return children;
 }
 
@@ -40,6 +56,8 @@ function AppRoutes() {
   const [cpdProfiles] = useState(initialCpdProfiles);
   const [aoPEPrograms, setAoPEPrograms] = useState(initialAoPEPrograms);
   const [registrarProfiles] = useState(initialRegistrarProfiles);
+  const [supervisors, setSupervisors] = useState(initialSupervisors);
+  const [practiceLocations, setPracticeLocations] = useState(initialPracticeLocations);
 
   return (
     <Routes>
@@ -64,24 +82,40 @@ function AppRoutes() {
         <RequireAuth adminOnly><ProgramList programs={programs} /></RequireAuth>
       } />
       <Route path="/admin/registrar/programs/new" element={
-        <RequireAuth adminOnly><ProgramForm programs={programs} setPrograms={setPrograms} /></RequireAuth>
+        <RequireAuth adminOnly><ProgramForm programs={programs} setPrograms={setPrograms} aoPEPrograms={aoPEPrograms} /></RequireAuth>
       } />
       <Route path="/admin/registrar/programs/:id/edit" element={
-        <RequireAuth adminOnly><ProgramForm programs={programs} setPrograms={setPrograms} /></RequireAuth>
+        <RequireAuth adminOnly><ProgramForm programs={programs} setPrograms={setPrograms} aoPEPrograms={aoPEPrograms} /></RequireAuth>
       } />
       <Route path="/admin/registrar/programs/:id" element={
-        <RequireAuth adminOnly><ProgramDetail programs={programs} setPrograms={setPrograms} /></RequireAuth>
+        <RequireAuth adminOnly><ProgramDetail programs={programs} setPrograms={setPrograms} supervisors={supervisors} practiceLocations={practiceLocations} aoPEPrograms={aoPEPrograms} /></RequireAuth>
       } />
 
       {/* Admin: Activity Logging */}
-      <Route path="/admin/registrar/log-supervision" element={
-        <RequireAuth adminOnly><LogSupervision programs={programs} setPrograms={setPrograms} /></RequireAuth>
-      } />
-      <Route path="/admin/registrar/log-practice" element={
-        <RequireAuth adminOnly><LogPractice programs={programs} setPrograms={setPrograms} /></RequireAuth>
-      } />
       <Route path="/admin/registrar/log-cpd" element={
-        <RequireAuth adminOnly><LogCPD programs={programs} /></RequireAuth>
+        <RequireAuth adminOnly><LogCPD programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+
+      {/* Admin: Manage Supervisors */}
+      <Route path="/admin/registrar/supervisors" element={
+        <RequireAuth adminOnly><SupervisorList supervisors={supervisors} programs={programs} /></RequireAuth>
+      } />
+      <Route path="/admin/registrar/supervisors/new" element={
+        <RequireAuth adminOnly><SupervisorForm supervisors={supervisors} setSupervisors={setSupervisors} programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+      <Route path="/admin/registrar/supervisors/:id" element={
+        <RequireAuth adminOnly><SupervisorForm supervisors={supervisors} setSupervisors={setSupervisors} programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+
+      {/* Admin: Manage Practice Locations */}
+      <Route path="/admin/registrar/practice-locations" element={
+        <RequireAuth adminOnly><PracticeLocationList locations={practiceLocations} programs={programs} /></RequireAuth>
+      } />
+      <Route path="/admin/registrar/practice-locations/new" element={
+        <RequireAuth adminOnly><PracticeLocationForm locations={practiceLocations} setLocations={setPracticeLocations} programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+      <Route path="/admin/registrar/practice-locations/:id" element={
+        <RequireAuth adminOnly><PracticeLocationForm locations={practiceLocations} setLocations={setPracticeLocations} programs={programs} setPrograms={setPrograms} /></RequireAuth>
       } />
 
       {/* Admin: AoPE Compliance Configuration */}
@@ -118,6 +152,38 @@ function AppRoutes() {
       } />
       <Route path="/internal/registrar/activities" element={
         <RequireAuth><RegistrarActivitiesList profiles={registrarProfiles} /></RequireAuth>
+      } />
+
+      {/* Member: self-service */}
+      <Route path="/member/cpd" element={
+        <RequireAuth memberOnly><MyCpd cpdProfiles={cpdProfiles} programs={programs} aoPEPrograms={aoPEPrograms} /></RequireAuth>
+      } />
+      <Route path="/member/registrar" element={
+        <RequireAuth memberOnly><MyRegistrarPrograms programs={programs} aoPEPrograms={aoPEPrograms} /></RequireAuth>
+      } />
+      <Route path="/member/registrar/supervisors" element={
+        <RequireAuth memberOnly><MemberRegistrarShortcut action="supervisors" programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+      <Route path="/member/registrar/places" element={
+        <RequireAuth memberOnly><MemberRegistrarShortcut action="places" programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+      <Route path="/member/registrar/log-supervision" element={
+        <RequireAuth memberOnly><MemberRegistrarShortcut action="log-supervision" programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+      <Route path="/member/registrar/log-practice" element={
+        <RequireAuth memberOnly><MemberRegistrarShortcut action="log-practice" programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+      <Route path="/member/registrar/log-cpd" element={
+        <RequireAuth memberOnly><MemberRegistrarShortcut action="log-cpd" programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+      <Route path="/member/registrar/new" element={
+        <RequireAuth memberOnly><ProgramForm programs={programs} setPrograms={setPrograms} aoPEPrograms={aoPEPrograms} memberRole /></RequireAuth>
+      } />
+      <Route path="/member/registrar/:id/edit" element={
+        <RequireAuth memberOnly><ProgramForm programs={programs} setPrograms={setPrograms} aoPEPrograms={aoPEPrograms} memberRole /></RequireAuth>
+      } />
+      <Route path="/member/registrar/:id" element={
+        <RequireAuth memberOnly><ProgramDetail programs={programs} setPrograms={setPrograms} supervisors={supervisors} practiceLocations={practiceLocations} aoPEPrograms={aoPEPrograms} /></RequireAuth>
       } />
 
       {/* Default redirect */}
