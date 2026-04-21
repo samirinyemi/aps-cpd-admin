@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useMemo, useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import SelectField from '../../components/SelectField';
+import LogCpdActivityModal from '../../components/LogCpdActivityModal';
 import { useAuth } from '../../context/AuthContext';
 
 function formatDate(dateStr) {
@@ -101,6 +102,20 @@ const RANGES = [
 export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = [] }) {
   const { member } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Log-activity modal: can be opened either by the "Log CPD activity" button
+  // on this page, or by deep-link / sidebar shortcut via ?log=1 query param.
+  const [logOpen, setLogOpen] = useState(false);
+  useEffect(() => {
+    if (searchParams.get('log') === '1') {
+      setLogOpen(true);
+      // strip the param so a refresh doesn't keep re-opening it
+      const next = new URLSearchParams(searchParams);
+      next.delete('log');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const profile = useMemo(
     () => (cpdProfiles || []).find((p) => p.memberNumber === member?.memberNumber) || null,
@@ -158,6 +173,17 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = 
     });
   }, [profile, selectedCycle, kindFilter, aoPEFilter]);
 
+  function handleLogSave(activity) {
+    setCpdProfiles((prev) =>
+      prev.map((p) =>
+        p.memberNumber === profile.memberNumber
+          ? { ...p, activities: [...(p.activities || []), activity] }
+          : p
+      )
+    );
+    setLogOpen(false);
+  }
+
   function handleDelete() {
     if (!confirmDelete) return;
     setCpdProfiles((prev) =>
@@ -202,12 +228,13 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = 
             </button>
           </div>
           {isCycleOpen && (
-            <Link
-              to="/member/cpd/log"
+            <button
+              type="button"
+              onClick={() => setLogOpen(true)}
               className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
             >
               Log CPD activity
-            </Link>
+            </button>
           )}
         </div>
       </div>
@@ -311,6 +338,17 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = 
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(null)}
       />
+
+      {/* Log CPD activity modal — overlays this page so the user stays in context */}
+      {isCycleOpen && selectedCycle && (
+        <LogCpdActivityModal
+          open={logOpen}
+          cycle={selectedCycle}
+          allocationOptions={(profile.aoPEs || []).map((a) => ({ value: a, label: a }))}
+          onSave={handleLogSave}
+          onCancel={() => setLogOpen(false)}
+        />
+      )}
     </PageShell>
   );
 }
