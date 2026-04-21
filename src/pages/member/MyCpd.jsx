@@ -175,6 +175,29 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         </div>
       </section>
 
+      {/* Quick actions — sit above the metrics so members can jump to the action surface immediately */}
+      <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <h2 className="text-base font-semibold text-gray-900 mb-4">Quick actions</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Link to="/member/cpd/profile" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
+            <p className="text-sm font-medium text-gray-900">Manage Profile</p>
+            <p className="text-xs text-gray-500 mt-0.5">Manage your details</p>
+          </Link>
+          <Link to="/member/cpd/learning-plan" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
+            <p className="text-sm font-medium text-gray-900">Manage Learning Plan</p>
+            <p className="text-xs text-gray-500 mt-0.5">Record needs</p>
+          </Link>
+          <Link to="/member/cpd/activities" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
+            <p className="text-sm font-medium text-gray-900">Activities History</p>
+            <p className="text-xs text-gray-500 mt-0.5">Edit or delete</p>
+          </Link>
+          <Link to="/member/cpd/report" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
+            <p className="text-sm font-medium text-gray-900">Report</p>
+            <p className="text-xs text-gray-500 mt-0.5">Generate PDF</p>
+          </Link>
+        </div>
+      </section>
+
       {/* Metric cards US-501..504 */}
       {metrics && (
         <>
@@ -306,29 +329,6 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
           </div>
         </section>
       )}
-
-      {/* Quick links to the other member CPD pages */}
-      <section className="bg-white border border-gray-200 rounded-lg p-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Quick actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Link to="/member/cpd/profile" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
-            <p className="text-sm font-medium text-gray-900">Manage Profile</p>
-            <p className="text-xs text-gray-500 mt-0.5">Manage your details</p>
-          </Link>
-          <Link to="/member/cpd/learning-plan" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
-            <p className="text-sm font-medium text-gray-900">Manage Learning Plan</p>
-            <p className="text-xs text-gray-500 mt-0.5">Record needs</p>
-          </Link>
-          <Link to="/member/cpd/activities" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
-            <p className="text-sm font-medium text-gray-900">Activities History</p>
-            <p className="text-xs text-gray-500 mt-0.5">Edit or delete</p>
-          </Link>
-          <Link to="/member/cpd/report" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
-            <p className="text-sm font-medium text-gray-900">Report</p>
-            <p className="text-xs text-gray-500 mt-0.5">Generate PDF</p>
-          </Link>
-        </div>
-      </section>
 
       {/* Log CPD activity modal (US-801/802/803) */}
       {selectedCycle && isCycleOpen && (
