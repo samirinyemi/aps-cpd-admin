@@ -187,8 +187,8 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = 
     <PageShell>
       <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">CPD Activity History</h1>
-          <p className="text-sm text-gray-500 mt-0.5">All CPD activities logged against the selected cycle.</p>
+          <h1 className="text-xl font-semibold text-gray-900">Activities</h1>
+          <p className="text-sm text-gray-500 mt-0.5">History of all CPD activities you've logged, plus statistics across the selected time range.</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">

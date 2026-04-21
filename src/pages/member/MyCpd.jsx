@@ -190,8 +190,8 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
             <p className="text-xs text-gray-500 mt-0.5">Record needs</p>
           </Link>
           <Link to="/member/cpd/activities" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
-            <p className="text-sm font-medium text-gray-900">Activities History</p>
-            <p className="text-xs text-gray-500 mt-0.5">Edit or delete</p>
+            <p className="text-sm font-medium text-gray-900">Activities</p>
+            <p className="text-xs text-gray-500 mt-0.5">View, log, edit or delete</p>
           </Link>
           <Link to="/member/cpd/report" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
             <p className="text-sm font-medium text-gray-900">Report</p>

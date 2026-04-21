@@ -69,7 +69,7 @@ export default function MyCpdActivityDetail({ cpdProfiles, setCpdProfiles, cycle
       <PageShell>
         <div className="text-center py-12">
           <p className="text-gray-500 mb-3">Activity not found.</p>
-          <Link to="/member/cpd/activities" className="text-aps-blue hover:underline text-sm">Back to Activity History</Link>
+          <Link to="/member/cpd/activities" className="text-aps-blue hover:underline text-sm">Back to Activities</Link>
         </div>
       </PageShell>
     );
@@ -105,7 +105,7 @@ export default function MyCpdActivityDetail({ cpdProfiles, setCpdProfiles, cycle
   return (
     <PageShell>
       <nav className="text-sm text-gray-500 mb-4">
-        <Link to="/member/cpd/activities" className="hover:text-aps-blue">CPD Activity History</Link>
+        <Link to="/member/cpd/activities" className="hover:text-aps-blue">Activities</Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900">{kind} · {formatDate(activity.completedDate)}</span>
       </nav>
