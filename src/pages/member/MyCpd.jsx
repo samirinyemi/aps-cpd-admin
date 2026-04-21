@@ -1,10 +1,10 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
-import SelectField from '../../components/SelectField';
 import { useAuth } from '../../context/AuthContext';
+import { useSelectedCycle } from '../../context/CycleContext';
 import { compliancePercent, findLinkedTemplate, computeCpdCycleMetrics } from '../../lib/compliance';
 
 // HLBR §3.4.4 CPD Summary — US-500 through US-506, plus US-803/805/806/807.
@@ -46,8 +46,9 @@ function MetricCard({ label, logged, required, met, exempt, suffix = 'h', descri
   );
 }
 
-export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEPrograms, cycles }) {
+export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEPrograms }) {
   const { member } = useAuth();
+  const { selectedCycle } = useSelectedCycle();
 
   const profile = useMemo(
     () => (cpdProfiles || []).find((p) => p.memberNumber === member?.memberNumber) || null,
@@ -58,29 +59,6 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
     () => (programs || []).filter((p) => p.memberNumber === member?.memberNumber),
     [programs, member]
   );
-
-  // HLBR US-803: cycle selector across last 7 years.
-  const availableCycles = useMemo(() => {
-    const all = cycles || [];
-    const usedCycleIds = new Set((profile?.activities || []).map((a) => a.cycleId).filter(Boolean));
-    const SEVEN_YEARS_MS = 7 * 365 * 24 * 60 * 60 * 1000;
-    const cutoff = new Date(Date.now() - SEVEN_YEARS_MS);
-    const filtered = all.filter((c) => {
-      const inWindow = new Date(c.startDate || 0) >= cutoff;
-      return inWindow && (c.status !== 'Pending' || usedCycleIds.has(c.id));
-    });
-    return [...filtered].sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
-  }, [cycles, profile]);
-
-  const defaultCycle = useMemo(
-    () => availableCycles.find((c) => c.status === 'Open') || availableCycles[0] || null,
-    [availableCycles]
-  );
-  const [selectedCycleId, setSelectedCycleId] = useState('');
-  useEffect(() => {
-    if (!selectedCycleId && defaultCycle) setSelectedCycleId(defaultCycle.id);
-  }, [selectedCycleId, defaultCycle]);
-  const selectedCycle = availableCycles.find((c) => c.id === selectedCycleId) || defaultCycle;
 
   // HLBR US-806: logging only when selected cycle is Open.
   const isCycleOpen = selectedCycle?.status === 'Open';
@@ -141,41 +119,18 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         </section>
       )}
 
-      {/* HLBR US-803: Cycle selector (always visible) */}
-      <section className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-[220px]">
-            <label className="block text-xs text-gray-500 mb-1.5">CPD Cycle</label>
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="min-w-[240px]">
-                <SelectField
-                  value={selectedCycleId}
-                  onChange={(e) => setSelectedCycleId(e.target.value)}
-                  disabled={availableCycles.length === 0}
-                >
-                  {availableCycles.length === 0 && <option value="">No cycles available</option>}
-                  {availableCycles.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}{c.status !== 'Open' ? ` (${c.status})` : ''}</option>
-                  ))}
-                </SelectField>
-              </div>
-              {selectedCycle && <StatusBadge status={selectedCycle.status} />}
-            </div>
-            <p className="text-xs text-gray-500 mt-1.5">
-              {isCycleOpen ? 'Logging and editing apply to this cycle.' : 'This cycle is not Open. You can view data but cannot log new activities against it.'}
-            </p>
-          </div>
-          {isCycleOpen && (
-            <button
-              type="button"
-              onClick={() => setLogOpen(true)}
-              className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark self-end"
-            >
-              Log CPD activity
-            </button>
-          )}
+      {/* Cycle selector lives in the GlobalCycleBar above — no duplicate here. */}
+      {isCycleOpen && (
+        <div className="mb-6 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setLogOpen(true)}
+            className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+          >
+            Log CPD activity
+          </button>
         </div>
-      </section>
+      )}
 
       {/* Quick actions — sit above the metrics so members can jump to the action surface immediately */}
       <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">

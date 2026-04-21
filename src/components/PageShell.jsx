@@ -1,4 +1,5 @@
 import GlobalNav from './GlobalNav';
+import GlobalCycleBar from './GlobalCycleBar';
 import SideNavigation from './SideNavigation';
 import Footer from './Footer';
 
@@ -6,6 +7,7 @@ export default function PageShell({ children }) {
   return (
     <div className="min-h-screen flex flex-col">
       <GlobalNav />
+      <GlobalCycleBar />
       <div className="flex flex-1">
         <SideNavigation />
         <div className="flex-1 flex flex-col">

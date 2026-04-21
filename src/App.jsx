@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { CycleProvider } from './context/CycleContext';
 import { initialCycles } from './data/mockCycles';
 import { initialPrograms } from './data/mockPrograms';
 import { initialAoPEPrograms } from './data/mockAoPEPrograms';
@@ -66,6 +67,7 @@ function AppRoutes() {
   const [practiceLocations, setPracticeLocations] = useState(initialPracticeLocations);
 
   return (
+    <CycleProvider cycles={cycles}>
     <Routes>
       <Route path="/login" element={<Login />} />
 
@@ -157,7 +159,7 @@ function AppRoutes() {
 
       {/* Member: self-service */}
       <Route path="/member/cpd" element={
-        <RequireAuth memberOnly><MyCpd cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} programs={programs} aoPEPrograms={aoPEPrograms} cycles={cycles} /></RequireAuth>
+        <RequireAuth memberOnly><MyCpd cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} programs={programs} aoPEPrograms={aoPEPrograms} /></RequireAuth>
       } />
       <Route path="/member/cpd/profile" element={
         <RequireAuth memberOnly><MyCpdProfile cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
@@ -172,7 +174,7 @@ function AppRoutes() {
         <RequireAuth memberOnly><MyCpdLog cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} cycles={cycles} /></RequireAuth>
       } />
       <Route path="/member/cpd/activities" element={
-        <RequireAuth memberOnly><MyCpdActivities cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} cycles={cycles} /></RequireAuth>
+        <RequireAuth memberOnly><MyCpdActivities cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
       } />
       <Route path="/member/cpd/activities/:id" element={
         <RequireAuth memberOnly><MyCpdActivityDetail cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} cycles={cycles} /></RequireAuth>
@@ -211,6 +213,7 @@ function AppRoutes() {
       {/* Default redirect */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </CycleProvider>
   );
 }
 

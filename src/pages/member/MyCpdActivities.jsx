@@ -5,6 +5,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import SelectField from '../../components/SelectField';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
 import { useAuth } from '../../context/AuthContext';
+import { useSelectedCycle } from '../../context/CycleContext';
 
 function formatDate(dateStr) {
   if (!dateStr) return '—';
@@ -99,9 +100,10 @@ const RANGES = [
   { value: 'all', label: 'All time', ms: null },
 ];
 
-export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = [] }) {
+export default function MyCpdActivities({ cpdProfiles, setCpdProfiles }) {
   const { member } = useAuth();
   const navigate = useNavigate();
+  const { selectedCycle } = useSelectedCycle();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Log-activity modal: can be opened either by the "Log CPD activity" button
@@ -122,18 +124,6 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = 
     [cpdProfiles, member]
   );
 
-  const availableCycles = useMemo(() => {
-    const all = cycles || [];
-    const SEVEN_YEARS_MS = 7 * 365 * 24 * 60 * 60 * 1000;
-    const cutoff = new Date(Date.now() - SEVEN_YEARS_MS);
-    return all
-      .filter((c) => new Date(c.startDate || 0) >= cutoff && c.status !== 'Pending')
-      .sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
-  }, [cycles]);
-
-  const defaultCycle = availableCycles.find((c) => c.status === 'Open') || availableCycles[0] || null;
-  const [selectedCycleId, setSelectedCycleId] = useState(defaultCycle?.id || '');
-  const selectedCycle = availableCycles.find((c) => c.id === selectedCycleId) || defaultCycle;
   const isCycleOpen = selectedCycle?.status === 'Open';
 
   const [kindFilter, setKindFilter] = useState('');
@@ -265,17 +255,9 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = 
         </div>
       </section>
 
-      {/* Filters */}
+      {/* Filters (cycle lives in the GlobalCycleBar) */}
       <section className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">CPD Cycle</label>
-            <SelectField value={selectedCycleId} onChange={(e) => setSelectedCycleId(e.target.value)}>
-              {availableCycles.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}{c.status !== 'Open' ? ` (${c.status})` : ''}</option>
-              ))}
-            </SelectField>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">Activity Kind</label>
             <SelectField value={kindFilter} onChange={(e) => setKindFilter(e.target.value)}>
