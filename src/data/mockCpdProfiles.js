@@ -16,10 +16,10 @@ export const initialCpdProfiles = [
       { id: 'ln2', need: 'Supervision skills development', priority: 'Medium', status: 'Completed' },
     ],
     activities: [
-      { id: 'a1', activityType: 'Peer Consultation', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-08-15', loggedDate: '2025-08-16', journalNotes: 'Discussed complex trauma case with peer group.' },
-      { id: 'a2', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-09-20', loggedDate: '2025-09-21', journalNotes: 'APS Annual Conference – attended sessions on CBT advances.' },
-      { id: 'a3', activityType: 'Peer Supervision', peerHrs: 1.5, actionHrs: 0, cpdHrs: 1.5, completedDate: '2025-10-05', loggedDate: '2025-10-06', journalNotes: 'Monthly peer supervision session.' },
-      { id: 'a4', activityType: 'Online Learning', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-11-10', loggedDate: '2025-11-12', journalNotes: 'Completed online module on telehealth best practices.' },
+      { id: 'a1', cycleId: '2', activityType: 'Peer Consultation', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-08-15', loggedDate: '2025-08-16', journalNotes: 'Discussed complex trauma case with peer group.' },
+      { id: 'a2', cycleId: '2', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-09-20', loggedDate: '2025-09-21', journalNotes: 'APS Annual Conference – attended sessions on CBT advances.' },
+      { id: 'a3', cycleId: '2', activityType: 'Peer Supervision', peerHrs: 1.5, actionHrs: 0, cpdHrs: 1.5, completedDate: '2025-10-05', loggedDate: '2025-10-06', journalNotes: 'Monthly peer supervision session.' },
+      { id: 'a4', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-11-10', loggedDate: '2025-11-12', journalNotes: 'Completed online module on telehealth best practices.' },
     ],
   },
   {
@@ -39,8 +39,8 @@ export const initialCpdProfiles = [
       { id: 'ln4', need: 'Psychometric assessment updates', priority: 'Low', status: 'Not Started' },
     ],
     activities: [
-      { id: 'a5', activityType: 'Workshop', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2025-08-22', loggedDate: '2025-08-23', journalNotes: 'Full-day workshop on 360-degree feedback.' },
-      { id: 'a6', activityType: 'Peer Consultation', peerHrs: 1, actionHrs: 0, cpdHrs: 1, completedDate: '2025-09-15', loggedDate: '2025-09-16', journalNotes: 'Consultation with colleague on org culture assessment.' },
+      { id: 'a5', cycleId: '2', activityType: 'Workshop', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2025-08-22', loggedDate: '2025-08-23', journalNotes: 'Full-day workshop on 360-degree feedback.' },
+      { id: 'a6', cycleId: '2', activityType: 'Peer Consultation', peerHrs: 1, actionHrs: 0, cpdHrs: 1, completedDate: '2025-09-15', loggedDate: '2025-09-16', journalNotes: 'Consultation with colleague on org culture assessment.' },
     ],
   },
   {
@@ -76,9 +76,9 @@ export const initialCpdProfiles = [
       { id: 'ln7', need: 'Ethics in digital practice', priority: 'Low', status: 'Completed' },
     ],
     activities: [
-      { id: 'a7', activityType: 'Peer Supervision', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-07-20', loggedDate: '2025-07-21', journalNotes: 'Group supervision with three peers on complex cases.' },
-      { id: 'a8', activityType: 'Reading/Research', peerHrs: 0, actionHrs: 2, cpdHrs: 2, completedDate: '2025-08-05', loggedDate: '2025-08-10', journalNotes: 'Reviewed recent literature on cultural safety frameworks.' },
-      { id: 'a9', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 8, cpdHrs: 8, completedDate: '2025-09-20', loggedDate: '2025-09-22', journalNotes: 'APS Annual Conference – full two-day attendance.' },
+      { id: 'a7', cycleId: '2', activityType: 'Peer Supervision', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-07-20', loggedDate: '2025-07-21', journalNotes: 'Group supervision with three peers on complex cases.' },
+      { id: 'a8', cycleId: '2', activityType: 'Reading/Research', peerHrs: 0, actionHrs: 2, cpdHrs: 2, completedDate: '2025-08-05', loggedDate: '2025-08-10', journalNotes: 'Reviewed recent literature on cultural safety frameworks.' },
+      { id: 'a9', cycleId: '2', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 8, cpdHrs: 8, completedDate: '2025-09-20', loggedDate: '2025-09-22', journalNotes: 'APS Annual Conference – full two-day attendance.' },
     ],
   },
   {
@@ -97,8 +97,8 @@ export const initialCpdProfiles = [
       { id: 'ln8', need: 'Chronic pain management approaches', priority: 'High', status: 'In Progress' },
     ],
     activities: [
-      { id: 'a10', activityType: 'Online Learning', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-08-01', loggedDate: '2025-08-02', journalNotes: 'Online course on motivational interviewing in health settings.' },
-      { id: 'a11', activityType: 'Peer Consultation', peerHrs: 1.5, actionHrs: 0, cpdHrs: 1.5, completedDate: '2025-10-18', loggedDate: '2025-10-19', journalNotes: 'Peer discussion on chronic disease management program.' },
+      { id: 'a10', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-08-01', loggedDate: '2025-08-02', journalNotes: 'Online course on motivational interviewing in health settings.' },
+      { id: 'a11', cycleId: '2', activityType: 'Peer Consultation', peerHrs: 1.5, actionHrs: 0, cpdHrs: 1.5, completedDate: '2025-10-18', loggedDate: '2025-10-19', journalNotes: 'Peer discussion on chronic disease management program.' },
     ],
   },
   {
@@ -118,11 +118,11 @@ export const initialCpdProfiles = [
       { id: 'ln10', need: 'Expert witness testimony skills', priority: 'Medium', status: 'In Progress' },
     ],
     activities: [
-      { id: 'a12', activityType: 'Workshop', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-07-15', loggedDate: '2025-07-16', journalNotes: 'Workshop on HCR-20 V3 risk assessment updates.' },
-      { id: 'a13', activityType: 'Peer Supervision', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-08-20', loggedDate: '2025-08-21', journalNotes: 'Peer case discussion on forensic assessment.' },
-      { id: 'a14', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2025-09-20', loggedDate: '2025-09-21', journalNotes: 'ANZAPPL conference on forensic practice.' },
-      { id: 'a15', activityType: 'Reading/Research', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-10-30', loggedDate: '2025-11-01', journalNotes: 'Literature review on malingering detection.' },
-      { id: 'a16', activityType: 'Peer Consultation', peerHrs: 1, actionHrs: 0, cpdHrs: 1, completedDate: '2025-11-15', loggedDate: '2025-11-16', journalNotes: 'Consultation on complex forensic report.' },
+      { id: 'a12', cycleId: '2', activityType: 'Workshop', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-07-15', loggedDate: '2025-07-16', journalNotes: 'Workshop on HCR-20 V3 risk assessment updates.' },
+      { id: 'a13', cycleId: '2', activityType: 'Peer Supervision', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-08-20', loggedDate: '2025-08-21', journalNotes: 'Peer case discussion on forensic assessment.' },
+      { id: 'a14', cycleId: '2', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2025-09-20', loggedDate: '2025-09-21', journalNotes: 'ANZAPPL conference on forensic practice.' },
+      { id: 'a15', cycleId: '2', activityType: 'Reading/Research', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-10-30', loggedDate: '2025-11-01', journalNotes: 'Literature review on malingering detection.' },
+      { id: 'a16', cycleId: '2', activityType: 'Peer Consultation', peerHrs: 1, actionHrs: 0, cpdHrs: 1, completedDate: '2025-11-15', loggedDate: '2025-11-16', journalNotes: 'Consultation on complex forensic report.' },
     ],
   },
   {
@@ -142,8 +142,8 @@ export const initialCpdProfiles = [
       { id: 'ln12', need: 'School-based intervention programs', priority: 'Medium', status: 'Not Started' },
     ],
     activities: [
-      { id: 'a17', activityType: 'Online Learning', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-08-10', loggedDate: '2025-08-11', journalNotes: 'ADOS-2 refresher module.' },
-      { id: 'a18', activityType: 'Peer Supervision', peerHrs: 1.5, actionHrs: 0, cpdHrs: 1.5, completedDate: '2025-09-25', loggedDate: '2025-09-26', journalNotes: 'Monthly peer supervision on complex student cases.' },
+      { id: 'a17', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-08-10', loggedDate: '2025-08-11', journalNotes: 'ADOS-2 refresher module.' },
+      { id: 'a18', cycleId: '2', activityType: 'Peer Supervision', peerHrs: 1.5, actionHrs: 0, cpdHrs: 1.5, completedDate: '2025-09-25', loggedDate: '2025-09-26', journalNotes: 'Monthly peer supervision on complex student cases.' },
     ],
   },
   {
@@ -162,10 +162,10 @@ export const initialCpdProfiles = [
       { id: 'ln13', need: 'Mental health in elite athletes', priority: 'High', status: 'Completed' },
     ],
     activities: [
-      { id: 'a19', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 8, cpdHrs: 8, completedDate: '2025-07-25', loggedDate: '2025-07-26', journalNotes: 'ASCA conference on sports psychology.' },
-      { id: 'a20', activityType: 'Peer Consultation', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-08-30', loggedDate: '2025-08-31', journalNotes: 'Peer discussion on athlete mental health screening.' },
-      { id: 'a21', activityType: 'Workshop', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-10-12', loggedDate: '2025-10-13', journalNotes: 'Workshop on performance psychology interventions.' },
-      { id: 'a22', activityType: 'Peer Supervision', peerHrs: 1.5, actionHrs: 0, cpdHrs: 1.5, completedDate: '2025-11-20', loggedDate: '2025-11-21', journalNotes: 'Quarterly peer supervision session.' },
+      { id: 'a19', cycleId: '2', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 8, cpdHrs: 8, completedDate: '2025-07-25', loggedDate: '2025-07-26', journalNotes: 'ASCA conference on sports psychology.' },
+      { id: 'a20', cycleId: '2', activityType: 'Peer Consultation', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-08-30', loggedDate: '2025-08-31', journalNotes: 'Peer discussion on athlete mental health screening.' },
+      { id: 'a21', cycleId: '2', activityType: 'Workshop', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-10-12', loggedDate: '2025-10-13', journalNotes: 'Workshop on performance psychology interventions.' },
+      { id: 'a22', cycleId: '2', activityType: 'Peer Supervision', peerHrs: 1.5, actionHrs: 0, cpdHrs: 1.5, completedDate: '2025-11-20', loggedDate: '2025-11-21', journalNotes: 'Quarterly peer supervision session.' },
     ],
   },
   {
@@ -184,8 +184,8 @@ export const initialCpdProfiles = [
       { id: 'ln14', need: 'ACT-based interventions', priority: 'High', status: 'Completed' },
     ],
     activities: [
-      { id: 'a23', activityType: 'Online Learning', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2024-10-15', loggedDate: '2024-10-16', journalNotes: 'ACT foundations online course.' },
-      { id: 'a24', activityType: 'Peer Supervision', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2024-11-20', loggedDate: '2024-11-21', journalNotes: 'Monthly peer supervision.' },
+      { id: 'a23', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2024-10-15', loggedDate: '2024-10-16', journalNotes: 'ACT foundations online course.' },
+      { id: 'a24', cycleId: '2', activityType: 'Peer Supervision', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2024-11-20', loggedDate: '2024-11-21', journalNotes: 'Monthly peer supervision.' },
     ],
   },
   {
@@ -205,8 +205,8 @@ export const initialCpdProfiles = [
       { id: 'ln16', need: 'Disaster mental health response', priority: 'Medium', status: 'Not Started' },
     ],
     activities: [
-      { id: 'a25', activityType: 'Reading/Research', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-08-20', loggedDate: '2025-08-22', journalNotes: 'Literature review on community psychology interventions.' },
-      { id: 'a26', activityType: 'Peer Consultation', peerHrs: 1, actionHrs: 0, cpdHrs: 1, completedDate: '2025-09-10', loggedDate: '2025-09-11', journalNotes: 'Peer consultation on program evaluation methods.' },
+      { id: 'a25', cycleId: '2', activityType: 'Reading/Research', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-08-20', loggedDate: '2025-08-22', journalNotes: 'Literature review on community psychology interventions.' },
+      { id: 'a26', cycleId: '2', activityType: 'Peer Consultation', peerHrs: 1, actionHrs: 0, cpdHrs: 1, completedDate: '2025-09-10', loggedDate: '2025-09-11', journalNotes: 'Peer consultation on program evaluation methods.' },
     ],
   },
 ];

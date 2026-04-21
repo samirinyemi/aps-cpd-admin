@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
+import LogCpdActivityModal from '../../components/LogCpdActivityModal';
 import { useAuth } from '../../context/AuthContext';
 import { compliancePercent, findLinkedTemplate } from '../../lib/compliance';
 
@@ -20,11 +21,9 @@ function Field({ label, value }) {
   );
 }
 
-// HLBR doesn't spec required CPD hours for a cycle in the prototype data.
-// Use a sensible default so the progress bar is visible for the demo.
 const CYCLE_REQUIRED_HOURS = 30;
 
-export default function MyCpd({ cpdProfiles, programs, aoPEPrograms }) {
+export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEPrograms, cycles }) {
   const { member } = useAuth();
 
   const profile = useMemo(
@@ -37,13 +36,62 @@ export default function MyCpd({ cpdProfiles, programs, aoPEPrograms }) {
     [programs, member]
   );
 
-  const loggedCpdHours = useMemo(() => {
-    if (!profile) return 0;
-    return (profile.activities || []).reduce((sum, a) => sum + Number(a.cpdHrs || 0), 0);
-  }, [profile]);
+  // HLBR US-803: the CPD Cycle selector lists the member's cycles for the
+  // last 7 years, sorted by start date descending, plus the currently Open
+  // cycle. We derive available cycles from (a) cycles the member has
+  // activities in and (b) every Open cycle.
+  const availableCycles = useMemo(() => {
+    const all = cycles || [];
+    const usedCycleIds = new Set((profile?.activities || []).map((a) => a.cycleId).filter(Boolean));
+    const filtered = all.filter((c) => c.status === 'Open' || usedCycleIds.has(c.id));
+    return [...filtered].sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
+  }, [cycles, profile]);
+
+  // Default: the most current Open cycle (HLBR US-803).
+  const defaultCycle = useMemo(
+    () => availableCycles.find((c) => c.status === 'Open') || availableCycles[0] || null,
+    [availableCycles]
+  );
+
+  const [selectedCycleId, setSelectedCycleId] = useState('');
+  useEffect(() => {
+    if (!selectedCycleId && defaultCycle) setSelectedCycleId(defaultCycle.id);
+  }, [selectedCycleId, defaultCycle]);
+
+  const selectedCycle = availableCycles.find((c) => c.id === selectedCycleId) || defaultCycle;
+
+  const activitiesForCycle = useMemo(() => {
+    if (!profile || !selectedCycle) return [];
+    return (profile.activities || []).filter((a) => a.cycleId === selectedCycle.id);
+  }, [profile, selectedCycle]);
+
+  const loggedCpdHours = useMemo(
+    () => activitiesForCycle.reduce((sum, a) => sum + Number(a.cpdHrs || 0), 0),
+    [activitiesForCycle]
+  );
 
   const cyclePct = Math.min(100, Math.round((loggedCpdHours / CYCLE_REQUIRED_HOURS) * 100));
   const cycleColour = cyclePct >= 100 ? 'bg-green-500' : cyclePct > 0 ? 'bg-amber-400' : 'bg-gray-300';
+
+  // HLBR US-806: only the Open cycle is editable. All other statuses → view-only.
+  const isCycleOpen = selectedCycle?.status === 'Open';
+
+  // HLBR US-807: show an alert banner if CPD Exemption = Yes for the selected cycle.
+  const hasExemption = Boolean(profile?.cpdExemption);
+
+  // Log activity modal
+  const [logOpen, setLogOpen] = useState(false);
+
+  function handleLogActivity(activity) {
+    setCpdProfiles((prev) =>
+      prev.map((p) =>
+        p.memberNumber === member.memberNumber
+          ? { ...p, activities: [...(p.activities || []), activity] }
+          : p
+      )
+    );
+    setLogOpen(false);
+  }
 
   if (!member) {
     return (
@@ -58,6 +106,8 @@ export default function MyCpd({ cpdProfiles, programs, aoPEPrograms }) {
     );
   }
 
+  const hasAnyRegistrar = myPrograms.length > 0;
+
   return (
     <PageShell>
       {/* Header */}
@@ -68,6 +118,57 @@ export default function MyCpd({ cpdProfiles, programs, aoPEPrograms }) {
         </p>
       </div>
 
+      {/* HLBR US-807: CPD Exemption alert */}
+      {hasExemption && (
+        <section className="mb-6 border border-amber-200 bg-amber-50 rounded-lg p-4 flex items-start gap-3">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#b45309" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
+            <path d="M10 2L2 17h16L10 2z" />
+            <path d="M10 8v4M10 15h.01" />
+          </svg>
+          <div>
+            <p className="text-sm font-medium text-amber-900">CPD Exemption is active for this cycle</p>
+            <p className="text-xs text-amber-800 mt-0.5">
+              Your CPD requirements are waived for the selected cycle. You may still log activities for your records.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* HLBR US-803 / US-805: CPD Cycle selector */}
+      <section className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex-1 min-w-[220px]">
+            <label className="block text-xs text-gray-500 mb-1.5">CPD Cycle</label>
+            {availableCycles.length <= 1 ? (
+              <p className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                {selectedCycle?.name || '—'}
+                {selectedCycle && <StatusBadge status={selectedCycle.status} />}
+              </p>
+            ) : (
+              <div className="flex items-center gap-2 flex-wrap">
+                <select
+                  value={selectedCycleId}
+                  onChange={(e) => setSelectedCycleId(e.target.value)}
+                  className="h-10 px-3 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
+                >
+                  {availableCycles.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}{c.status !== 'Open' ? ` (${c.status})` : ''}
+                    </option>
+                  ))}
+                </select>
+                {selectedCycle && <StatusBadge status={selectedCycle.status} />}
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-1.5">
+              {isCycleOpen
+                ? 'Logging and editing apply to this cycle.'
+                : 'This cycle is no longer Open. You can view data but cannot log new activities against it.'}
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Personal details */}
       <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
         <h2 className="text-base font-semibold text-gray-900 mb-4">Profile</h2>
@@ -75,14 +176,14 @@ export default function MyCpd({ cpdProfiles, programs, aoPEPrograms }) {
           <Field label="Name" value={`${member.title ? member.title + ' ' : ''}${member.firstName} ${member.lastName}`} />
           <Field label="Member Number" value={member.memberNumber} />
           <Field label="Grade" value={member.grade} />
-          <Field label="Current CPD Cycle" value={profile?.cpdCycle} />
+          <Field label="Board Registration" value={profile?.boardRegistration} />
         </dl>
       </section>
 
       {/* Cycle progress */}
       <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
         <div className="flex items-baseline justify-between mb-1">
-          <h2 className="text-base font-semibold text-gray-900">CPD Cycle Progress</h2>
+          <h2 className="text-base font-semibold text-gray-900">{selectedCycle?.name || 'CPD'} Progress</h2>
           <p className="text-2xl font-semibold text-gray-900">{cyclePct}%</p>
         </div>
         <p className="text-xs text-gray-500 mb-3">
@@ -91,26 +192,30 @@ export default function MyCpd({ cpdProfiles, programs, aoPEPrograms }) {
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
           <div className={`h-full ${cycleColour} transition-all`} style={{ width: `${cyclePct}%` }} />
         </div>
-        {profile?.cpdExemption && (
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
-            <p className="text-xs text-amber-800">
-              <span className="font-medium">CPD Exemption</span> — your requirements are waived for this cycle.
-            </p>
-          </div>
-        )}
       </section>
 
       {/* CPD Activities */}
       <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">
-          My CPD Activities
-          <span className="text-sm font-normal text-gray-400 ml-2">
-            ({profile?.activities?.length || 0})
-          </span>
-        </h2>
-        {!profile || profile.activities.length === 0 ? (
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-gray-900">
+            My CPD Activities
+            <span className="text-sm font-normal text-gray-400 ml-2">({activitiesForCycle.length})</span>
+          </h2>
+          {isCycleOpen && (
+            <button
+              type="button"
+              onClick={() => setLogOpen(true)}
+              className="px-3 py-1.5 text-xs font-medium text-white bg-aps-blue rounded hover:bg-aps-blue-dark"
+            >
+              Log CPD activity
+            </button>
+          )}
+        </div>
+        {activitiesForCycle.length === 0 ? (
           <div className="py-8 text-center border border-dashed border-gray-200 rounded-lg">
-            <p className="text-sm text-gray-500">No CPD activities logged yet.</p>
+            <p className="text-sm text-gray-500">
+              No CPD activities logged for this cycle{isCycleOpen ? " yet." : "."}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -125,7 +230,7 @@ export default function MyCpd({ cpdProfiles, programs, aoPEPrograms }) {
                 </tr>
               </thead>
               <tbody>
-                {[...profile.activities]
+                {[...activitiesForCycle]
                   .sort((a, b) => (b.completedDate || '').localeCompare(a.completedDate || ''))
                   .map((a) => (
                     <tr key={a.id} className="border-b border-gray-100 last:border-0">
@@ -142,31 +247,21 @@ export default function MyCpd({ cpdProfiles, programs, aoPEPrograms }) {
         )}
       </section>
 
-      {/* My Registrar Programs */}
-      <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <div className="flex items-baseline justify-between mb-4">
-          <h2 className="text-base font-semibold text-gray-900">
-            My Registrar Programs
-            <span className="text-sm font-normal text-gray-400 ml-2">({myPrograms.length})</span>
-          </h2>
-          <Link
-            to="/member/registrar"
-            className="text-xs font-medium text-aps-blue hover:underline"
-          >
-            View all →
-          </Link>
-        </div>
-        {myPrograms.length === 0 ? (
-          <div className="py-8 text-center border border-dashed border-gray-200 rounded-lg">
-            <p className="text-sm text-gray-500 mb-2">You're not enrolled in a registrar program yet.</p>
+      {/* My Registrar Programs — only shown when the member has at least one */}
+      {hasAnyRegistrar && (
+        <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <div className="flex items-baseline justify-between mb-4">
+            <h2 className="text-base font-semibold text-gray-900">
+              My Registrar Programs
+              <span className="text-sm font-normal text-gray-400 ml-2">({myPrograms.length})</span>
+            </h2>
             <Link
-              to="/member/registrar/new"
-              className="inline-block px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+              to="/member/registrar"
+              className="text-xs font-medium text-aps-blue hover:underline"
             >
-              Begin new registrar program
+              View all →
             </Link>
           </div>
-        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {myPrograms.map((p) => {
               const template = findLinkedTemplate(p, aoPEPrograms || []);
@@ -196,8 +291,8 @@ export default function MyCpd({ cpdProfiles, programs, aoPEPrograms }) {
               );
             })}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* Learning plan */}
       <section className="bg-white border border-gray-200 rounded-lg p-6">
@@ -231,6 +326,16 @@ export default function MyCpd({ cpdProfiles, programs, aoPEPrograms }) {
           </ul>
         )}
       </section>
+
+      {/* Log CPD activity modal — only offered when on an Open cycle */}
+      {selectedCycle && isCycleOpen && (
+        <LogCpdActivityModal
+          open={logOpen}
+          cycle={selectedCycle}
+          onSave={handleLogActivity}
+          onCancel={() => setLogOpen(false)}
+        />
+      )}
     </PageShell>
   );
 }

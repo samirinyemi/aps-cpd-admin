@@ -53,7 +53,7 @@ function RequireAuth({ children, adminOnly = false, memberOnly = false }) {
 function AppRoutes() {
   const [cycles, setCycles] = useState(initialCycles);
   const [programs, setPrograms] = useState(initialPrograms);
-  const [cpdProfiles] = useState(initialCpdProfiles);
+  const [cpdProfiles, setCpdProfiles] = useState(initialCpdProfiles);
   const [aoPEPrograms, setAoPEPrograms] = useState(initialAoPEPrograms);
   const [registrarProfiles] = useState(initialRegistrarProfiles);
   const [supervisors, setSupervisors] = useState(initialSupervisors);
@@ -156,7 +156,7 @@ function AppRoutes() {
 
       {/* Member: self-service */}
       <Route path="/member/cpd" element={
-        <RequireAuth memberOnly><MyCpd cpdProfiles={cpdProfiles} programs={programs} aoPEPrograms={aoPEPrograms} /></RequireAuth>
+        <RequireAuth memberOnly><MyCpd cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} programs={programs} aoPEPrograms={aoPEPrograms} cycles={cycles} /></RequireAuth>
       } />
       <Route path="/member/registrar" element={
         <RequireAuth memberOnly><MyRegistrarPrograms programs={programs} aoPEPrograms={aoPEPrograms} /></RequireAuth>

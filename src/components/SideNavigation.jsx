@@ -38,20 +38,28 @@ const adminNav = [
   },
 ];
 
-const memberNav = [
+const memberNavBase = [
   { label: 'My CPD', to: '/member/cpd' },
-  {
-    label: 'Registrar',
-    children: [
-      { label: 'My Registrar Programs', to: '/member/registrar' },
-      { label: 'My Supervisors', to: '/member/registrar/supervisors' },
-      { label: 'My Places of Practice', to: '/member/registrar/places' },
-      { label: 'Log Supervision', to: '/member/registrar/log-supervision' },
-      { label: 'Log Practice', to: '/member/registrar/log-practice' },
-      { label: 'Log CPD', to: '/member/registrar/log-cpd' },
-    ],
-  },
 ];
+
+const memberNavRegistrarGroup = {
+  label: 'Registrar',
+  children: [
+    { label: 'My Registrar Programs', to: '/member/registrar' },
+    { label: 'My Supervisors', to: '/member/registrar/supervisors' },
+    { label: 'My Places of Practice', to: '/member/registrar/places' },
+    { label: 'Log Supervision', to: '/member/registrar/log-supervision' },
+    { label: 'Log Practice', to: '/member/registrar/log-practice' },
+    { label: 'Log CPD', to: '/member/registrar/log-cpd' },
+  ],
+};
+
+// Build the member nav dynamically. A CPD-only member (no registrar program
+// IDs attached at login time) should never see the Registrar sub-menu.
+function buildMemberNav(member) {
+  const hasRegistrar = Array.isArray(member?.registrarProgramIds) && member.registrarProgramIds.length > 0;
+  return hasRegistrar ? [...memberNavBase, memberNavRegistrarGroup] : memberNavBase;
+}
 
 const internalNav = [
   {
@@ -116,10 +124,10 @@ function NavItem({ item, siblings = [] }) {
 }
 
 export default function SideNavigation() {
-  const { role } = useAuth();
+  const { role, member } = useAuth();
   const items =
     role === 'IT Administrator' ? adminNav
-    : role === 'Member' ? memberNav
+    : role === 'Member' ? buildMemberNav(member)
     : internalNav;
 
   return (
