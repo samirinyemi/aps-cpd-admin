@@ -1,4 +1,5 @@
 import { Children, useEffect, useRef, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 // Drop-in replacement for <select> with a fully custom dropdown.
 // Children should be <option value="...">label</option> elements — the same API
@@ -73,10 +74,11 @@ export default function SelectField({ value, onChange, disabled, children, class
         <span className={`block truncate ${isPlaceholderShowing ? 'text-gray-400' : 'text-gray-900'}`}>
           {displayLabel}
         </span>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-          <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 120ms' }}>
-            <polyline points="5 8 10 13 15 8" />
-          </svg>
+        <span
+          className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 120ms' }}
+        >
+          <ChevronDown size={14} strokeWidth={1.75} />
         </span>
       </button>
 
