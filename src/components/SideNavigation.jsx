@@ -42,8 +42,8 @@ const memberNavBase = [
     label: 'My CPD',
     children: [
       { label: 'CPD Summary', to: '/member/cpd' },
-      { label: 'CPD Profile', to: '/member/cpd/profile' },
-      { label: 'Learning Plan', to: '/member/cpd/learning-plan' },
+      { label: 'Manage Profile', to: '/member/cpd/profile' },
+      { label: 'Manage Learning Plan', to: '/member/cpd/learning-plan' },
       { label: 'Log Activity', to: '/member/cpd/log' },
       { label: 'Activities History', to: '/member/cpd/activities' },
       { label: 'Report', to: '/member/cpd/report' },

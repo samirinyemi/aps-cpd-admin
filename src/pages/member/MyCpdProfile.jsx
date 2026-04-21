@@ -122,7 +122,7 @@ export default function MyCpdProfile({ cpdProfiles, setCpdProfiles }) {
     <PageShell>
       <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Manage CPD Profile</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Manage Profile</h1>
           <p className="text-sm text-gray-500 mt-0.5">Your professional and CPD-related details.</p>
         </div>
         {!isEditing && (

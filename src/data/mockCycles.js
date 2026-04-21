@@ -1,5 +1,56 @@
 export const initialCycles = [
   {
+    id: '0a',
+    name: '2021–2022 CPD Cycle',
+    startDate: '2021-07-01',
+    endDate: '2022-06-30',
+    minRequiredHours: 30,
+    minPeerHours: 10,
+    status: 'Closed',
+    schedules: [
+      { id: 'sch-0a-1', action: 'Open',  dateTime: '2021-07-01T00:00', status: 'Executed' },
+      { id: 'sch-0a-2', action: 'Close', dateTime: '2022-06-30T23:59', status: 'Executed' },
+    ],
+    statusHistory: [
+      { action: 'Opened', date: '2021-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
+      { action: 'Closed', date: '2022-06-30T23:59:00', triggeredBy: 'System (Scheduled)' },
+    ],
+  },
+  {
+    id: '0b',
+    name: '2022–2023 CPD Cycle',
+    startDate: '2022-07-01',
+    endDate: '2023-06-30',
+    minRequiredHours: 30,
+    minPeerHours: 10,
+    status: 'Closed',
+    schedules: [
+      { id: 'sch-0b-1', action: 'Open',  dateTime: '2022-07-01T00:00', status: 'Executed' },
+      { id: 'sch-0b-2', action: 'Close', dateTime: '2023-06-30T23:59', status: 'Executed' },
+    ],
+    statusHistory: [
+      { action: 'Opened', date: '2022-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
+      { action: 'Closed', date: '2023-06-30T23:59:00', triggeredBy: 'System (Scheduled)' },
+    ],
+  },
+  {
+    id: '0c',
+    name: '2023–2024 CPD Cycle',
+    startDate: '2023-07-01',
+    endDate: '2024-06-30',
+    minRequiredHours: 30,
+    minPeerHours: 10,
+    status: 'Closed',
+    schedules: [
+      { id: 'sch-0c-1', action: 'Open',  dateTime: '2023-07-01T00:00', status: 'Executed' },
+      { id: 'sch-0c-2', action: 'Close', dateTime: '2024-06-30T23:59', status: 'Executed' },
+    ],
+    statusHistory: [
+      { action: 'Opened', date: '2023-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
+      { action: 'Closed', date: '2024-06-30T23:59:00', triggeredBy: 'System (Scheduled)' },
+    ],
+  },
+  {
     id: '1',
     name: '2024–2025 CPD Cycle',
     startDate: '2024-07-01',

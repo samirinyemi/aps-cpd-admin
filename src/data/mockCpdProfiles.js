@@ -18,6 +18,16 @@ export const initialCpdProfiles = [
       { id: 'ln2', need: 'Supervision skills development', priority: 'Medium', status: 'Completed' },
     ],
     activities: [
+      // 2021–2022 cycle
+      { id: 'a00a', cycleId: '0a', allocation: 'Clinical Psychology', activityKind: 'Active CPD', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 12, cpdHrs: 12, completedDate: '2021-11-14', loggedDate: '2021-11-15', journalNotes: 'APS conference — three-day clinical stream.' },
+      { id: 'a00b', cycleId: '0a', allocation: 'Clinical Psychology', activityKind: 'Peer Consultation', peerHrs: 4, actionHrs: 2, cpdHrs: 6, completedDate: '2022-03-18', loggedDate: '2022-03-19', journalNotes: 'Quarterly peer group.' },
+      // 2022–2023 cycle
+      { id: 'a00c', cycleId: '0b', allocation: 'Clinical Psychology', activityKind: 'Active CPD', activityType: 'Online Learning', peerHrs: 0, actionHrs: 15, cpdHrs: 15, completedDate: '2022-10-05', loggedDate: '2022-10-06', journalNotes: 'Online course on schema therapy.' },
+      { id: 'a00d', cycleId: '0b', allocation: 'Clinical Psychology', activityKind: 'Peer Consultation', peerHrs: 6, actionHrs: 2, cpdHrs: 8, completedDate: '2023-04-12', loggedDate: '2023-04-13', journalNotes: 'Monthly peer consultation across the year.' },
+      // 2023–2024 cycle
+      { id: 'a00e', cycleId: '0c', allocation: 'Clinical Psychology', activityKind: 'Active CPD', activityType: 'Workshop', peerHrs: 0, actionHrs: 10, cpdHrs: 10, completedDate: '2023-09-22', loggedDate: '2023-09-23', journalNotes: 'EMDR foundational training.' },
+      { id: 'a00f', cycleId: '0c', allocation: 'Clinical Psychology', activityKind: 'Peer Consultation', peerHrs: 5, actionHrs: 3, cpdHrs: 8, completedDate: '2024-05-20', loggedDate: '2024-05-21', journalNotes: 'Peer consultation group — complex cases.' },
+      // 2024–2025 cycle (now-closed)
       { id: 'a0a', cycleId: '1', allocation: 'Clinical Psychology', activityType: 'Workshop', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2025-02-12', loggedDate: '2025-02-13', journalNotes: 'Two-day workshop on trauma-focused CBT.' },
       { id: 'a0b', cycleId: '1', allocation: 'Clinical Psychology', activityType: 'Peer Consultation', peerHrs: 3, actionHrs: 0, cpdHrs: 3, completedDate: '2025-04-05', loggedDate: '2025-04-06', journalNotes: 'Monthly peer consultation group — 3 sessions.' },
       { id: 'a1', cycleId: '2', allocation: 'Clinical Psychology', activityType: 'Peer Consultation', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-08-15', loggedDate: '2025-08-16', journalNotes: 'Discussed complex trauma case with peer group.' },
