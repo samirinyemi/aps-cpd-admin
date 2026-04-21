@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import { useAuth } from '../../context/AuthContext';
-import { compliancePercent, findLinkedTemplate } from '../../lib/compliance';
+import { compliancePercent, findLinkedTemplate, findMemberCpdActivities } from '../../lib/compliance';
 
 function formatDate(dateStr) {
   if (!dateStr) return '—';
@@ -11,7 +11,7 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-export default function MyRegistrarPrograms({ programs, aoPEPrograms }) {
+export default function MyRegistrarPrograms({ programs, aoPEPrograms, cpdProfiles = [] }) {
   const { member } = useAuth();
   const navigate = useNavigate();
 
@@ -50,7 +50,8 @@ export default function MyRegistrarPrograms({ programs, aoPEPrograms }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {myPrograms.map((p) => {
             const template = findLinkedTemplate(p, aoPEPrograms || []);
-            const pct = template ? compliancePercent(p, template) : 0;
+            const memberCpd = findMemberCpdActivities(p, cpdProfiles);
+            const pct = template ? compliancePercent(p, template, memberCpd) : 0;
             const barColour = pct >= 100 ? 'bg-green-500' : pct > 0 ? 'bg-amber-400' : 'bg-gray-300';
             return (
               <Link

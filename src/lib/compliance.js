@@ -41,8 +41,8 @@ export function formatPercent(num, den) {
  * Uses the HLBR US-1304 formula: (MAP + MAS + MACPD) / (MPP + MPS + MPCPD).
  * Returns 0 when inputs are missing.
  */
-export function compliancePercent(program, template) {
-  const metrics = computeCompliance(program, template);
+export function compliancePercent(program, template, cpdActivities = []) {
+  const metrics = computeCompliance(program, template, cpdActivities);
   if (!metrics) return 0;
   return metrics.overall.percent;
 }
@@ -61,22 +61,36 @@ export function findLinkedTemplate(program, aoPEPrograms = []) {
 }
 
 /**
+ * Extract a member's CPD activities from the profiles store.
+ * CPD activities are the unified cycle-scoped store on each CPD profile.
+ */
+export function findMemberCpdActivities(program, cpdProfiles = []) {
+  if (!program || !program.memberNumber) return [];
+  const profile = cpdProfiles.find((p) => p.memberNumber === program.memberNumber);
+  return profile?.activities || [];
+}
+
+/**
  * Compute compliance metrics for a member program against its AoPE template.
- * Returns null if either input is missing. All hour values are expressed as
- * minute totals internally and surfaced via hoursText strings.
+ * Returns null if either required input is missing. All hour values are expressed
+ * as minute totals internally and surfaced via hoursText strings.
  *
  * HLBR variable mapping (all totals in MINUTES internally):
- *   MAP     = Practice minutes
+ *   MAP     = Practice minutes (from program.activities)
  *   MADC    = Direct client contact minutes on Practice activities
- *   MAS     = Supervision minutes
+ *   MAS     = Supervision minutes (from program.activities)
  *   MASI    = Supervision where supervisionType === 'Individual'
  *   MASG    = Supervision where supervisionType === 'Group'
  *   MASP    = Supervision where the allocated supervisor is Primary on this program
  *   MASS    = Supervision where allocated supervisor is Secondary AND supervisor's AoPE matches program's AoPE
  *   MASS_X  = Supervision where allocated supervisor is Secondary AND supervisor's AoPE does NOT match
- *   MACPD   = CPD activities where allocation === program.areaOfPractice
+ *   MACPD   = CPD profile activities where allocation === program.areaOfPractice
+ *             (CPD is stored on the member's CPD profile, NOT on the program — unified store)
+ *
+ * @param cpdActivities optional — member's CPD activities pulled from cpdProfile.
+ *                       Pass an empty array (the default) to treat CPD as zero.
  */
-export function computeCompliance(program, template) {
+export function computeCompliance(program, template, cpdActivities = []) {
   if (!program || !template) return null;
 
   const activities = program.activities || [];
@@ -115,12 +129,17 @@ export function computeCompliance(program, template) {
           else MASS_X += m;
         }
       }
-    } else if (a.activityType === 'CPD') {
-      if (!a.allocation || a.allocation === program.areaOfPractice) {
-        MACPD += m;
-        if (!earliestCpdDate || (a.completionDate && a.completionDate < earliestCpdDate)) {
-          earliestCpdDate = a.completionDate || earliestCpdDate;
-        }
+    }
+  }
+
+  // CPD: unified store on cpdProfile.activities. Filter to activities allocated
+  // to this program's AoPE (HLBR MACPD formula).
+  for (const a of cpdActivities) {
+    if (a.allocation === program.areaOfPractice) {
+      // cpdProfile activity shape uses `cpdHrs` (decimal hours) for duration.
+      MACPD += Math.round(Number(a.cpdHrs || 0) * 60);
+      if (!earliestCpdDate || (a.completedDate && a.completedDate < earliestCpdDate)) {
+        earliestCpdDate = a.completedDate || earliestCpdDate;
       }
     }
   }

@@ -25,7 +25,6 @@ import RegistrarActivitiesList from './pages/internal/RegistrarActivitiesList';
 import AoPEList from './pages/admin/AoPEList';
 import AoPEDetail from './pages/admin/AoPEDetail';
 import AoPEForm from './pages/admin/AoPEForm';
-import LogCPD from './pages/admin/LogCPD';
 import SupervisorList from './pages/admin/SupervisorList';
 import SupervisorForm from './pages/admin/SupervisorForm';
 import PracticeLocationList from './pages/admin/PracticeLocationList';
@@ -88,12 +87,7 @@ function AppRoutes() {
         <RequireAuth adminOnly><ProgramForm programs={programs} setPrograms={setPrograms} aoPEPrograms={aoPEPrograms} /></RequireAuth>
       } />
       <Route path="/admin/registrar/programs/:id" element={
-        <RequireAuth adminOnly><ProgramDetail programs={programs} setPrograms={setPrograms} supervisors={supervisors} practiceLocations={practiceLocations} aoPEPrograms={aoPEPrograms} /></RequireAuth>
-      } />
-
-      {/* Admin: Activity Logging */}
-      <Route path="/admin/registrar/log-cpd" element={
-        <RequireAuth adminOnly><LogCPD programs={programs} setPrograms={setPrograms} /></RequireAuth>
+        <RequireAuth adminOnly><ProgramDetail programs={programs} setPrograms={setPrograms} supervisors={supervisors} practiceLocations={practiceLocations} aoPEPrograms={aoPEPrograms} cpdProfiles={cpdProfiles} /></RequireAuth>
       } />
 
       {/* Admin: Manage Supervisors */}
@@ -159,7 +153,7 @@ function AppRoutes() {
         <RequireAuth memberOnly><MyCpd cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} programs={programs} aoPEPrograms={aoPEPrograms} cycles={cycles} /></RequireAuth>
       } />
       <Route path="/member/registrar" element={
-        <RequireAuth memberOnly><MyRegistrarPrograms programs={programs} aoPEPrograms={aoPEPrograms} /></RequireAuth>
+        <RequireAuth memberOnly><MyRegistrarPrograms programs={programs} aoPEPrograms={aoPEPrograms} cpdProfiles={cpdProfiles} /></RequireAuth>
       } />
       <Route path="/member/registrar/supervisors" element={
         <RequireAuth memberOnly><MemberRegistrarShortcut action="supervisors" programs={programs} setPrograms={setPrograms} /></RequireAuth>
@@ -174,7 +168,7 @@ function AppRoutes() {
         <RequireAuth memberOnly><MemberRegistrarShortcut action="log-practice" programs={programs} setPrograms={setPrograms} /></RequireAuth>
       } />
       <Route path="/member/registrar/log-cpd" element={
-        <RequireAuth memberOnly><MemberRegistrarShortcut action="log-cpd" programs={programs} setPrograms={setPrograms} /></RequireAuth>
+        <RequireAuth memberOnly><MemberRegistrarShortcut action="log-cpd" programs={programs} setPrograms={setPrograms} cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} cycles={cycles} /></RequireAuth>
       } />
       <Route path="/member/registrar/new" element={
         <RequireAuth memberOnly><ProgramForm programs={programs} setPrograms={setPrograms} aoPEPrograms={aoPEPrograms} memberRole /></RequireAuth>
@@ -183,7 +177,7 @@ function AppRoutes() {
         <RequireAuth memberOnly><ProgramForm programs={programs} setPrograms={setPrograms} aoPEPrograms={aoPEPrograms} memberRole /></RequireAuth>
       } />
       <Route path="/member/registrar/:id" element={
-        <RequireAuth memberOnly><ProgramDetail programs={programs} setPrograms={setPrograms} supervisors={supervisors} practiceLocations={practiceLocations} aoPEPrograms={aoPEPrograms} /></RequireAuth>
+        <RequireAuth memberOnly><ProgramDetail programs={programs} setPrograms={setPrograms} supervisors={supervisors} practiceLocations={practiceLocations} aoPEPrograms={aoPEPrograms} cpdProfiles={cpdProfiles} /></RequireAuth>
       } />
 
       {/* Default redirect */}

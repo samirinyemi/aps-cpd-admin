@@ -265,7 +265,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {myPrograms.map((p) => {
               const template = findLinkedTemplate(p, aoPEPrograms || []);
-              const pct = template ? compliancePercent(p, template) : 0;
+              const pct = template ? compliancePercent(p, template, profile?.activities || []) : 0;
               const barColour = pct >= 100 ? 'bg-green-500' : pct > 0 ? 'bg-amber-400' : 'bg-gray-300';
               return (
                 <Link
@@ -332,6 +332,11 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         <LogCpdActivityModal
           open={logOpen}
           cycle={selectedCycle}
+          allocationOptions={
+            myPrograms
+              .filter((p) => p.status === 'Open')
+              .map((p) => ({ value: p.areaOfPractice, label: p.areaOfPractice }))
+          }
           onSave={handleLogActivity}
           onCancel={() => setLogOpen(false)}
         />

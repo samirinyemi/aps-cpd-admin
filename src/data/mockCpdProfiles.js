@@ -16,10 +16,10 @@ export const initialCpdProfiles = [
       { id: 'ln2', need: 'Supervision skills development', priority: 'Medium', status: 'Completed' },
     ],
     activities: [
-      { id: 'a1', cycleId: '2', activityType: 'Peer Consultation', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-08-15', loggedDate: '2025-08-16', journalNotes: 'Discussed complex trauma case with peer group.' },
-      { id: 'a2', cycleId: '2', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-09-20', loggedDate: '2025-09-21', journalNotes: 'APS Annual Conference – attended sessions on CBT advances.' },
-      { id: 'a3', cycleId: '2', activityType: 'Peer Supervision', peerHrs: 1.5, actionHrs: 0, cpdHrs: 1.5, completedDate: '2025-10-05', loggedDate: '2025-10-06', journalNotes: 'Monthly peer supervision session.' },
-      { id: 'a4', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-11-10', loggedDate: '2025-11-12', journalNotes: 'Completed online module on telehealth best practices.' },
+      { id: 'a1', cycleId: '2', allocation: 'Clinical Psychology', activityType: 'Peer Consultation', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-08-15', loggedDate: '2025-08-16', journalNotes: 'Discussed complex trauma case with peer group.' },
+      { id: 'a2', cycleId: '2', allocation: 'Clinical Psychology', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-09-20', loggedDate: '2025-09-21', journalNotes: 'APS Annual Conference – attended sessions on CBT advances.' },
+      { id: 'a3', cycleId: '2', allocation: 'Clinical Psychology', activityType: 'Peer Supervision', peerHrs: 1.5, actionHrs: 0, cpdHrs: 1.5, completedDate: '2025-10-05', loggedDate: '2025-10-06', journalNotes: 'Monthly peer supervision session.' },
+      { id: 'a4', cycleId: '2', allocation: 'Clinical Psychology', activityType: 'Online Learning', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-11-10', loggedDate: '2025-11-12', journalNotes: 'Completed online module on telehealth best practices.' },
     ],
   },
   {
@@ -39,8 +39,8 @@ export const initialCpdProfiles = [
       { id: 'ln4', need: 'Psychometric assessment updates', priority: 'Low', status: 'Not Started' },
     ],
     activities: [
-      { id: 'a5', cycleId: '2', activityType: 'Workshop', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2025-08-22', loggedDate: '2025-08-23', journalNotes: 'Full-day workshop on 360-degree feedback.' },
-      { id: 'a6', cycleId: '2', activityType: 'Peer Consultation', peerHrs: 1, actionHrs: 0, cpdHrs: 1, completedDate: '2025-09-15', loggedDate: '2025-09-16', journalNotes: 'Consultation with colleague on org culture assessment.' },
+      { id: 'a5', cycleId: '2', allocation: 'Organisational Psychology', activityType: 'Workshop', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2025-08-22', loggedDate: '2025-08-23', journalNotes: 'Full-day workshop on 360-degree feedback.' },
+      { id: 'a6', cycleId: '2', allocation: 'Organisational Psychology', activityType: 'Peer Consultation', peerHrs: 1, actionHrs: 0, cpdHrs: 1, completedDate: '2025-09-15', loggedDate: '2025-09-16', journalNotes: 'Consultation with colleague on org culture assessment.' },
     ],
   },
   {

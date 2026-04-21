@@ -6,8 +6,7 @@ import StatusBadge from '../../components/StatusBadge';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import LogSessionModal from '../../components/LogSessionModal';
 import LogHoursModal from '../../components/LogHoursModal';
-import LogCpdModal from '../../components/LogCpdModal';
-import { computeCompliance, findLinkedTemplate, formatHours } from '../../lib/compliance';
+import { computeCompliance, findLinkedTemplate, findMemberCpdActivities, formatHours } from '../../lib/compliance';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -319,10 +318,11 @@ function minutesFromHoursText(text) {
   return total;
 }
 
-function ComplianceDashboard({ program, aoPEPrograms }) {
+function ComplianceDashboard({ program, aoPEPrograms, cpdProfiles }) {
   const [viewMode, setViewMode] = useState('hlbr'); // 'hlbr' (default) | 'improved'
 
   const template = findLinkedTemplate(program, aoPEPrograms);
+  const memberCpdActivities = findMemberCpdActivities(program, cpdProfiles);
 
   // US-1301: only show dashboard if program status is Open.
   if (program.status !== 'Open') {
@@ -358,7 +358,7 @@ function ComplianceDashboard({ program, aoPEPrograms }) {
     );
   }
 
-  const metrics = computeCompliance(program, template);
+  const metrics = computeCompliance(program, template, memberCpdActivities);
   if (!metrics) return null;
 
   return (
@@ -400,7 +400,7 @@ function ComplianceDashboard({ program, aoPEPrograms }) {
   );
 }
 
-export default function ProgramDetail({ programs, setPrograms, supervisors, practiceLocations, aoPEPrograms = [] }) {
+export default function ProgramDetail({ programs, setPrograms, supervisors, practiceLocations, aoPEPrograms = [], cpdProfiles = [] }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { role, member } = useAuth();
@@ -429,7 +429,6 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
 
   const [logSession, setLogSession] = useState({ open: false, supervisor: null });
   const [logHours, setLogHours] = useState({ open: false, location: null });
-  const [logCpdOpen, setLogCpdOpen] = useState(false);
   const [dialog, setDialog] = useState({ open: false });
 
   function handleLogSession(programId, activity) {
@@ -446,13 +445,6 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
     setLogHours({ open: false, location: null });
   }
 
-  function handleLogCpd(programId, activity, meta = {}) {
-    // ProgramDetail only ever creates new entries via its Log CPD button.
-    setPrograms((prev) =>
-      prev.map((p) => (p.id === programId ? { ...p, activities: [...(p.activities || []), activity] } : p))
-    );
-    setLogCpdOpen(false);
-  }
 
   function openSupervisorLog(supervisorId) {
     const cat = (supervisors || []).find((s) => s.id === supervisorId);
@@ -582,7 +574,7 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
       </section>
 
       {/* Compliance Dashboard — HLBR US-1301..1307 */}
-      <ComplianceDashboard program={program} aoPEPrograms={aoPEPrograms} />
+      <ComplianceDashboard program={program} aoPEPrograms={aoPEPrograms} cpdProfiles={cpdProfiles} />
 
       {/* Supervisors */}
       <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
@@ -676,12 +668,13 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
             Activities
             <span className="text-sm font-normal text-gray-400 ml-2">({(program.activities || []).length})</span>
           </h2>
-          {!isReadOnly && (
+          {!isReadOnly && isMemberRole && (
             <button
-              onClick={() => setLogCpdOpen(true)}
+              onClick={() => navigate('/member/cpd')}
+              title="Log CPD activities on your CPD dashboard; CPD logged against this AoPE counts toward compliance."
               className="px-2.5 py-1 text-xs font-medium text-white bg-aps-blue rounded hover:bg-aps-blue-dark"
             >
-              Log CPD Hours
+              Log CPD (via My CPD) →
             </button>
           )}
         </div>
@@ -742,12 +735,6 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
         lockedProgramId={program.id}
         onSave={handleLogHours}
         onCancel={() => setLogHours({ open: false, location: null })}
-      />
-      <LogCpdModal
-        open={logCpdOpen}
-        program={program}
-        onSave={handleLogCpd}
-        onCancel={() => setLogCpdOpen(false)}
       />
       <ConfirmDialog
         open={dialog.open}

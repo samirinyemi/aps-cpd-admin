@@ -15,7 +15,6 @@ const adminNav = [
       { label: 'Registrar Programs', to: '/admin/registrar/programs' },
       { label: 'Supervisors', to: '/admin/registrar/supervisors' },
       { label: 'Practice Locations', to: '/admin/registrar/practice-locations' },
-      { label: 'Log CPD Hours', to: '/admin/registrar/log-cpd' },
     ],
   },
   {

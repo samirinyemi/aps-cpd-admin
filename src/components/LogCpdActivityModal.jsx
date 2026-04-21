@@ -22,6 +22,7 @@ const emptyForm = {
   actionHrs: '',
   cpdHrs: '',
   journalNotes: '',
+  allocation: '', // '' = no AoPE allocation (general CPD)
 };
 
 function todayISO() {
@@ -29,16 +30,19 @@ function todayISO() {
   return d.toISOString().slice(0, 10);
 }
 
-export default function LogCpdActivityModal({ open, cycle, onSave, onCancel }) {
+// allocationOptions — list of { value, label } pairs. Typically the member's
+// registrar-program AoPEs. Pass an empty array (or omit) for CPD-only members,
+// in which case the allocation field is hidden altogether.
+export default function LogCpdActivityModal({ open, cycle, allocationOptions = [], defaultAllocation = '', onSave, onCancel }) {
   const [form, setForm] = useState({ ...emptyForm });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (open) {
-      setForm({ ...emptyForm });
+      setForm({ ...emptyForm, allocation: defaultAllocation || '' });
       setErrors({});
     }
-  }, [open]);
+  }, [open, defaultAllocation]);
 
   if (!open) return null;
 
@@ -65,6 +69,7 @@ export default function LogCpdActivityModal({ open, cycle, onSave, onCancel }) {
     const activity = {
       id: `a-${Date.now()}`,
       cycleId: cycle.id,
+      allocation: form.allocation || null,
       activityType: form.activityType,
       peerHrs: Number(form.peerHrs) || 0,
       actionHrs: Number(form.actionHrs) || 0,
@@ -146,6 +151,25 @@ export default function LogCpdActivityModal({ open, cycle, onSave, onCancel }) {
             </div>
           </div>
           {errors.cpdHrs && <p className="text-sm text-red-600 -mt-2">{errors.cpdHrs}</p>}
+
+          {allocationOptions.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Allocate to AoPE <span className="text-gray-400 font-normal text-xs">(optional)</span></label>
+              <select
+                value={form.allocation}
+                onChange={(e) => update('allocation', e.target.value)}
+                className={inputClass('allocation') + ' bg-white'}
+              >
+                <option value="">Not allocated (general CPD)</option>
+                {allocationOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">
+                Allocating this activity to a registrar program's AoPE means it also counts toward that program's CPD compliance (HLBR MACPD).
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Journal Notes</label>

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import LogSessionModal from '../../components/LogSessionModal';
 import LogHoursModal from '../../components/LogHoursModal';
-import LogCpdModal from '../../components/LogCpdModal';
+import LogCpdActivityModal from '../../components/LogCpdActivityModal';
 import { useAuth } from '../../context/AuthContext';
 
 function formatDate(dateStr) {
@@ -28,7 +28,7 @@ const titles = {
   'log-cpd':         { page: 'Log CPD Hours',         subtitle: 'Record a CPD activity against your active registrar program.' },
 };
 
-export default function MemberRegistrarShortcut({ action, programs, setPrograms }) {
+export default function MemberRegistrarShortcut({ action, programs, setPrograms, cpdProfiles = [], setCpdProfiles, cycles = [] }) {
   const { member } = useAuth();
   const navigate = useNavigate();
 
@@ -118,12 +118,20 @@ export default function MemberRegistrarShortcut({ action, programs, setPrograms 
     navigate(`/member/registrar/${programId}`);
   }
 
-  function handleLogCpd(programId, activity) {
-    setPrograms((prev) =>
-      prev.map((p) => (p.id === programId ? { ...p, activities: [...(p.activities || []), activity] } : p))
+  // CPD logging is unified on the member's CPD profile, tagged with the current
+  // Open cycle and allocated to this program's AoPE so it rolls up into the
+  // registrar compliance dashboard (HLBR US-1706 + MACPD formula).
+  function handleLogCpd(activity) {
+    if (!setCpdProfiles || !member) return;
+    setCpdProfiles((prev) =>
+      prev.map((p) =>
+        p.memberNumber === member.memberNumber
+          ? { ...p, activities: [...(p.activities || []), activity] }
+          : p
+      )
     );
     setCpdOpen(false);
-    navigate(`/member/registrar/${programId}`);
+    navigate('/member/cpd');
   }
 
   // ---- Render ----
@@ -341,10 +349,11 @@ export default function MemberRegistrarShortcut({ action, programs, setPrograms 
         onSave={handleLogHours}
         onCancel={() => setHoursOpen(false)}
       />
-      <LogCpdModal
+      <LogCpdActivityModal
         open={cpdOpen}
-        program={active}
-        programs={programs}
+        cycle={cycles.find((c) => c.status === 'Open') || null}
+        allocationOptions={openPrograms.map((p) => ({ value: p.areaOfPractice, label: p.areaOfPractice }))}
+        defaultAllocation={active.areaOfPractice}
         onSave={handleLogCpd}
         onCancel={() => setCpdOpen(false)}
       />
