@@ -149,6 +149,50 @@ export const initialCpdProfiles = [
         status: 'In Progress',
         reviews: [],
       },
+      {
+        id: 'ln16', title: 'Motivational Interviewing refresh',
+        description: 'Re-anchor MI skills — reflective listening, evoking change talk, resistance roll-with approach — for substance-use referrals.',
+        proposedDate: 'Two-day workshop in February + recorded-session review over following month.',
+        anticipatedOutcome: 'Measurable increase in change-talk utterances across session recordings.',
+        status: 'Not Started',
+        reviews: [],
+      },
+      {
+        id: 'ln17', title: 'Perinatal mental health fundamentals',
+        description: 'Build a working knowledge base for assessment and treatment of perinatal depression and anxiety.',
+        proposedDate: 'MHPN perinatal series (4 webinars) March–June.',
+        anticipatedOutcome: 'Confidence to accept perinatal referrals; screening protocol in place.',
+        status: 'In Progress',
+        reviews: [
+          { id: 'rv9', reviewedAt: '2025-10-12', notes: 'First two webinars done; key insight: importance of routine screening across both antenatal and postnatal touchpoints.' },
+        ],
+      },
+      {
+        id: 'ln18', title: 'Sleep-focused CBT (CBT-I)',
+        description: 'Structured CBT for insomnia — sleep hygiene, stimulus control, sleep restriction, cognitive components.',
+        proposedDate: 'CBT-I online certification + 3-month application phase.',
+        anticipatedOutcome: 'Deliver a full 6-session CBT-I protocol to at least 2 clients.',
+        status: 'In Progress',
+        reviews: [],
+      },
+      {
+        id: 'ln19', title: 'Working with interpreters',
+        description: 'Best-practice for psychological work with professional interpreters — briefing, turn-taking, debriefing.',
+        proposedDate: 'Reading list + peer consultation in Q1.',
+        anticipatedOutcome: 'Established protocol documented and trialed with two referrals.',
+        status: 'Not Started',
+        reviews: [],
+      },
+      {
+        id: 'ln20', title: 'Clinical writing and case notes',
+        description: 'Improve case-note quality — SOAP-style structure, risk formulation clarity, defensible language.',
+        proposedDate: 'Quarterly self-audit + peer review pairing.',
+        anticipatedOutcome: 'Peer reviewer rates my sample notes as "fit for purpose" without major edits.',
+        status: 'In Progress',
+        reviews: [
+          { id: 'rv10', reviewedAt: '2025-11-08', notes: 'Self-audit Q3 complete; main gap flagged: explicit safety-plan language in risk notes.' },
+        ],
+      },
     ],
     activities: [
       // 2021–2022 cycle
