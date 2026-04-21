@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
+import SelectField from '../../components/SelectField';
 import { useAuth } from '../../context/AuthContext';
 import { compliancePercent, findLinkedTemplate, computeCpdCycleMetrics } from '../../lib/compliance';
 
@@ -146,17 +147,18 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
           <div className="flex-1 min-w-[220px]">
             <label className="block text-xs text-gray-500 mb-1.5">CPD Cycle</label>
             <div className="flex items-center gap-2 flex-wrap">
-              <select
-                value={selectedCycleId}
-                onChange={(e) => setSelectedCycleId(e.target.value)}
-                disabled={availableCycles.length === 0}
-                className="h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue disabled:bg-gray-50 disabled:text-gray-500"
-              >
-                {availableCycles.length === 0 && <option value="">No cycles available</option>}
-                {availableCycles.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}{c.status !== 'Open' ? ` (${c.status})` : ''}</option>
-                ))}
-              </select>
+              <div className="min-w-[240px]">
+                <SelectField
+                  value={selectedCycleId}
+                  onChange={(e) => setSelectedCycleId(e.target.value)}
+                  disabled={availableCycles.length === 0}
+                >
+                  {availableCycles.length === 0 && <option value="">No cycles available</option>}
+                  {availableCycles.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}{c.status !== 'Open' ? ` (${c.status})` : ''}</option>
+                  ))}
+                </SelectField>
+              </div>
               {selectedCycle && <StatusBadge status={selectedCycle.status} />}
             </div>
             <p className="text-xs text-gray-500 mt-1.5">

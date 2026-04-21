@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
+import SelectField from '../../components/SelectField';
 
 // HLBR View CPD Activity History — US-901 to US-903.
 
@@ -103,37 +104,25 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles, cycles = 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">CPD Cycle</label>
-            <select
-              value={selectedCycleId}
-              onChange={(e) => setSelectedCycleId(e.target.value)}
-              className="w-full h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
-            >
+            <SelectField value={selectedCycleId} onChange={(e) => setSelectedCycleId(e.target.value)}>
               {availableCycles.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}{c.status !== 'Open' ? ` (${c.status})` : ''}</option>
               ))}
-            </select>
+            </SelectField>
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Activity Kind</label>
-            <select
-              value={kindFilter}
-              onChange={(e) => setKindFilter(e.target.value)}
-              className="w-full h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
-            >
+            <SelectField value={kindFilter} onChange={(e) => setKindFilter(e.target.value)}>
               <option value="">All kinds</option>
               {kinds.map((k) => <option key={k} value={k}>{k}</option>)}
-            </select>
+            </SelectField>
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Allocation (AoPE)</label>
-            <select
-              value={aoPEFilter}
-              onChange={(e) => setAoPEFilter(e.target.value)}
-              className="w-full h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
-            >
+            <SelectField value={aoPEFilter} onChange={(e) => setAoPEFilter(e.target.value)}>
               <option value="">All AoPEs</option>
               {(profile.aoPEs || []).map((a) => <option key={a} value={a}>{a}</option>)}
-            </select>
+            </SelectField>
           </div>
         </div>
       </section>

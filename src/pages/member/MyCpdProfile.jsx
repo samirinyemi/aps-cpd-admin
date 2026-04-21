@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PageShell from '../../components/PageShell';
 import { useAuth } from '../../context/AuthContext';
 import { aoPEOptions } from '../../data/mockPrograms';
+import SelectField from '../../components/SelectField';
 
 // HLBR §3.4.5 Manage CPD Profile — US-601 to US-604.
 // View-first; edit mode unlocks inline editing governed by profile status rules.
@@ -166,16 +167,15 @@ export default function MyCpdProfile({ cpdProfiles, setCpdProfiles }) {
             <dt className="text-xs text-gray-500">Board Registration</dt>
             <dd className="text-sm font-medium text-gray-900 mt-0.5">
               {isEditing ? (
-                <select
+                <SelectField
                   value={form.boardRegistration}
                   onChange={(e) => update('boardRegistration', e.target.value)}
-                  className="w-full h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
                 >
                   <option value="General">General</option>
                   <option value="Provisional">Provisional</option>
                   <option value="Non-Practicing">Non-Practicing</option>
                   <option value="Not Registered">Not Registered</option>
-                </select>
+                </SelectField>
               ) : (
                 form.boardRegistration
               )}

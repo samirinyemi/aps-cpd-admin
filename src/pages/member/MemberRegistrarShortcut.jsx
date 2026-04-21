@@ -5,6 +5,7 @@ import LogSessionModal from '../../components/LogSessionModal';
 import LogHoursModal from '../../components/LogHoursModal';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
 import { useAuth } from '../../context/AuthContext';
+import SelectField from '../../components/SelectField';
 
 function formatDate(dateStr) {
   if (!dateStr) return '—';
@@ -161,17 +162,13 @@ export default function MemberRegistrarShortcut({ action, programs, setPrograms,
             <span className="text-xs text-gray-400 font-normal ml-2">(only Open program)</span>
           </p>
         ) : (
-          <select
-            value={activeId}
-            onChange={(e) => setActiveId(e.target.value)}
-            className="w-full h-10 pl-3 pr-8 text-sm bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
-          >
+          <SelectField value={activeId} onChange={(e) => setActiveId(e.target.value)}>
             {openPrograms.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.areaOfPractice}
               </option>
             ))}
-          </select>
+          </SelectField>
         )}
         <p className="text-xs text-gray-500 mt-1.5">
           {openPrograms.length > 1
