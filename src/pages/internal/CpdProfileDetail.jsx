@@ -30,8 +30,22 @@ export default function CpdProfileDetail({ profiles }) {
   const isAdmin = role === 'IT Administrator';
 
   const learningNeedsColumns = [
-    { key: 'need', label: 'Learning Need' },
-    { key: 'priority', label: 'Priority' },
+    { key: 'title', label: 'Learning Need' },
+    {
+      key: 'proposedDate',
+      label: 'Proposed Date',
+      render: (row) => (
+        <span className="block max-w-xs truncate text-gray-700" title={row.proposedDate}>
+          {row.proposedDate || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'reviews',
+      label: 'Reviews',
+      accessor: (row) => row.reviews?.length ?? 0,
+      render: (row) => <span className="text-gray-700">{row.reviews?.length ?? 0}</span>,
+    },
     {
       key: 'status',
       label: 'Status',
