@@ -7,6 +7,7 @@ const emptyForm = {
   proposedDate: '',
   anticipatedOutcome: '',
   status: 'Not Started',
+  priority: 'Medium',
 };
 
 export default function LearningNeedFormModal({ open, existingNeed, onSave, onCancel }) {
@@ -23,6 +24,7 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
         proposedDate: existingNeed.proposedDate || '',
         anticipatedOutcome: existingNeed.anticipatedOutcome || '',
         status: existingNeed.status || 'Not Started',
+        priority: existingNeed.priority || 'Medium',
       });
     } else {
       setForm({ ...emptyForm });
@@ -56,6 +58,7 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
       proposedDate: form.proposedDate.trim(),
       anticipatedOutcome: form.anticipatedOutcome.trim(),
       status: form.status,
+      priority: form.priority,
       reviews: isEdit ? (existingNeed.reviews || []) : [],
     };
     onSave(payload);
@@ -126,13 +129,23 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
             {errors.anticipatedOutcome && <p className="mt-1 text-sm text-red-600">{errors.anticipatedOutcome}</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
-            <SelectField value={form.status} onChange={(e) => update('status', e.target.value)}>
-              <option value="Not Started">Not Started</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-            </SelectField>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Priority</label>
+              <SelectField value={form.priority} onChange={(e) => update('priority', e.target.value)}>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </SelectField>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+              <SelectField value={form.status} onChange={(e) => update('status', e.target.value)}>
+                <option value="Not Started">Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </SelectField>
+            </div>
           </div>
         </div>
 

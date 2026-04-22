@@ -89,8 +89,19 @@ const PEER_FOCUS_LIBRARY = [
   'Assessment feedback with family', 'Boundary and self-care reflection',
 ];
 
+// Deterministic priority cycle, biased toward Medium. Used both to fill in
+// missing priority on hand-authored entries and to assign one on padded
+// entries. Cycling produces a natural-looking mix across 20 entries per
+// persona without having to author priorities by hand for every seed.
+const PRIORITY_CYCLE = ['High', 'Medium', 'Low', 'Medium'];
+function ensurePriority(need, index) {
+  if (need && need.priority) return need;
+  return { ...need, priority: PRIORITY_CYCLE[index % PRIORITY_CYCLE.length] };
+}
+
 function padLearningPlans(persona) {
-  const existing = Array.isArray(persona.learningNeeds) ? persona.learningNeeds : [];
+  const raw = Array.isArray(persona.learningNeeds) ? persona.learningNeeds : [];
+  const existing = raw.map((n, i) => ensurePriority(n, i));
   if (existing.length >= 20) return existing;
   const aope = (persona.aoPEs && persona.aoPEs[0]) || 'Clinical Psychology';
   const topics = LEARNING_TOPICS_BY_AOPE[aope] || LEARNING_TOPICS_BY_AOPE['Clinical Psychology'];
@@ -109,6 +120,7 @@ function padLearningPlans(persona) {
       proposedDate: 'Across Q2–Q4 of the current cycle.',
       anticipatedOutcome: `Apply ${topic.toLowerCase()} learning in at least one client context.`,
       status,
+      priority: PRIORITY_CYCLE[padded.length % PRIORITY_CYCLE.length],
       reviews: status === 'Completed'
         ? [{ id: `${persona.id}-gen-rv${idx}`, reviewedAt: '2025-10-15', notes: 'Completed the planned training and reviewed outcomes with peer.' }]
         : [],
@@ -125,6 +137,7 @@ function padLearningPlans(persona) {
       proposedDate: 'Flexible — rolling across the cycle.',
       anticipatedOutcome: 'Captured reflection and integrated into practice.',
       status,
+      priority: PRIORITY_CYCLE[padded.length % PRIORITY_CYCLE.length],
       reviews: [],
     });
     filler++;

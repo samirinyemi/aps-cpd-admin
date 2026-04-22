@@ -13,6 +13,15 @@ function Field({ label, value, children }) {
   );
 }
 
+function PriorityChip({ priority }) {
+  const p = priority || 'Medium';
+  const cls =
+    p === 'High' ? 'bg-red-50 text-red-700 border-red-200'
+    : p === 'Low' ? 'bg-gray-50 text-gray-600 border-gray-200'
+    : 'bg-sky-50 text-sky-700 border-sky-200';
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${cls}`}>{p}</span>;
+}
+
 export default function CpdProfileDetail({ profiles }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,6 +40,11 @@ export default function CpdProfileDetail({ profiles }) {
 
   const learningNeedsColumns = [
     { key: 'title', label: 'Learning Need' },
+    {
+      key: 'priority',
+      label: 'Priority',
+      render: (row) => <PriorityChip priority={row.priority} />,
+    },
     {
       key: 'proposedDate',
       label: 'Proposed Date',

@@ -18,6 +18,15 @@ function StatusChip({ status }) {
   return <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${cls}`}>{status || 'Not Started'}</span>;
 }
 
+function PriorityChip({ priority }) {
+  const p = priority || 'Medium';
+  const cls =
+    p === 'High' ? 'bg-red-50 text-red-700 border-red-200'
+    : p === 'Low' ? 'bg-gray-50 text-gray-600 border-gray-200'
+    : 'bg-sky-50 text-sky-700 border-sky-200';
+  return <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${cls}`}>{p} priority</span>;
+}
+
 const EditIcon = () => <Pencil size={14} strokeWidth={1.5} />;
 const TrashIcon = () => <Trash2 size={14} strokeWidth={1.5} />;
 
@@ -38,7 +47,10 @@ function NeedCard({ need, layout, onOpen, onEdit, onDelete }) {
             <p className="text-sm font-semibold text-gray-900">{need.title || need.need}</p>
             <p className="text-xs text-gray-500 mt-1">{need.proposedDate || '—'}</p>
           </div>
-          <StatusChip status={need.status} />
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <StatusChip status={need.status} />
+            <PriorityChip priority={need.priority} />
+          </div>
         </div>
         {need.description && (
           <p className="text-xs text-gray-600 line-clamp-2 bg-gray-50 border border-gray-100 rounded p-2 mb-3">{need.description}</p>
@@ -57,6 +69,7 @@ function NeedCard({ need, layout, onOpen, onEdit, onDelete }) {
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           <p className="text-sm font-semibold text-gray-900">{need.title || need.need}</p>
           <StatusChip status={need.status} />
+          <PriorityChip priority={need.priority} />
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
           <span><span className="text-gray-500">Proposed:</span> <span className="font-medium text-gray-900">{need.proposedDate || '—'}</span></span>

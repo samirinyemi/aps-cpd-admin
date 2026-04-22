@@ -20,6 +20,15 @@ function StatusChip({ status }) {
   return <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${cls}`}>{status || 'Not Started'}</span>;
 }
 
+function PriorityChip({ priority }) {
+  const p = priority || 'Medium';
+  const cls =
+    p === 'High' ? 'bg-red-50 text-red-700 border-red-200'
+    : p === 'Low' ? 'bg-gray-50 text-gray-600 border-gray-200'
+    : 'bg-sky-50 text-sky-700 border-sky-200';
+  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${cls}`}>{p} priority</span>;
+}
+
 export default function MyLearningPlanDetail({ cpdProfiles, setCpdProfiles }) {
   const { member } = useAuth();
   const { id } = useParams();
@@ -119,6 +128,7 @@ export default function MyLearningPlanDetail({ cpdProfiles, setCpdProfiles }) {
           <div className="flex items-center gap-3 mb-1 flex-wrap">
             <h1 className="text-xl font-semibold text-gray-900">{need.title || need.need}</h1>
             <StatusChip status={need.status} />
+            <PriorityChip priority={need.priority} />
           </div>
         </div>
         <div className="flex items-center gap-2">
