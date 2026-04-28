@@ -676,41 +676,52 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
         {(program.activities || []).length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-6">No activities logged yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Date</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Type</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Supervisor / Place</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Supervision Type</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Duration</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Direct Contact</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...(program.activities || [])].sort((a, b) => b.completionDate.localeCompare(a.completionDate)).map((a) => (
-                  <tr key={a.id} className="border-b border-gray-100">
-                    <td className="py-3 pr-4">{formatDate(a.completionDate)}</td>
-                    <td className="py-3 pr-4">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        a.activityType === 'Supervision' ? 'bg-aps-blue/10 text-aps-blue'
-                          : a.activityType === 'Practice' ? 'bg-amber-100 text-amber-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {a.activityType}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-4">{a.supervisorName || a.employerName || '—'}</td>
-                    <td className="py-3 pr-4">{a.supervisionType || '—'}</td>
-                    <td className="py-3 pr-4">{formatDuration(a.hours, a.minutes)}</td>
-                    <td className="py-3 pr-4">
-                      {a.activityType === 'Practice' ? formatDuration(a.directContactHours, a.directContactMinutes) : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {[...(program.activities || [])].sort((a, b) => b.completionDate.localeCompare(a.completionDate)).map((a) => {
+              const isSupervision = a.activityType === 'Supervision';
+              const isPractice = a.activityType === 'Practice';
+              const typeChip = isSupervision
+                ? 'bg-aps-blue/10 text-aps-blue'
+                : isPractice
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'bg-gray-100 text-gray-600';
+              return (
+                <div key={a.id} className="border border-gray-100 rounded-lg p-4 bg-gray-50/50">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${typeChip}`}>
+                          {a.activityType}
+                        </span>
+                        {isSupervision && a.supervisionType && (
+                          <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">
+                            {a.supervisionType}
+                          </span>
+                        )}
+                        <span className="text-xs text-gray-500">{formatDate(a.completionDate)}</span>
+                      </div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {a.supervisorName || a.employerName || '—'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-gray-600 shrink-0">
+                      <div className="text-right">
+                        <p className="text-gray-500">Duration</p>
+                        <p className="font-medium text-gray-900 mt-0.5">{formatDuration(a.hours, a.minutes)}</p>
+                      </div>
+                      {isPractice && (
+                        <div className="text-right">
+                          <p className="text-gray-500">Direct contact</p>
+                          <p className="font-medium text-gray-900 mt-0.5">
+                            {formatDuration(a.directContactHours, a.directContactMinutes)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
