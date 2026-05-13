@@ -21,122 +21,12 @@ function formatDate(dateStr) {
   });
 }
 
-function ScheduleStatusBadge({ status }) {
-  const styles = {
-    Pending: 'bg-gray-100 text-gray-700 border border-gray-200',
-    Executed: 'bg-status-open-bg text-status-open border border-status-open/30',
-    Cancelled: 'bg-status-closed-bg text-status-closed border border-status-closed/30',
-  };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${styles[status] || styles.Pending}`}>
-      {status}
-    </span>
-  );
-}
-
-function ActionBadge({ action }) {
-  const styles =
-    action === 'Open'
-      ? 'bg-status-open-bg text-status-open border border-status-open/30'
-      : 'bg-aps-blue-light text-aps-blue border border-aps-blue/20';
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${styles}`}>
-      {action === 'Open' ? 'Open Cycle' : 'Close Cycle'}
-    </span>
-  );
-}
-
-function AddScheduleModal({ open, onSave, onCancel }) {
-  const [action, setAction] = useState('Open');
-  const [dateTime, setDateTime] = useState('');
-
-  if (!open) return null;
-
-  function handleSave() {
-    onSave({ action, dateTime });
-    setAction('Open');
-    setDateTime('');
-  }
-
-  function handleCancel() {
-    setAction('Open');
-    setDateTime('');
-    onCancel();
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={handleCancel} />
-      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Schedule</h3>
-
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Action</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setAction('Open')}
-                className={`px-4 py-3 text-sm font-medium rounded-md border transition-colors ${
-                  action === 'Open'
-                    ? 'border-aps-blue bg-aps-blue-light text-aps-blue'
-                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                Open Cycle
-              </button>
-              <button
-                type="button"
-                onClick={() => setAction('Close')}
-                className={`px-4 py-3 text-sm font-medium rounded-md border transition-colors ${
-                  action === 'Close'
-                    ? 'border-aps-blue bg-aps-blue-light text-aps-blue'
-                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                Close Cycle
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Date & Time</label>
-            <input
-              type="datetime-local"
-              value={dateTime}
-              onChange={(e) => setDateTime(e.target.value)}
-              className="w-full h-14 px-4 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue"
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!dateTime}
-            className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Add schedule
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function CycleDetail({ cycles, setCycles }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const cycle = cycles.find((c) => c.id === id);
 
   const [dialog, setDialog] = useState({ open: false });
-  const [addModalOpen, setAddModalOpen] = useState(false);
 
   if (!cycle) {
     return (
@@ -150,8 +40,6 @@ export default function CycleDetail({ cycles, setCycles }) {
       </PageShell>
     );
   }
-
-  const schedules = cycle.schedules || [];
 
   function handleCycleAction(action) {
     setDialog({
@@ -186,54 +74,8 @@ export default function CycleDetail({ cycles, setCycles }) {
     });
   }
 
-  function handleAddSchedule(entry) {
-    const newSchedule = {
-      id: `sch-${cycle.id}-${Date.now()}`,
-      action: entry.action,
-      dateTime: entry.dateTime,
-      status: 'Pending',
-    };
-    setCycles((prev) =>
-      prev.map((c) =>
-        c.id === cycle.id
-          ? { ...c, schedules: [...(c.schedules || []), newSchedule] }
-          : c
-      )
-    );
-    setAddModalOpen(false);
-  }
-
-  function handleRemoveSchedule(schedule) {
-    setDialog({
-      open: true,
-      title: 'Remove Schedule',
-      message: `Are you sure you want to remove this scheduled ${schedule.action.toLowerCase()} event for "${cycle.name}"?`,
-      confirmLabel: 'Remove',
-      onConfirm: () => {
-        setCycles((prev) =>
-          prev.map((c) =>
-            c.id === cycle.id
-              ? {
-                  ...c,
-                  schedules: (c.schedules || []).filter((s) => s.id !== schedule.id),
-                }
-              : c
-          )
-        );
-        setDialog({ open: false });
-      },
-    });
-  }
-
-  // Sort schedules so Close actions appear before Open actions,
-  // then by dateTime ascending within each action group.
-  const actionOrder = { Close: 0, Open: 1 };
-  const sortedSchedules = [...schedules].sort((a, b) => {
-    const orderA = actionOrder[a.action] ?? 99;
-    const orderB = actionOrder[b.action] ?? 99;
-    if (orderA !== orderB) return orderA - orderB;
-    return a.dateTime.localeCompare(b.dateTime);
-  });
+  // Most recent action first
+  const history = [...(cycle.statusHistory || [])].reverse();
 
   return (
     <PageShell>
@@ -292,7 +134,7 @@ export default function CycleDetail({ cycles, setCycles }) {
         </div>
       </div>
 
-      {/* Cycle Details Card */}
+      {/* Cycle Details */}
       <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
         <h2 className="text-base font-semibold text-gray-900 mb-4">Cycle Details</h2>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
@@ -323,97 +165,44 @@ export default function CycleDetail({ cycles, setCycles }) {
         </dl>
       </section>
 
-      {/* Schedule Section */}
-      <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <div className="flex items-start justify-between mb-1">
-          <div>
-            <h2 className="text-base font-semibold text-gray-900">Scheduled Events</h2>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Queue future open or close events for this cycle. Multiple schedules can be added.
+      {/* History */}
+      <section className="bg-white border border-gray-200 rounded-lg p-6">
+        <h2 className="text-base font-semibold text-gray-900 mb-4">
+          History
+          <span className="text-sm font-normal text-gray-400 ml-2">({history.length})</span>
+        </h2>
+        {history.length === 0 ? (
+          <div className="py-8 text-center border border-dashed border-gray-200 rounded-lg">
+            <p className="text-sm text-gray-400">No actions recorded yet.</p>
+            <p className="text-xs text-gray-400 mt-1">
+              Actions like Opening, Closing, or Reopening this cycle will appear here.
             </p>
           </div>
-          <button
-            onClick={() => setAddModalOpen(true)}
-            className="px-3 py-1.5 text-xs font-medium text-aps-blue border border-aps-blue rounded hover:bg-aps-blue-light shrink-0 ml-4"
-          >
-            Add schedule
-          </button>
-        </div>
-
-        {sortedSchedules.length === 0 ? (
-          <div className="mt-4 py-8 text-center border border-dashed border-gray-200 rounded-lg">
-            <p className="text-sm text-gray-400">No schedules queued for this cycle.</p>
-          </div>
         ) : (
-          <div className="border border-gray-200 rounded-lg overflow-hidden mt-4">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Action</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Date & Time</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Status</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-600">&nbsp;</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedSchedules.map((s) => (
-                  <tr key={s.id} className="border-b border-gray-100 last:border-0">
-                    <td className="px-4 py-3"><ActionBadge action={s.action} /></td>
-                    <td className="px-4 py-3 text-gray-700">{formatDateTime(s.dateTime)}</td>
-                    <td className="px-4 py-3"><ScheduleStatusBadge status={s.status} /></td>
-                    <td className="px-4 py-3 text-right">
-                      {s.status === 'Pending' && (
-                        <button
-                          onClick={() => handleRemoveSchedule(s)}
-                          className="text-xs text-red-600 hover:underline"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="space-y-2">
+            {history.map((entry, i) => (
+              <li
+                key={i}
+                className="flex items-center justify-between gap-4 px-4 py-3 border border-gray-100 rounded-lg bg-gray-50/40"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className={`shrink-0 w-2 h-2 rounded-full ${
+                    entry.action === 'Opened' || entry.action === 'Reopened'
+                      ? 'bg-status-open'
+                      : 'bg-status-closed'
+                  }`} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{entry.action}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{entry.triggeredBy}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 shrink-0">{formatDateTime(entry.date)}</p>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 
-      {/* Status History */}
-      {cycle.statusHistory && cycle.statusHistory.length > 0 && (
-        <section className="bg-white border border-gray-200 rounded-lg p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Status History</h2>
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Action</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Date & Time</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-600">Triggered By</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cycle.statusHistory.map((entry, i) => (
-                  <tr key={i} className="border-b border-gray-100 last:border-0">
-                    <td className="px-4 py-3 text-gray-700 font-medium">{entry.action}</td>
-                    <td className="px-4 py-3 text-gray-700">{formatDateTime(entry.date)}</td>
-                    <td className="px-4 py-3 text-gray-500">{entry.triggeredBy}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-
-      {/* Add schedule modal */}
-      <AddScheduleModal
-        open={addModalOpen}
-        onSave={handleAddSchedule}
-        onCancel={() => setAddModalOpen(false)}
-      />
-
-      {/* Confirm dialog */}
       <ConfirmDialog
         open={dialog.open}
         title={dialog.title}
