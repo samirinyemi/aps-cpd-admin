@@ -480,17 +480,43 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
         </div>
       </section>
 
-      {/* ── Offline empty-state ────────────────────────────────────────── */}
+      {/* ── Offline state ──────────────────────────────────────────────── */}
       {!isPDTool && (
-        <section className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <FolderOpen size={32} strokeWidth={1} className="mx-auto text-gray-400 mb-3" />
-          <p className="text-sm font-medium text-gray-700 mb-1">
-            Your learning plan is documented outside this system.
-          </p>
-          <p className="text-xs text-gray-500 max-w-sm mx-auto">
-            You've indicated your learning plan is kept elsewhere. To manage it here instead,
-            select <span className="font-medium">PD Tool</span> above.
-          </p>
+        <section className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+          <div className="flex items-start gap-4">
+            <div className="shrink-0 w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
+              <FolderOpen size={20} strokeWidth={1.5} className="text-gray-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-800 mb-1">
+                You've declared your learning plan is documented outside this system.
+              </p>
+              <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                APS has recorded that you manage your learning plan offline — for example in a
+                Word document, spreadsheet, or physical record. You'll need to produce that
+                evidence if asked during an audit.
+              </p>
+              {needs.length > 0 ? (
+                <p className="text-xs text-gray-500 bg-white border border-gray-200 rounded-md px-3 py-2 inline-block">
+                  💾 You have <span className="font-semibold text-gray-800">{needs.length} learning {needs.length === 1 ? 'need' : 'needs'}</span> saved
+                  in this system from when your method was set to <span className="font-medium">PD Tool</span>.
+                  They're preserved and will reappear if you switch back.
+                </p>
+              ) : (
+                <p className="text-xs text-gray-500">
+                  To manage your learning plan in this system instead, select{' '}
+                  <button
+                    type="button"
+                    onClick={() => handleMethodChange('PD Tool')}
+                    className="font-medium text-aps-blue hover:underline"
+                  >
+                    PD Tool
+                  </button>{' '}
+                  above.
+                </p>
+              )}
+            </div>
+          </div>
         </section>
       )}
 
