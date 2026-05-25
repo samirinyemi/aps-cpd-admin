@@ -496,25 +496,17 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
                 Word document, spreadsheet, or physical record. You'll need to produce that
                 evidence if asked during an audit.
               </p>
-              {needs.length > 0 ? (
-                <p className="text-xs text-gray-500 bg-white border border-gray-200 rounded-md px-3 py-2 inline-block">
-                  💾 You have <span className="font-semibold text-gray-800">{needs.length} learning {needs.length === 1 ? 'need' : 'needs'}</span> saved
-                  in this system from when your method was set to <span className="font-medium">PD Tool</span>.
-                  They're preserved and will reappear if you switch back.
-                </p>
-              ) : (
-                <p className="text-xs text-gray-500">
-                  To manage your learning plan in this system instead, select{' '}
-                  <button
-                    type="button"
-                    onClick={() => handleMethodChange('PD Tool')}
-                    className="font-medium text-aps-blue hover:underline"
-                  >
-                    PD Tool
-                  </button>{' '}
-                  above.
-                </p>
-              )}
+              <p className="text-xs text-gray-500">
+                To manage your learning plan in this system instead, select{' '}
+                <button
+                  type="button"
+                  onClick={() => handleMethodChange('PD Tool')}
+                  className="font-medium text-aps-blue hover:underline"
+                >
+                  PD Tool
+                </button>{' '}
+                above.
+              </p>
             </div>
           </div>
         </section>
