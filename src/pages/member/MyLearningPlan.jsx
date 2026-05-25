@@ -286,8 +286,10 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
     () => profile?.learningPlanMethod || 'PD Tool'
   );
 
-  // ── US-707: Review panel state ───────────────────────────────────────────
-  const [reviewMode, setReviewMode] = useState(null); // null | 'add' | 'edit'
+  // ── US-707: Review panel state (multiple reviews) ───────────────────────
+  const [reviewFormOpen,   setReviewFormOpen]   = useState(false);
+  const [editingReview,    setEditingReview]    = useState(null);   // review obj | null
+  const [confirmDelReview, setConfirmDelReview] = useState(null);   // review obj | null
 
   // ── Learning needs list state ────────────────────────────────────────────
   // ── Tab state ────────────────────────────────────────────────────────────
@@ -352,16 +354,37 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
     setConfirmDelete(null);
   }
 
-  // ── US-707: save plan-level review ──────────────────────────────────────
+  // ── US-707: reviews CRUD ────────────────────────────────────────────────
   function handleSaveReview(data) {
-    persistProfile({ learningPlanReview: data });
-    setReviewMode(null);
+    const existing = profile.learningPlanReviews || [];
+    const isEdit   = existing.some((r) => r.id === data.id);
+    persistProfile({
+      learningPlanReviews: isEdit
+        ? existing.map((r) => (r.id === data.id ? data : r))
+        : [...existing, { ...data, id: `pr-${Date.now()}` }],
+    });
+    setReviewFormOpen(false);
+    setEditingReview(null);
   }
 
-  const isPDTool       = docMethod === 'PD Tool';
-  const isOpen         = selectedCycle?.status === 'Open';
-  const needs          = profile.learningNeeds || [];
-  const existingReview = profile.learningPlanReview || null;
+  function handleDeleteReview() {
+    if (!confirmDelReview) return;
+    persistProfile({
+      learningPlanReviews: (profile.learningPlanReviews || []).filter(
+        (r) => r.id !== confirmDelReview.id
+      ),
+    });
+    setConfirmDelReview(null);
+  }
+
+  const isPDTool  = docMethod === 'PD Tool';
+  const isOpen    = selectedCycle?.status === 'Open';
+  const needs     = profile.learningNeeds || [];
+  // Reviews sorted newest-first by date
+  const reviews   = [...(profile.learningPlanReviews || [])].sort(
+    (a, b) => (b.reviewDate || '').localeCompare(a.reviewDate || '')
+  );
+  // Cycle date bounds for the review date validator
 
   // Cycle date bounds for the review date validator
   const cycleStart = selectedCycle?.startDate || '';
@@ -518,11 +541,11 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
               >
                 <ClipboardCheck size={15} strokeWidth={1.5} />
                 Review
-                {existingReview && (
+                {reviews.length > 0 && (
                   <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
                     activeTab === 'review' ? 'bg-aps-blue/10 text-aps-blue' : 'bg-green-100 text-green-600'
                   }`}>
-                    ✓
+                    {reviews.length}
                   </span>
                 )}
               </button>
@@ -559,13 +582,13 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
               </div>
             )}
 
-            {activeTab === 'review' && existingReview && reviewMode !== 'edit' && isOpen && (
+            {activeTab === 'review' && isOpen && !reviewFormOpen && (
               <button
                 type="button"
-                onClick={() => setReviewMode('edit')}
-                className="flex items-center gap-1.5 text-xs font-medium text-aps-blue hover:underline pb-px"
+                onClick={() => { setEditingReview(null); setReviewFormOpen(true); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark pb-px"
               >
-                <Pencil size={13} strokeWidth={1.5} /> Edit review
+                Add review
               </button>
             )}
           </div>
@@ -671,64 +694,94 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
           {activeTab === 'review' && (
             <section>
               <p className="text-sm text-gray-500 mb-5">
-                Record when you reviewed your learning plan and the outcomes you achieved this cycle.
+                Log each time you review your learning plan. You can add multiple reviews throughout the cycle.
               </p>
 
-              {/* No review yet */}
-              {!existingReview && reviewMode !== 'add' && (
+              {/* Inline form — add or edit */}
+              {reviewFormOpen && (
+                <div className="bg-white border border-aps-blue/30 rounded-lg p-5 mb-5">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-0.5">
+                    {editingReview ? 'Edit review' : 'Add review'}
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-1">Both fields are required.</p>
+                  <ReviewForm
+                    initial={editingReview}
+                    cycleStart={cycleStart}
+                    cycleEnd={cycleEnd}
+                    onSave={handleSaveReview}
+                    onCancel={() => { setReviewFormOpen(false); setEditingReview(null); }}
+                  />
+                </div>
+              )}
+
+              {/* Empty state */}
+              {reviews.length === 0 && !reviewFormOpen && (
                 <div className="border border-dashed border-gray-200 rounded-lg p-8 text-center">
                   <CalendarDays size={28} strokeWidth={1} className="mx-auto text-gray-300 mb-2" />
-                  <p className="text-sm text-gray-500 mb-1">No review submitted yet.</p>
+                  <p className="text-sm text-gray-500 mb-1">No reviews added yet.</p>
                   <p className="text-xs text-gray-400 mb-4">
-                    Once you've reflected on your learning plan outcomes, submit your review here.
+                    Add your first review to record your reflections and outcomes for this cycle.
                   </p>
                   {isOpen ? (
                     <button
                       type="button"
-                      onClick={() => setReviewMode('add')}
+                      onClick={() => { setEditingReview(null); setReviewFormOpen(true); }}
                       className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
                     >
-                      Submit review details
+                      Add review
                     </button>
                   ) : (
                     <p className="text-xs text-gray-400 italic">
-                      Reviews can only be submitted while the CPD cycle is open.
+                      Reviews can only be added while the CPD cycle is open.
                     </p>
                   )}
                 </div>
               )}
 
-              {/* Existing review display */}
-              {existingReview && reviewMode !== 'edit' && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <ClipboardCheck size={15} className="text-green-600 shrink-0" />
-                    <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">
-                      Review submitted
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
-                    <div>
-                      <p className="text-xs text-gray-500 mb-0.5">Review date</p>
-                      <p className="font-medium text-gray-900">{existingReview.reviewDate}</p>
+              {/* Review list — newest first */}
+              {reviews.length > 0 && (
+                <div className="flex flex-col gap-3">
+                  {reviews.map((r) => (
+                    <div
+                      key={r.id}
+                      className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <CalendarDays size={14} strokeWidth={1.5} className="text-aps-blue shrink-0" />
+                          <span className="text-sm font-semibold text-gray-900">{r.reviewDate}</span>
+                        </div>
+                        {isOpen && (
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingReview(r);
+                                setReviewFormOpen(true);
+                                // scroll form into view if needed
+                              }}
+                              className="p-1.5 rounded text-aps-blue hover:bg-aps-blue-light"
+                              title="Edit"
+                            >
+                              <Pencil size={14} strokeWidth={1.5} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDelReview(r)}
+                              className="p-1.5 rounded text-red-500 hover:bg-red-50"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} strokeWidth={1.5} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-700 leading-relaxed mt-2">
+                        {r.outcomesAchieved}
+                      </p>
                     </div>
-                    <div className="sm:col-span-2">
-                      <p className="text-xs text-gray-500 mb-0.5">Outcomes achieved</p>
-                      <p className="text-gray-800 leading-relaxed">{existingReview.outcomesAchieved}</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              )}
-
-              {/* Inline review form */}
-              {(reviewMode === 'add' || reviewMode === 'edit') && (
-                <ReviewForm
-                  initial={reviewMode === 'edit' ? existingReview : null}
-                  cycleStart={cycleStart}
-                  cycleEnd={cycleEnd}
-                  onSave={handleSaveReview}
-                  onCancel={() => setReviewMode(null)}
-                />
               )}
             </section>
           )}
@@ -754,6 +807,19 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
         confirmLabel="Delete"
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(null)}
+      />
+
+      <ConfirmDialog
+        open={Boolean(confirmDelReview)}
+        title="Delete review"
+        message={
+          confirmDelReview
+            ? `Delete the review dated ${confirmDelReview.reviewDate}? This cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        onConfirm={handleDeleteReview}
+        onCancel={() => setConfirmDelReview(null)}
       />
     </PageShell>
   );
