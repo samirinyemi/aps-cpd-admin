@@ -290,6 +290,9 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
   const [reviewMode, setReviewMode] = useState(null); // null | 'add' | 'edit'
 
   // ── Learning needs list state ────────────────────────────────────────────
+  // ── Tab state ────────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState('needs'); // 'needs' | 'review'
+
   const [layout,       setLayout]       = useState('list');
   const [formOpen,     setFormOpen]     = useState(false);
   const [editingNeed,  setEditingNeed]  = useState(null);
@@ -298,6 +301,8 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
   const PAGE_SIZE = 10;
 
   useEffect(() => { setPage(1); }, [layout, docMethod]);
+  // Reset to needs tab when method changes
+  useEffect(() => { setActiveTab('needs'); }, [docMethod]);
 
   // ── Guard: no profile ────────────────────────────────────────────────────
   if (!profile) {
@@ -366,46 +371,11 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
     <PageShell>
 
       {/* ── Page header ───────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-900">Manage Learning Plan</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Record your planned learning activities and goals for this CPD cycle.
-          </p>
-        </div>
-
-        {/* Layout toggle + Add button — only for PD Tool */}
-        {isPDTool && (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
-              <button
-                onClick={() => setLayout('list')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${
-                  layout === 'list' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                <List size={14} /> List
-              </button>
-              <button
-                onClick={() => setLayout('grid')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border-l border-gray-300 ${
-                  layout === 'grid' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
-                }`}
-              >
-                <LayoutGrid size={14} /> Grid
-              </button>
-            </div>
-            {isOpen && (
-              <button
-                type="button"
-                onClick={() => { setEditingNeed(null); setFormOpen(true); }}
-                className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
-              >
-                Add learning need
-              </button>
-            )}
-          </div>
-        )}
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-gray-900">Manage Learning Plan</h1>
+        <p className="text-sm text-gray-500 mt-0.5">
+          Record your planned learning activities and goals for this CPD cycle.
+        </p>
       </div>
 
       {/* ── Section 1: US-701/702 — Documentation method ──────────────── */}
@@ -515,7 +485,93 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
       {/* ── PD Tool sections ───────────────────────────────────────────── */}
       {isPDTool && (
         <>
-          {/* ── Section 2: US-703–706 — List of learning needs ────────── */}
+          {/* ── Tab bar ───────────────────────────────────────────────── */}
+          <div className="flex items-center justify-between mb-5 border-b border-gray-200">
+            <div className="flex items-center gap-0">
+              <button
+                type="button"
+                onClick={() => setActiveTab('needs')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                  activeTab === 'needs'
+                    ? 'border-aps-blue text-aps-blue'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <List size={15} strokeWidth={1.5} />
+                Learning needs
+                {needs.length > 0 && (
+                  <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
+                    activeTab === 'needs' ? 'bg-aps-blue/10 text-aps-blue' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {needs.length}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('review')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                  activeTab === 'review'
+                    ? 'border-aps-blue text-aps-blue'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <ClipboardCheck size={15} strokeWidth={1.5} />
+                Review
+                {existingReview && (
+                  <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
+                    activeTab === 'review' ? 'bg-aps-blue/10 text-aps-blue' : 'bg-green-100 text-green-600'
+                  }`}>
+                    ✓
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Tab-specific actions in the top-right */}
+            {activeTab === 'needs' && isOpen && (
+              <div className="flex items-center gap-3 pb-px">
+                <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                  <button
+                    onClick={() => setLayout('list')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${
+                      layout === 'list' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    <List size={13} /> List
+                  </button>
+                  <button
+                    onClick={() => setLayout('grid')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border-l border-gray-300 ${
+                      layout === 'grid' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    <LayoutGrid size={13} /> Grid
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setEditingNeed(null); setFormOpen(true); }}
+                  className="px-4 py-1.5 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+                >
+                  Add learning need
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'review' && existingReview && reviewMode !== 'edit' && isOpen && (
+              <button
+                type="button"
+                onClick={() => setReviewMode('edit')}
+                className="flex items-center gap-1.5 text-xs font-medium text-aps-blue hover:underline pb-px"
+              >
+                <Pencil size={13} strokeWidth={1.5} /> Edit review
+              </button>
+            )}
+          </div>
+
+          {/* ── Tab: Learning needs ────────────────────────────────────── */}
+          {activeTab === 'needs' && (
           <section>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-semibold text-gray-900">Learning needs</h2>
@@ -609,89 +665,73 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
             })()}
           </section>
 
-          {/* ── Section 3: US-707 — Review of learning plan ───────────── */}
-          <section className="bg-white border border-gray-200 rounded-lg p-5 mt-6">
-            <div className="flex items-start justify-between gap-3 mb-1">
-              <div>
-                <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                  <ClipboardCheck size={16} strokeWidth={1.5} className="text-aps-blue" />
-                  Review of learning plan
-                </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Record when you reviewed your learning plan and what outcomes you achieved this cycle.
-                </p>
-              </div>
+          )}
 
-              {/* Edit button — shown when review exists and not in edit mode */}
-              {existingReview && reviewMode !== 'edit' && isOpen && (
-                <button
-                  type="button"
-                  onClick={() => setReviewMode('edit')}
-                  className="flex items-center gap-1.5 text-xs font-medium text-aps-blue hover:underline shrink-0"
-                >
-                  <Pencil size={13} strokeWidth={1.5} /> Edit review
-                </button>
-              )}
-            </div>
+          {/* ── Tab: Review ────────────────────────────────────────────── */}
+          {activeTab === 'review' && (
+            <section>
+              <p className="text-sm text-gray-500 mb-5">
+                Record when you reviewed your learning plan and the outcomes you achieved this cycle.
+              </p>
 
-            {/* ── No review yet ─────────────────────────────────────── */}
-            {!existingReview && reviewMode !== 'add' && (
-              <div className="mt-4 border border-dashed border-gray-200 rounded-lg p-6 text-center">
-                <CalendarDays size={28} strokeWidth={1} className="mx-auto text-gray-300 mb-2" />
-                <p className="text-sm text-gray-500 mb-1">No review submitted yet.</p>
-                <p className="text-xs text-gray-400 mb-4">
-                  Once you've reflected on your learning plan outcomes, submit your review below.
-                </p>
-                {isOpen && (
-                  <button
-                    type="button"
-                    onClick={() => setReviewMode('add')}
-                    className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
-                  >
-                    Submit review details
-                  </button>
-                )}
-                {!isOpen && (
-                  <p className="text-xs text-gray-400 italic">
-                    Reviews can only be submitted while the CPD cycle is open.
+              {/* No review yet */}
+              {!existingReview && reviewMode !== 'add' && (
+                <div className="border border-dashed border-gray-200 rounded-lg p-8 text-center">
+                  <CalendarDays size={28} strokeWidth={1} className="mx-auto text-gray-300 mb-2" />
+                  <p className="text-sm text-gray-500 mb-1">No review submitted yet.</p>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Once you've reflected on your learning plan outcomes, submit your review here.
                   </p>
-                )}
-              </div>
-            )}
-
-            {/* ── Existing review display ───────────────────────────── */}
-            {existingReview && reviewMode !== 'edit' && (
-              <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <ClipboardCheck size={15} className="text-green-600 shrink-0" />
-                  <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">
-                    Review submitted
-                  </span>
+                  {isOpen ? (
+                    <button
+                      type="button"
+                      onClick={() => setReviewMode('add')}
+                      className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+                    >
+                      Submit review details
+                    </button>
+                  ) : (
+                    <p className="text-xs text-gray-400 italic">
+                      Reviews can only be submitted while the CPD cycle is open.
+                    </p>
+                  )}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-0.5">Review date</p>
-                    <p className="font-medium text-gray-900">{existingReview.reviewDate}</p>
+              )}
+
+              {/* Existing review display */}
+              {existingReview && reviewMode !== 'edit' && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <ClipboardCheck size={15} className="text-green-600 shrink-0" />
+                    <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">
+                      Review submitted
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-0.5">Outcomes achieved</p>
-                    <p className="text-gray-800 leading-relaxed">{existingReview.outcomesAchieved}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Review date</p>
+                      <p className="font-medium text-gray-900">{existingReview.reviewDate}</p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-xs text-gray-500 mb-0.5">Outcomes achieved</p>
+                      <p className="text-gray-800 leading-relaxed">{existingReview.outcomesAchieved}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* ── Inline review form (add or edit) ─────────────────── */}
-            {(reviewMode === 'add' || reviewMode === 'edit') && (
-              <ReviewForm
-                initial={reviewMode === 'edit' ? existingReview : null}
-                cycleStart={cycleStart}
-                cycleEnd={cycleEnd}
-                onSave={handleSaveReview}
-                onCancel={() => setReviewMode(null)}
-              />
-            )}
-          </section>
+              {/* Inline review form */}
+              {(reviewMode === 'add' || reviewMode === 'edit') && (
+                <ReviewForm
+                  initial={reviewMode === 'edit' ? existingReview : null}
+                  cycleStart={cycleStart}
+                  cycleEnd={cycleEnd}
+                  onSave={handleSaveReview}
+                  onCancel={() => setReviewMode(null)}
+                />
+              )}
+            </section>
+          )}
         </>
       )}
 
