@@ -13,8 +13,9 @@ export const initialSupervisors = [
     email: 'j.mitchell@melbournepsych.com.au',
     phone: '03 9347 1200',
     assignedPrograms: [
-      { programId: '1', supervisionType: 'Primary' },
-      { programId: '6', supervisionType: 'Primary' },
+      { programId: '1',  supervisionType: 'Primary' },   // 2024–2025
+      { programId: '6',  supervisionType: 'Primary' },   // 2025–2026
+      { programId: '13', supervisionType: 'Primary' },   // 2023–2024
     ],
   },
   {
@@ -27,7 +28,8 @@ export const initialSupervisors = [
     email: 'l.nguyen@unimelb.edu.au',
     phone: '03 8344 6300',
     assignedPrograms: [
-      { programId: '1', supervisionType: 'Secondary' },
+      { programId: '1',  supervisionType: 'Secondary' }, // 2024–2025
+      { programId: '11', supervisionType: 'Primary' },   // 2022–2023
     ],
   },
   {
@@ -40,8 +42,10 @@ export const initialSupervisors = [
     email: 'k.patel@orgpsych.com.au',
     phone: '02 9267 4455',
     assignedPrograms: [
-      { programId: '2', supervisionType: 'Primary' },
-      { programId: '8', supervisionType: 'Primary' },
+      { programId: '2',  supervisionType: 'Primary' },   // 2024–2025
+      { programId: '8',  supervisionType: 'Primary' },   // 2025–2026
+      { programId: '9',  supervisionType: 'Primary' },   // 2021–2022
+      { programId: '14', supervisionType: 'Primary' },   // 2023–2024
     ],
   },
   {
@@ -54,8 +58,9 @@ export const initialSupervisors = [
     email: 'michael.obrien@forensicpsych.com.au',
     phone: '07 3221 8899',
     assignedPrograms: [
-      { programId: '3', supervisionType: 'Primary' },
-      { programId: '7', supervisionType: 'Primary' },
+      { programId: '3',  supervisionType: 'Primary' },   // 2023–2024
+      { programId: '7',  supervisionType: 'Primary' },   // 2025–2026
+      { programId: '15', supervisionType: 'Primary' },   // 2024–2025
     ],
   },
   {
@@ -68,7 +73,7 @@ export const initialSupervisors = [
     email: 'a.foster@brisbaneclinic.com.au',
     phone: '07 3009 2211',
     assignedPrograms: [
-      { programId: '3', supervisionType: 'Secondary' },
+      { programId: '3', supervisionType: 'Secondary' },  // 2023–2024
     ],
   },
   {
@@ -81,7 +86,8 @@ export const initialSupervisors = [
     email: 'r.shaw@adelaide.edu.au',
     phone: '08 8313 5200',
     assignedPrograms: [
-      { programId: '4', supervisionType: 'Primary' },
+      { programId: '4',  supervisionType: 'Primary' },   // 2022–2023
+      { programId: '10', supervisionType: 'Primary' },   // 2021–2022
     ],
   },
   {
@@ -94,7 +100,8 @@ export const initialSupervisors = [
     email: 'p.sharma@healthpsych.com.au',
     phone: '03 9654 3300',
     assignedPrograms: [
-      { programId: '5', supervisionType: 'Primary' },
+      { programId: '5',  supervisionType: 'Primary' },   // 2021–2022
+      { programId: '12', supervisionType: 'Primary' },   // 2022–2023
     ],
   },
   {

@@ -407,4 +407,166 @@ export const initialPrograms = [
       { id: 'act-o1', activityType: 'Supervision', completionDate: '2026-02-05', hours: 1, minutes: 0, supervisionType: 'Individual', supervisorId: 's3', supervisorName: 'Dr Karen Patel', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Organisational Psychology' },
     ],
   },
+
+  // ─── 2021–2022 additions (need 2 more for ≥3 per cycle) ──────────────────
+
+  // 2021–2022 — Organisational Psychology (Closed)
+  {
+    id: '9',
+    member: { title: 'Ms', firstName: 'Amelia', lastName: 'Brooks' },
+    memberNumber: 'PSY-2021-033',
+    memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-3',
+    areaOfPractice: 'Organisational Psychology',
+    qualification: 'Masters degree (5th and 6th year accredited degree)',
+    commencementDate: '2021-10-01',
+    holdsAoPE: false,
+    dualQualification: false,
+    status: 'Closed',
+    supervisors: [
+      { id: 's3', title: 'Dr', firstName: 'Karen', lastName: 'Patel', ahpraNumber: 'PSY0002345678', supervisionType: 'Primary', supervisorAoPE: 'Organisational Psychology' },
+    ],
+    placesOfPractice: [
+      { id: 'p10', positionTitle: 'Organisational Consultant', employerName: 'PwC Australia', phone: '03 8603 1000', email: 'a.brooks@pwc.com.au', addressLine1: '2 Riverside Quay', addressLine2: '', suburb: 'Southbank', postcode: '3006', state: 'VIC' },
+    ],
+    activities: [],
+  },
+
+  // 2021–2022 — Clinical Neuropsychology (Closed)
+  {
+    id: '10',
+    member: { title: 'Mr', firstName: 'Thomas', lastName: 'Walsh' },
+    memberNumber: 'PSY-2022-001',
+    memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-2',
+    areaOfPractice: 'Clinical Neuropsychology',
+    qualification: 'Masters degree (5th and 6th year accredited degree with doctoral thesis e.g. Masters/PhD)',
+    commencementDate: '2022-01-10',
+    holdsAoPE: false,
+    dualQualification: false,
+    status: 'Closed',
+    supervisors: [
+      { id: 's6', title: 'Prof', firstName: 'Robert', lastName: 'Shaw', ahpraNumber: 'PSY0005678901', supervisionType: 'Primary', supervisorAoPE: 'Clinical Neuropsychology' },
+    ],
+    placesOfPractice: [
+      { id: 'p11', positionTitle: 'Neuropsychologist', employerName: 'The Alfred Hospital', phone: '03 9076 2000', email: 't.walsh@alfred.org.au', addressLine1: '55 Commercial Rd', addressLine2: '', suburb: 'Prahran', postcode: '3004', state: 'VIC' },
+    ],
+    activities: [],
+  },
+
+  // ─── 2022–2023 additions (need 2 more for ≥3 per cycle) ──────────────────
+
+  // 2022–2023 — Clinical Psychology (Closed)
+  {
+    id: '11',
+    member: { title: 'Ms', firstName: 'Sophie', lastName: 'Nguyen' },
+    memberNumber: 'PSY-2022-078',
+    memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-1',
+    areaOfPractice: 'Clinical Psychology',
+    qualification: 'DPsych/PysD degree (5th to 7th year accredited degree e.g. DPsych or PysD)',
+    commencementDate: '2022-08-15',
+    holdsAoPE: false,
+    dualQualification: false,
+    status: 'Closed',
+    supervisors: [
+      { id: 's2', title: 'Prof', firstName: 'Linda', lastName: 'Nguyen', ahpraNumber: 'PSY0009876543', supervisionType: 'Primary', supervisorAoPE: 'Clinical Psychology' },
+    ],
+    placesOfPractice: [
+      { id: 'p12', positionTitle: 'Psychologist', employerName: 'Austin Health', phone: '03 9496 5000', email: 's.nguyen@austin.org.au', addressLine1: '145 Studley Rd', addressLine2: '', suburb: 'Heidelberg', postcode: '3084', state: 'VIC' },
+    ],
+    activities: [],
+  },
+
+  // 2022–2023 — Health Psychology (Closed)
+  {
+    id: '12',
+    member: { title: 'Mr', firstName: 'Chris', lastName: 'Nguyen' },
+    memberNumber: 'PSY-2023-004',
+    memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-5',
+    areaOfPractice: 'Health Psychology',
+    qualification: 'Masters degree (5th and 6th year accredited degree)',
+    commencementDate: '2022-11-01',
+    holdsAoPE: false,
+    dualQualification: false,
+    status: 'Closed',
+    supervisors: [
+      { id: 's7', title: 'Dr', firstName: 'Priya', lastName: 'Sharma', ahpraNumber: 'PSY0006789012', supervisionType: 'Primary', supervisorAoPE: 'Health Psychology' },
+    ],
+    placesOfPractice: [
+      { id: 'p13', positionTitle: 'Health Psychologist', employerName: "St Vincent's Hospital", phone: '02 8382 1111', email: 'c.nguyen@svhs.org.au', addressLine1: '390 Victoria St', addressLine2: '', suburb: 'Darlinghurst', postcode: '2010', state: 'NSW' },
+    ],
+    activities: [],
+  },
+
+  // ─── 2023–2024 additions (need 2 more for ≥3 per cycle) ──────────────────
+
+  // 2023–2024 — Clinical Psychology (Open)
+  {
+    id: '13',
+    member: { title: 'Ms', firstName: 'Lena', lastName: 'Park' },
+    memberNumber: 'PSY-2023-055',
+    memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-1',
+    areaOfPractice: 'Clinical Psychology',
+    qualification: 'Masters degree (5th and 6th year accredited degree)',
+    commencementDate: '2023-08-01',
+    holdsAoPE: false,
+    dualQualification: false,
+    status: 'Open',
+    supervisors: [
+      { id: 's1', title: 'Dr', firstName: 'James', lastName: 'Mitchell', ahpraNumber: 'PSY0001234567', supervisionType: 'Primary', supervisorAoPE: 'Clinical Psychology' },
+    ],
+    placesOfPractice: [
+      { id: 'p14', positionTitle: 'Psychologist', employerName: 'Monash Medical Centre', phone: '03 9594 6666', email: 'l.park@monashhealth.org', addressLine1: '246 Clayton Rd', addressLine2: '', suburb: 'Clayton', postcode: '3168', state: 'VIC' },
+    ],
+    activities: [],
+  },
+
+  // 2023–2024 — Organisational Psychology (Open)
+  {
+    id: '14',
+    member: { title: 'Dr', firstName: 'Wei', lastName: 'Zhang' },
+    memberNumber: 'PSY-2024-003',
+    memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-3',
+    areaOfPractice: 'Organisational Psychology',
+    qualification: 'Masters degree (5th and 6th year accredited degree)',
+    commencementDate: '2024-02-01',
+    holdsAoPE: false,
+    dualQualification: false,
+    status: 'Open',
+    supervisors: [
+      { id: 's3', title: 'Dr', firstName: 'Karen', lastName: 'Patel', ahpraNumber: 'PSY0002345678', supervisionType: 'Primary', supervisorAoPE: 'Organisational Psychology' },
+    ],
+    placesOfPractice: [
+      { id: 'p15', positionTitle: 'Organisational Consultant', employerName: 'IBM Australia', phone: '02 9354 4000', email: 'w.zhang@ibm.com', addressLine1: '60 City Rd', addressLine2: '', suburb: 'Southbank', postcode: '3006', state: 'VIC' },
+    ],
+    activities: [],
+  },
+
+  // ─── 2024–2025 addition (need 1 more for ≥3 per cycle) ───────────────────
+
+  // 2024–2025 — Forensic Psychology (Open)
+  {
+    id: '15',
+    member: { title: 'Ms', firstName: 'Zoe', lastName: 'Martinez' },
+    memberNumber: 'PSY-2024-067',
+    memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-4',
+    areaOfPractice: 'Forensic Psychology',
+    qualification: 'DPsych/PysD degree (5th to 7th year accredited degree e.g. DPsych or PysD)',
+    commencementDate: '2024-11-01',
+    holdsAoPE: false,
+    dualQualification: false,
+    status: 'Open',
+    supervisors: [
+      { id: 's4', title: 'Dr', firstName: 'Michael', lastName: "O'Brien", ahpraNumber: 'PSY0003456789', supervisionType: 'Primary', supervisorAoPE: 'Forensic Psychology' },
+    ],
+    placesOfPractice: [
+      { id: 'p16', positionTitle: 'Forensic Psychologist', employerName: 'Victoria Police Forensic Services', phone: '03 9247 6666', email: 'z.martinez@police.vic.gov.au', addressLine1: '637 Flinders St', addressLine2: '', suburb: 'Docklands', postcode: '3008', state: 'VIC' },
+    ],
+    activities: [],
+  },
 ];
