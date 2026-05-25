@@ -135,7 +135,7 @@ export default function MyLearningPlanDetail({ cpdProfiles, setCpdProfiles }) {
       <section className="bg-white border border-gray-200 rounded-lg p-6">
         <dl className="space-y-5">
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+            <dt className="text-xs font-medium text-gray-500 mb-1">
               Learning need identified
             </dt>
             <dd className="text-sm text-gray-900">{needTitle}</dd>
@@ -143,7 +143,7 @@ export default function MyLearningPlanDetail({ cpdProfiles, setCpdProfiles }) {
 
           {activitiesText && (
             <div>
-              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+              <dt className="text-xs font-medium text-gray-500 mb-1">
                 Types of activities proposed
               </dt>
               <dd className="text-sm text-gray-900 whitespace-pre-wrap">{activitiesText}</dd>
@@ -151,7 +151,7 @@ export default function MyLearningPlanDetail({ cpdProfiles, setCpdProfiles }) {
           )}
 
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+            <dt className="text-xs font-medium text-gray-500 mb-1">
               Proposed dates for activities
             </dt>
             <dd className="text-sm text-gray-900">
@@ -161,7 +161,7 @@ export default function MyLearningPlanDetail({ cpdProfiles, setCpdProfiles }) {
 
           {anticipatedText && (
             <div>
-              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+              <dt className="text-xs font-medium text-gray-500 mb-1">
                 Anticipated outcomes
               </dt>
               <dd className="text-sm text-gray-900 whitespace-pre-wrap">{anticipatedText}</dd>
