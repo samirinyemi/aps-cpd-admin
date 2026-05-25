@@ -41,6 +41,7 @@ export const initialSupervisors = [
     phone: '02 9267 4455',
     assignedPrograms: [
       { programId: '2', supervisionType: 'Primary' },
+      { programId: '8', supervisionType: 'Primary' },
     ],
   },
   {
@@ -54,6 +55,7 @@ export const initialSupervisors = [
     phone: '07 3221 8899',
     assignedPrograms: [
       { programId: '3', supervisionType: 'Primary' },
+      { programId: '7', supervisionType: 'Primary' },
     ],
   },
   {

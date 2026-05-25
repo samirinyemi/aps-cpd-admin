@@ -320,4 +320,91 @@ export const initialPrograms = [
     ],
     activities: [],
   },
+
+  // 2025–2026 cycle — Forensic Psychology (Open)
+  {
+    id: '7',
+    member: { title: 'Mr', firstName: 'Noah', lastName: 'Patel' },
+    memberNumber: 'PSY-2025-022',
+    memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-4',
+    areaOfPractice: 'Forensic Psychology',
+    qualification: 'DPsych/PysD degree (5th to 7th year accredited degree e.g. DPsych or PysD)',
+    commencementDate: '2025-09-01',
+    holdsAoPE: false,
+    dualQualification: false,
+    status: 'Open',
+    supervisors: [
+      {
+        id: 's4',
+        title: 'Dr',
+        firstName: 'Michael',
+        lastName: "O'Brien",
+        ahpraNumber: 'PSY0003456789',
+        supervisionType: 'Primary',
+        supervisorAoPE: 'Forensic Psychology',
+      },
+    ],
+    placesOfPractice: [
+      {
+        id: 'p8',
+        positionTitle: 'Forensic Psychologist',
+        employerName: 'NSW Justice Health',
+        phone: '02 9289 4000',
+        email: 'n.patel@justicehealth.nsw.gov.au',
+        addressLine1: '14 College St',
+        addressLine2: '',
+        suburb: 'Darlinghurst',
+        postcode: '2010',
+        state: 'NSW',
+      },
+    ],
+    activities: [
+      { id: 'act-f1', activityType: 'Supervision', completionDate: '2025-10-08', hours: 1, minutes: 30, supervisionType: 'Individual', supervisorId: 's4', supervisorName: "Dr Michael O'Brien", directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Forensic Psychology' },
+      { id: 'act-f2', activityType: 'Practice', completionDate: '2025-10-20', hours: 20, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: 12, directContactMinutes: 0, placeId: 'p8', employerName: 'NSW Justice Health', allocation: 'Forensic Psychology' },
+    ],
+  },
+
+  // 2025–2026 cycle — Organisational Psychology (Open)
+  {
+    id: '8',
+    member: { title: 'Ms', firstName: 'Hannah', lastName: "O'Connor" },
+    memberNumber: 'PSY-2025-045',
+    memberGrade: 'Registrar',
+    aopeComplianceId: 'aope-3',
+    areaOfPractice: 'Organisational Psychology',
+    qualification: 'Masters degree (5th and 6th year accredited degree)',
+    commencementDate: '2026-01-15',
+    holdsAoPE: false,
+    dualQualification: false,
+    status: 'Open',
+    supervisors: [
+      {
+        id: 's3',
+        title: 'Dr',
+        firstName: 'Karen',
+        lastName: 'Patel',
+        ahpraNumber: 'PSY0002345678',
+        supervisionType: 'Primary',
+        supervisorAoPE: 'Organisational Psychology',
+      },
+    ],
+    placesOfPractice: [
+      {
+        id: 'p9',
+        positionTitle: 'Organisational Psychologist',
+        employerName: 'Accenture Australia',
+        phone: '02 9005 5000',
+        email: 'h.oconnor@accenture.com',
+        addressLine1: '1 Martin Place',
+        addressLine2: 'Level 22',
+        suburb: 'Sydney',
+        postcode: '2000',
+        state: 'NSW',
+      },
+    ],
+    activities: [
+      { id: 'act-o1', activityType: 'Supervision', completionDate: '2026-02-05', hours: 1, minutes: 0, supervisionType: 'Individual', supervisorId: 's3', supervisorName: 'Dr Karen Patel', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Organisational Psychology' },
+    ],
+  },
 ];
