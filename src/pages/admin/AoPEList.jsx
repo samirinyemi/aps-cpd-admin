@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Pencil, Clock, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import EmptyState from '../../components/EmptyState';
+import CycleSwitcher from '../../components/CycleSwitcher';
 
 const EditIcon = () => <Pencil size={16} strokeWidth={1.5} />;
 const ClockIcon = () => <Clock size={14} strokeWidth={1.5} />;
@@ -137,6 +138,8 @@ export default function AoPEList({ aoPEPrograms }) {
           </button>
         </div>
       </div>
+
+      <CycleSwitcher className="mb-6" />
 
       {aoPEPrograms.length === 0 ? (
         <EmptyState message="No AoPE compliance programs have been configured yet." />
