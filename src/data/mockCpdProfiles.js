@@ -215,6 +215,11 @@ const rawInitialCpdProfiles = [
     cpdExemption: false,
     termsOfUse: true,
     learningPlanMethod: 'PD Tool',
+    // US-707: plan-level review record (reviewDate must be within the CPD cycle period)
+    learningPlanReview: {
+      reviewDate: '2025-11-20',
+      outcomesAchieved: 'Completed trauma workshop and began applying EMDR with two clients. Gained confidence in phase-based formulation. Supervision skills goal substantially met — started supporting a registrar in October. Cultural competence work is ongoing; next cycle will focus on embedding yarning in all intake assessments.',
+    },
     aoPEs: ['Clinical Psychology'],
     requirementsMet: true,
     learningNeeds: [

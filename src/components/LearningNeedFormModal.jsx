@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import SelectField from './SelectField';
 
+// US-704/705: Learning need form — 4 mandatory fields per spec.
+// Field sizes: learning need 250, activities proposed 250, proposed dates 60, anticipated outcomes 250.
 const emptyForm = {
-  title: '',
-  description: '',
+  need: '',
+  activitiesProposed: '',
   proposedDate: '',
   anticipatedOutcome: '',
   status: 'Not Started',
@@ -19,8 +21,9 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
     if (!open) return;
     if (existingNeed) {
       setForm({
-        title: existingNeed.title || existingNeed.need || '',
-        description: existingNeed.description || '',
+        need: existingNeed.need || existingNeed.title || '',
+        // backward-compat: old records may use 'description' for activities proposed
+        activitiesProposed: existingNeed.activitiesProposed || existingNeed.description || '',
         proposedDate: existingNeed.proposedDate || '',
         anticipatedOutcome: existingNeed.anticipatedOutcome || '',
         status: existingNeed.status || 'Not Started',
@@ -41,8 +44,8 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
 
   function validate() {
     const errs = {};
-    if (!form.title.trim()) errs.title = 'Required';
-    if (!form.description.trim()) errs.description = 'Required';
+    if (!form.need.trim()) errs.need = 'Required';
+    if (!form.activitiesProposed.trim()) errs.activitiesProposed = 'Required';
     if (!form.proposedDate.trim()) errs.proposedDate = 'Required';
     if (!form.anticipatedOutcome.trim()) errs.anticipatedOutcome = 'Required';
     return errs;
@@ -53,8 +56,11 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     const payload = {
       id: isEdit ? existingNeed.id : `ln-${Date.now()}`,
-      title: form.title.trim(),
-      description: form.description.trim(),
+      // keep both field aliases so the rest of the app can read either
+      need: form.need.trim(),
+      title: form.need.trim(),
+      activitiesProposed: form.activitiesProposed.trim(),
+      description: form.activitiesProposed.trim(),        // backward-compat alias
       proposedDate: form.proposedDate.trim(),
       anticipatedOutcome: form.anticipatedOutcome.trim(),
       status: form.status,
@@ -65,85 +71,126 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
   }
 
   const inputClass = (field) =>
-    `w-full h-11 px-3 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue ${errors[field] ? 'border-red-400' : 'border-gray-300'}`;
+    `w-full h-14 px-3 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue ${errors[field] ? 'border-red-400' : 'border-gray-300'}`;
   const textareaClass = (field) =>
-    `w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue ${errors[field] ? 'border-red-400' : 'border-gray-300'}`;
+    `w-full px-3 py-2.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue resize-none ${errors[field] ? 'border-red-400' : 'border-gray-300'}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onCancel} />
       <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">{isEdit ? 'Edit learning need' : 'Add learning need'}</h3>
-        <p className="text-sm text-gray-500 mb-5">Capture what you plan to learn, when, and what good looks like.</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+          {isEdit ? 'Edit learning need' : 'Add learning need'}
+        </h3>
+        <p className="text-sm text-gray-500 mb-5">
+          All fields are mandatory.
+        </p>
 
-        <div className="space-y-4 mb-6">
+        <div className="space-y-5 mb-6">
+          {/* Field 1: Learning need identified */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Title</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Learning need identified <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
-              maxLength={120}
-              value={form.title}
-              onChange={(e) => update('title', e.target.value)}
-              className={inputClass('title')}
+              maxLength={250}
+              value={form.need}
+              onChange={(e) => update('need', e.target.value)}
+              className={inputClass('need')}
               placeholder="e.g. Evidence-based trauma interventions"
             />
-            {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+            <div className="flex justify-between mt-1">
+              {errors.need
+                ? <p className="text-sm text-red-600">{errors.need}</p>
+                : <span />}
+              <span className="text-[11px] text-gray-400 ml-auto">{form.need.length}/250</span>
+            </div>
           </div>
 
+          {/* Field 2: Types of activities proposed */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Types of activities proposed to meet this need <span className="text-red-500">*</span>
+            </label>
             <textarea
               rows={3}
-              maxLength={500}
-              value={form.description}
-              onChange={(e) => update('description', e.target.value)}
-              className={textareaClass('description')}
-              placeholder="What will you do to meet this learning need?"
+              maxLength={250}
+              value={form.activitiesProposed}
+              onChange={(e) => update('activitiesProposed', e.target.value)}
+              className={textareaClass('activitiesProposed')}
+              placeholder="e.g. Attend 2-day trauma workshop, monthly peer consultation, reading program"
             />
-            {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+            <div className="flex justify-between mt-1">
+              {errors.activitiesProposed
+                ? <p className="text-sm text-red-600">{errors.activitiesProposed}</p>
+                : <span />}
+              <span className="text-[11px] text-gray-400 ml-auto">{form.activitiesProposed.length}/250</span>
+            </div>
           </div>
 
+          {/* Field 3: Proposed dates */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Proposed date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Proposed dates for activities <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
-              maxLength={80}
+              maxLength={60}
               value={form.proposedDate}
               onChange={(e) => update('proposedDate', e.target.value)}
               className={inputClass('proposedDate')}
               placeholder="e.g. August 2025 · Semester 2 · Ongoing through Q3"
             />
-            {errors.proposedDate && <p className="mt-1 text-sm text-red-600">{errors.proposedDate}</p>}
+            <div className="flex justify-between mt-1">
+              {errors.proposedDate
+                ? <p className="text-sm text-red-600">{errors.proposedDate}</p>
+                : <span />}
+              <span className="text-[11px] text-gray-400 ml-auto">{form.proposedDate.length}/60</span>
+            </div>
           </div>
 
+          {/* Field 4: Anticipated outcomes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Anticipated outcome</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Anticipated outcomes <span className="text-red-500">*</span>
+            </label>
             <textarea
               rows={3}
-              maxLength={500}
+              maxLength={250}
               value={form.anticipatedOutcome}
               onChange={(e) => update('anticipatedOutcome', e.target.value)}
               className={textareaClass('anticipatedOutcome')}
-              placeholder="What will you be able to do differently once this is complete?"
+              placeholder="e.g. Confidently formulate and deliver phased trauma treatment"
             />
-            {errors.anticipatedOutcome && <p className="mt-1 text-sm text-red-600">{errors.anticipatedOutcome}</p>}
+            <div className="flex justify-between mt-1">
+              {errors.anticipatedOutcome
+                ? <p className="text-sm text-red-600">{errors.anticipatedOutcome}</p>
+                : <span />}
+              <span className="text-[11px] text-gray-400 ml-auto">{form.anticipatedOutcome.length}/250</span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Status + Priority — optional helpers, not in spec as mandatory */}
+          <div className="grid grid-cols-2 gap-4 pt-1 border-t border-gray-100">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Priority</label>
-              <SelectField value={form.priority} onChange={(e) => update('priority', e.target.value)}>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </SelectField>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                Status <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
               <SelectField value={form.status} onChange={(e) => update('status', e.target.value)}>
                 <option value="Not Started">Not Started</option>
                 <option value="In Progress">In Progress</option>
                 <option value="Completed">Completed</option>
+              </SelectField>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">
+                Priority <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <SelectField value={form.priority} onChange={(e) => update('priority', e.target.value)}>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
               </SelectField>
             </div>
           </div>
