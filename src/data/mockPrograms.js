@@ -86,6 +86,8 @@ export const initialPrograms = [
       { id: 'act-3', activityType: 'Practice', completionDate: '2025-02-05', hours: 8, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: 5, directContactMinutes: 30, placeId: 'p1', employerName: 'Melbourne Health', allocation: 'Clinical Psychology' },
       { id: 'act-4', activityType: 'Supervision', completionDate: '2025-02-12', hours: 2, minutes: 0, supervisionType: 'Individual', supervisorId: 's1', supervisorName: 'Dr James Mitchell', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Clinical Psychology' },
       { id: 'act-5', activityType: 'Practice', completionDate: '2025-03-01', hours: 40, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: 25, directContactMinutes: 0, placeId: 'p1', employerName: 'Melbourne Health', allocation: 'Clinical Psychology' },
+      { id: 'act-5a', activityType: 'CPD', completionDate: '2025-02-20', hours: 3, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Clinical Psychology', activityTitle: 'Workshop: Evidence-Based Trauma-Focused CBT' },
+      { id: 'act-5b', activityType: 'CPD', completionDate: '2025-03-14', hours: 1, minutes: 30, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Clinical Psychology', activityTitle: 'APS Webinar: Contemporary Issues in Assessment' },
     ],
   },
   {
@@ -129,6 +131,7 @@ export const initialPrograms = [
       { id: 'act-6', activityType: 'Supervision', completionDate: '2025-01-10', hours: 1, minutes: 30, supervisionType: 'Individual', supervisorId: 's3', supervisorName: 'Dr Karen Patel', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Organisational Psychology' },
       { id: 'act-7', activityType: 'Practice', completionDate: '2025-02-01', hours: 20, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: 12, directContactMinutes: 0, placeId: 'p2', employerName: 'Deloitte Australia', allocation: 'Organisational Psychology' },
       { id: 'act-8', activityType: 'Supervision', completionDate: '2025-02-14', hours: 1, minutes: 0, supervisionType: 'Group', supervisorId: 's3', supervisorName: 'Dr Karen Patel', directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Organisational Psychology' },
+      { id: 'act-8a', activityType: 'CPD', completionDate: '2025-01-28', hours: 2, minutes: 0, supervisionType: null, supervisorId: null, supervisorName: null, directContactHours: null, directContactMinutes: null, placeId: null, employerName: null, allocation: 'Organisational Psychology', activityTitle: 'Seminar: Positive Psychology in the Workplace' },
     ],
   },
   {

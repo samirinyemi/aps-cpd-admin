@@ -24,6 +24,7 @@ import RegistrarProfilesList from './pages/internal/RegistrarProfilesList';
 import RegistrarProfileDetail from './pages/internal/RegistrarProfileDetail';
 import RegistrarActivitiesList from './pages/internal/RegistrarActivitiesList';
 import AoPEList from './pages/admin/AoPEList';
+import LogCpdHours from './pages/admin/LogCpdHours';
 import AoPEDetail from './pages/admin/AoPEDetail';
 import AoPEForm from './pages/admin/AoPEForm';
 import SupervisorList from './pages/admin/SupervisorList';
@@ -119,6 +120,11 @@ function AppRoutes() {
       } />
       <Route path="/admin/registrar/practice-locations/:id" element={
         <RequireAuth adminOnly><PracticeLocationForm locations={practiceLocations} setLocations={setPracticeLocations} programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+
+      {/* Admin: Log CPD Hours */}
+      <Route path="/admin/registrar/log-cpd" element={
+        <RequireAuth adminOnly><LogCpdHours programs={programs} setPrograms={setPrograms} /></RequireAuth>
       } />
 
       {/* Admin: AoPE Compliance Configuration */}
