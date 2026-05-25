@@ -14,6 +14,7 @@ export const initialSupervisors = [
     phone: '03 9347 1200',
     assignedPrograms: [
       { programId: '1', supervisionType: 'Primary' },
+      { programId: '6', supervisionType: 'Primary' },
     ],
   },
   {
@@ -90,7 +91,9 @@ export const initialSupervisors = [
     supervisorAoPE: 'Health Psychology',
     email: 'p.sharma@healthpsych.com.au',
     phone: '03 9654 3300',
-    assignedPrograms: [],
+    assignedPrograms: [
+      { programId: '5', supervisionType: 'Primary' },
+    ],
   },
   {
     id: 's8',

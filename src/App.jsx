@@ -123,7 +123,7 @@ function AppRoutes() {
 
       {/* Admin: AoPE Compliance Configuration */}
       <Route path="/admin/registrar/aope" element={
-        <RequireAuth adminOnly><AoPEList aoPEPrograms={aoPEPrograms} /></RequireAuth>
+        <RequireAuth adminOnly><AoPEList aoPEPrograms={aoPEPrograms} programs={programs} /></RequireAuth>
       } />
       <Route path="/admin/registrar/aope/new" element={
         <RequireAuth adminOnly><AoPEForm aoPEPrograms={aoPEPrograms} setAoPEPrograms={setAoPEPrograms} /></RequireAuth>

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil, Clock, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import EmptyState from '../../components/EmptyState';
 import CycleSwitcher from '../../components/CycleSwitcher';
+import { useSelectedCycle } from '../../context/CycleContext';
 
 const EditIcon = () => <Pencil size={16} strokeWidth={1.5} />;
 const ClockIcon = () => <Clock size={14} strokeWidth={1.5} />;
@@ -90,9 +91,23 @@ function AoPECard({ program, layout, onNavigate }) {
   );
 }
 
-export default function AoPEList({ aoPEPrograms }) {
+export default function AoPEList({ aoPEPrograms, programs = [] }) {
   const navigate = useNavigate();
   const [layout, setLayout] = useState('list');
+  const { selectedCycle } = useSelectedCycle();
+
+  // Filter to AoPE templates whose area of practice has at least one
+  // registrar program with a commencementDate in the selected cycle's range.
+  const filtered = useMemo(() => {
+    if (!selectedCycle) return aoPEPrograms;
+    const areasInCycle = new Set(
+      programs
+        .filter((p) => p.commencementDate >= selectedCycle.startDate && p.commencementDate <= selectedCycle.endDate)
+        .map((p) => p.areaOfPractice)
+    );
+    if (areasInCycle.size === 0) return [];
+    return aoPEPrograms.filter((a) => areasInCycle.has(a.areaOfPractice));
+  }, [aoPEPrograms, programs, selectedCycle]);
 
   function handleNavigate(program, mode) {
     if (mode === 'edit') {
@@ -107,7 +122,9 @@ export default function AoPEList({ aoPEPrograms }) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">AoPE Compliance Configuration</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{aoPEPrograms.length} program{aoPEPrograms.length !== 1 ? 's' : ''} configured</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {filtered.length} of {aoPEPrograms.length} program{aoPEPrograms.length !== 1 ? 's' : ''} configured
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
@@ -143,15 +160,17 @@ export default function AoPEList({ aoPEPrograms }) {
 
       {aoPEPrograms.length === 0 ? (
         <EmptyState message="No AoPE compliance programs have been configured yet." />
+      ) : filtered.length === 0 ? (
+        <EmptyState message={`No AoPE programs are active in the ${selectedCycle?.name || 'selected'} cycle.`} />
       ) : layout === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {aoPEPrograms.map((p) => (
+          {filtered.map((p) => (
             <AoPECard key={p.id} program={p} layout="grid" onNavigate={handleNavigate} />
           ))}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {aoPEPrograms.map((p) => (
+          {filtered.map((p) => (
             <AoPECard key={p.id} program={p} layout="list" onNavigate={handleNavigate} />
           ))}
         </div>
