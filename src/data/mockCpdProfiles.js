@@ -121,9 +121,6 @@ function padLearningPlans(persona) {
       anticipatedOutcome: `Apply ${topic.toLowerCase()} learning in at least one client context.`,
       status,
       priority: PRIORITY_CYCLE[padded.length % PRIORITY_CYCLE.length],
-      reviews: status === 'Completed'
-        ? [{ id: `${persona.id}-gen-rv${idx}`, reviewedAt: '2025-10-15', notes: 'Completed the planned training and reviewed outcomes with peer.' }]
-        : [],
     });
   }
   // If the topic library wasn't big enough, continue with numbered fillers.
@@ -137,8 +134,7 @@ function padLearningPlans(persona) {
       proposedDate: 'Flexible — rolling across the cycle.',
       anticipatedOutcome: 'Captured reflection and integrated into practice.',
       status,
-      priority: PRIORITY_CYCLE[padded.length % PRIORITY_CYCLE.length],
-      reviews: [],
+      priority: PRIORITY_CYCLE[padded.length % PRIORITY_CYCLE.length]
     });
     filler++;
   }
@@ -236,179 +232,140 @@ const rawInitialCpdProfiles = [
         description: 'Deepen my application of trauma-focused CBT, EMDR, and phase-based approaches with complex PTSD clients.',
         proposedDate: 'Across Q3 and Q4 — 2-day workshop plus monthly peer consultation.',
         anticipatedOutcome: 'Confidently formulate and deliver phased trauma treatment for complex presentations.',
-        status: 'In Progress',
-        reviews: [
-          { id: 'rv1', reviewedAt: '2025-09-30', notes: 'Completed EMDR refresher and applied with two clients. Peer group helpful for case conceptualisation.' },
-          { id: 'rv2', reviewedAt: '2025-11-15', notes: 'Reviewed progress with supervisor. Next step: integrate somatic grounding techniques.' },
-        ],
+        status: 'In Progress'
       },
       {
         id: 'ln2', title: 'Supervision skills development',
         description: 'Build my skills as a secondary supervisor with registrars — including reflective practice frameworks and feedback delivery.',
         proposedDate: 'Semester 2 — monthly reading + quarterly supervision-of-supervision.',
         anticipatedOutcome: 'Provide structured, reflective supervision to at least one registrar this cycle.',
-        status: 'Completed',
-        reviews: [
-          { id: 'rv3', reviewedAt: '2025-10-10', notes: 'Completed supervisor training course; registrar assignment started in October.' },
-        ],
+        status: 'Completed'
       },
       {
         id: 'ln3', title: 'Cultural competence for First Nations clients',
         description: 'Strengthen culturally safe practice with Aboriginal and Torres Strait Islander clients and their families.',
         proposedDate: 'Rolling — reading + cultural supervision throughout the year.',
         anticipatedOutcome: 'Embed cultural safety framework across all intake assessments and treatment plans.',
-        status: 'In Progress',
-        reviews: [
-          { id: 'rv4', reviewedAt: '2025-10-22', notes: 'Attended AIPA cultural safety webinar; started using yarning approach in intake.' },
-        ],
+        status: 'In Progress'
       },
       {
         id: 'ln4', title: 'Adolescent depression treatment',
         description: 'Improve outcomes for adolescent clients presenting with depression by integrating IPT-A and family involvement.',
         proposedDate: 'Term 3 workshop + 6-month application phase.',
         anticipatedOutcome: 'Deliver IPT-A to at least 3 adolescent clients with measured symptom reduction.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'ln5', title: 'DBT skills groups',
         description: 'Lead a full 24-week DBT skills group for adult clients with emotional dysregulation.',
         proposedDate: 'Facilitator training Feb 2026, group commences Mar 2026.',
         anticipatedOutcome: 'Co-facilitate one DBT group cycle and evaluate outcomes.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'ln6', title: 'Telehealth best practice',
         description: 'Refine telehealth delivery with children and older adults — platform, consent, safety planning.',
         proposedDate: 'Online module + APS practice note review, September.',
         anticipatedOutcome: 'Updated telehealth protocol adopted across my caseload.',
-        status: 'Completed',
-        reviews: [
-          { id: 'rv5', reviewedAt: '2025-10-01', notes: 'Protocol updated; shared with team.' },
-        ],
+        status: 'Completed'
       },
       {
         id: 'ln7', title: 'Clinical risk assessment',
         description: 'Formalise suicide and self-harm risk assessment using the Columbia Suicide Severity Rating Scale.',
         proposedDate: 'Workshop in August + in-session integration over 3 months.',
         anticipatedOutcome: 'C-SSRS embedded in intake and review workflow.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'ln8', title: 'Psychopharmacology literacy',
         description: 'Improve working knowledge of common SSRI/SNRI/antipsychotic side-effect profiles and interactions.',
         proposedDate: 'Quarterly self-directed reading + GP liaison debriefs.',
         anticipatedOutcome: 'More collaborative medication-related conversations with prescribing GPs.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'ln9', title: 'Outcome measurement rigor',
         description: 'Implement routine outcome monitoring (ORS/SRS or PHQ-9/GAD-7) across all new clients.',
         proposedDate: 'Roll out in Q2 after template design.',
         anticipatedOutcome: 'Outcome data captured for 90% of new clients across a 6-month window.',
-        status: 'Completed',
-        reviews: [
-          { id: 'rv6', reviewedAt: '2025-08-05', notes: 'ORS/SRS now standard intake; data captured on 88% of new clients.' },
-        ],
+        status: 'Completed'
       },
       {
         id: 'ln10', title: 'Ethics: boundaries in small communities',
         description: 'Explore ethical decision-making in rural/regional practice where multiple relationships are common.',
         proposedDate: 'Reading + ethics consultation.',
         anticipatedOutcome: 'Documented decision framework used in at least 2 cases.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'ln11', title: 'Group formulation skills',
         description: 'Strengthen case formulation for complex clients drawing on CBT, schema, and attachment lenses.',
         proposedDate: 'Monthly formulation-focused peer consultation across the year.',
         anticipatedOutcome: 'Integrated formulation applied to 5+ complex cases with peer feedback.',
-        status: 'In Progress',
-        reviews: [
-          { id: 'rv7', reviewedAt: '2025-11-02', notes: 'Peer group noted growth in integrating schema with CBT for personality presentations.' },
-        ],
+        status: 'In Progress'
       },
       {
         id: 'ln12', title: 'Neurodiversity-affirming practice',
         description: 'Adopt neurodiversity-affirming approach with autistic and ADHD clients — assessment language, accommodation planning.',
         proposedDate: 'Workshop plus ongoing reading over 6 months.',
         anticipatedOutcome: 'Report templates and session language reflect a neurodiversity-affirming stance.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'ln13', title: 'Brief interventions for anxiety',
         description: 'Equip for short-course (4–6 session) evidence-based anxiety work suitable for EAP/short-contract referrals.',
         proposedDate: 'Online course + 3-month application window.',
         anticipatedOutcome: 'Structured 6-session template available for new EAP referrals.',
-        status: 'Completed',
-        reviews: [
-          { id: 'rv8', reviewedAt: '2025-07-20', notes: 'Template live; used with 4 clients to date — positive feedback.' },
-        ],
+        status: 'Completed'
       },
       {
         id: 'ln14', title: 'Supervisor training — primary role',
         description: 'Upgrade from secondary to primary supervisor accreditation so I can supervise registrars end-to-end.',
         proposedDate: 'Primary-supervisor workshop Feb 2026; application by April 2026.',
         anticipatedOutcome: 'Primary supervisor endorsement obtained.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'ln15', title: 'Private practice business literacy',
         description: 'Grow business-side knowledge — Medicare MBS updates, record-keeping, insurance basics.',
         proposedDate: 'APS webinar + quarterly check-ins.',
         anticipatedOutcome: 'Updated practice systems aligned with current MBS and retention rules.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'ln16', title: 'Motivational Interviewing refresh',
         description: 'Re-anchor MI skills — reflective listening, evoking change talk, resistance roll-with approach — for substance-use referrals.',
         proposedDate: 'Two-day workshop in February + recorded-session review over following month.',
         anticipatedOutcome: 'Measurable increase in change-talk utterances across session recordings.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'ln17', title: 'Perinatal mental health fundamentals',
         description: 'Build a working knowledge base for assessment and treatment of perinatal depression and anxiety.',
         proposedDate: 'MHPN perinatal series (4 webinars) March–June.',
         anticipatedOutcome: 'Confidence to accept perinatal referrals; screening protocol in place.',
-        status: 'In Progress',
-        reviews: [
-          { id: 'rv9', reviewedAt: '2025-10-12', notes: 'First two webinars done; key insight: importance of routine screening across both antenatal and postnatal touchpoints.' },
-        ],
+        status: 'In Progress'
       },
       {
         id: 'ln18', title: 'Sleep-focused CBT (CBT-I)',
         description: 'Structured CBT for insomnia — sleep hygiene, stimulus control, sleep restriction, cognitive components.',
         proposedDate: 'CBT-I online certification + 3-month application phase.',
         anticipatedOutcome: 'Deliver a full 6-session CBT-I protocol to at least 2 clients.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'ln19', title: 'Working with interpreters',
         description: 'Best-practice for psychological work with professional interpreters — briefing, turn-taking, debriefing.',
         proposedDate: 'Reading list + peer consultation in Q1.',
         anticipatedOutcome: 'Established protocol documented and trialed with two referrals.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'ln20', title: 'Clinical writing and case notes',
         description: 'Improve case-note quality — SOAP-style structure, risk formulation clarity, defensible language.',
         proposedDate: 'Quarterly self-audit + peer review pairing.',
         anticipatedOutcome: 'Peer reviewer rates my sample notes as "fit for purpose" without major edits.',
-        status: 'In Progress',
-        reviews: [
-          { id: 'rv10', reviewedAt: '2025-11-08', notes: 'Self-audit Q3 complete; main gap flagged: explicit safety-plan language in risk notes.' },
-        ],
+        status: 'In Progress'
       },
     ],
     activities: [
@@ -456,8 +413,8 @@ const rawInitialCpdProfiles = [
     aoPEs: ['Organisational Psychology'],
     requirementsMet: false,
     learningNeeds: [
-      { id: 'ln3', title: 'Leadership coaching frameworks', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
-      { id: 'ln4', title: 'Psychometric assessment updates', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started', reviews: [] },
+      { id: 'ln3', title: 'Leadership coaching frameworks', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress' },
+      { id: 'ln4', title: 'Psychometric assessment updates', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started' },
     ],
     activities: [
       { id: 'a5', cycleId: '2', allocation: 'Organisational Psychology', activityType: 'Workshop', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2025-08-22', loggedDate: '2025-08-23', journalNotes: 'Full-day workshop on 360-degree feedback.' },
@@ -496,9 +453,9 @@ const rawInitialCpdProfiles = [
     aoPEs: ['Counselling Psychology'],
     requirementsMet: false,
     learningNeeds: [
-      { id: 'ln5', title: 'Cultural competency in counselling', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
-      { id: 'ln6', title: 'Grief and loss interventions', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started', reviews: [] },
-      { id: 'ln7', title: 'Ethics in digital practice', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Completed', reviews: [] },
+      { id: 'ln5', title: 'Cultural competency in counselling', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress' },
+      { id: 'ln6', title: 'Grief and loss interventions', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started' },
+      { id: 'ln7', title: 'Ethics in digital practice', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Completed' },
     ],
     activities: [
       { id: 'a7', cycleId: '2', activityType: 'Peer Supervision', peerHrs: 2, actionHrs: 0, cpdHrs: 2, completedDate: '2025-07-20', loggedDate: '2025-07-21', journalNotes: 'Group supervision with three peers on complex cases.' },
@@ -521,7 +478,7 @@ const rawInitialCpdProfiles = [
     aoPEs: ['Health Psychology'],
     requirementsMet: false,
     learningNeeds: [
-      { id: 'ln8', title: 'Chronic pain management approaches', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
+      { id: 'ln8', title: 'Chronic pain management approaches', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress' },
     ],
     activities: [
       { id: 'a10', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 4, cpdHrs: 4, completedDate: '2025-08-01', loggedDate: '2025-08-02', journalNotes: 'Online course on motivational interviewing in health settings.' },
@@ -548,176 +505,140 @@ const rawInitialCpdProfiles = [
         description: 'Stay current with the latest HCR-20 V3 coding guidelines and align practice with the updated risk formulation framework.',
         proposedDate: 'Workshop in July + case application through Q3/Q4.',
         anticipatedOutcome: 'All current forensic reports reference the HCR-20 V3 formulation model consistently.',
-        status: 'Completed',
-        reviews: [
-          { id: 'rk-rv1', reviewedAt: '2025-09-12', notes: 'Workshop completed in July; applied to three pre-sentence reports.' },
-        ],
+        status: 'Completed'
       },
       {
         id: 'rk-ln2', title: 'Expert witness testimony skills',
         description: 'Refine courtroom presentation — cross-examination technique, clarity under pressure, credibility markers.',
         proposedDate: 'Advanced expert-witness training in October + mock-trial practice.',
         anticipatedOutcome: 'Deliver three court appearances with peer feedback rating "confident and clear."',
-        status: 'In Progress',
-        reviews: [
-          { id: 'rk-rv2', reviewedAt: '2025-11-03', notes: 'Completed two mock-trial exercises; adjusted pacing and plain-language explanations.' },
-        ],
+        status: 'In Progress'
       },
       {
         id: 'rk-ln3', title: 'Malingering detection — SIRS-2 & MMPI-2-RF validity',
         description: 'Deepen knowledge of symptom validity testing in forensic contexts, especially with compensation/legal referrals.',
         proposedDate: 'Reading program Q1 + supervision in Q2.',
         anticipatedOutcome: 'Competent, defensible use of SIRS-2 and MMPI-2-RF validity scales in forensic assessments.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'rk-ln4', title: 'Violence risk assessment — SVR-20',
         description: 'Build SVR-20 competence for pre-release and parole contexts.',
         proposedDate: 'Manual review + SVR-20 workshop in March.',
         anticipatedOutcome: 'SVR-20 integrated into two parole-board reports.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'rk-ln5', title: 'Cultural considerations in forensic assessment',
         description: 'Strengthen culturally informed practice — especially assessments involving Aboriginal and Torres Strait Islander clients.',
         proposedDate: 'AIPA cultural safety webinar + ongoing cultural supervision.',
         anticipatedOutcome: 'Cultural formulation documented in every forensic assessment involving First Nations clients.',
-        status: 'In Progress',
-        reviews: [
-          { id: 'rk-rv3', reviewedAt: '2025-10-18', notes: 'Attended AIPA webinar; drafted cultural formulation template.' },
-        ],
+        status: 'In Progress'
       },
       {
         id: 'rk-ln6', title: 'Juvenile forensic assessment (SAVRY)',
         description: 'Up-skill on SAVRY and developmental considerations for adolescent forensic assessments.',
         proposedDate: 'Online training Q2 + case consultation.',
         anticipatedOutcome: 'SAVRY used appropriately across all juvenile justice referrals.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'rk-ln7', title: 'Competence to stand trial evaluations',
         description: 'Refresh fitness-to-stand-trial assessment process and relevant legislation.',
         proposedDate: 'Reading + legislative refresher.',
         anticipatedOutcome: 'Confident independent delivery of two fitness evaluations.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'rk-ln8', title: 'Forensic report writing — clarity & defensibility',
         description: 'Tighten forensic report structure — findings, limitations, formulation, recommendations; minimise jargon.',
         proposedDate: 'Quarterly peer-review of sample reports.',
         anticipatedOutcome: 'Peer reviewers rate sample reports as "fit for court" without major edits.',
-        status: 'In Progress',
-        reviews: [
-          { id: 'rk-rv4', reviewedAt: '2025-11-10', notes: 'Q3 peer review completed; feedback: tighter formulation paragraphs.' },
-        ],
+        status: 'In Progress'
       },
       {
         id: 'rk-ln9', title: 'Trauma-informed interviewing',
         description: 'Apply trauma-informed principles to forensic interviewing without compromising evidentiary clarity.',
         proposedDate: 'Two-day workshop + role-play supervision.',
         anticipatedOutcome: 'Documented trauma-informed interviewing protocol in my practice manual.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'rk-ln10', title: 'Working with interpreters in forensic contexts',
         description: 'Best practice for working with professional interpreters when conducting forensic interviews and assessments.',
         proposedDate: 'Reading + peer consultation Q2.',
         anticipatedOutcome: 'Established interpreter briefing protocol used on all non-English assessments.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'rk-ln11', title: 'Psychopathy assessment (PCL-R)',
         description: 'Maintain PCL-R accreditation and refresh inter-rater reliability.',
         proposedDate: 'Annual PCL-R calibration workshop in May.',
         anticipatedOutcome: 'PCL-R accreditation renewed; inter-rater agreement within acceptable range.',
-        status: 'Completed',
-        reviews: [
-          { id: 'rk-rv5', reviewedAt: '2025-06-02', notes: 'Calibration workshop completed; reliability within 1 point.' },
-        ],
+        status: 'Completed'
       },
       {
         id: 'rk-ln12', title: 'Sex-offender treatment and risk (Static-99R, Stable-2007)',
         description: 'Currency on sex-offender risk tools used in treatment planning and parole contexts.',
         proposedDate: 'Training refresher + peer consultation across the year.',
         anticipatedOutcome: 'Up-to-date use of Static-99R and Stable-2007 documented in three cases.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'rk-ln13', title: 'Ethics in dual-role forensic/therapy referrals',
         description: 'Clarify ethical pathway when a referrer requests both assessment and therapy.',
         proposedDate: 'Ethics consultation + APS code review.',
         anticipatedOutcome: 'Clear, documented decision framework applied to new referrals.',
-        status: 'Completed',
-        reviews: [
-          { id: 'rk-rv6', reviewedAt: '2025-08-25', notes: 'Decision framework finalised and circulated within team.' },
-        ],
+        status: 'Completed'
       },
       {
         id: 'rk-ln14', title: 'Neuropsychological screening in forensic contexts',
         description: 'Introductory-level neuropsychology for detecting cognitive impairment relevant to criminal responsibility.',
         proposedDate: 'Online course Q3 + supervision.',
         anticipatedOutcome: 'Appropriate screening + referral pathway documented.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'rk-ln15', title: 'Supervision of forensic registrars',
         description: 'Build primary-supervisor competence for registrars specialising in forensic psychology.',
         proposedDate: 'Supervisor training + supervision-of-supervision quarterly.',
         anticipatedOutcome: 'Primary supervision delivered to at least one forensic registrar.',
-        status: 'In Progress',
-        reviews: [
-          { id: 'rk-rv7', reviewedAt: '2025-10-29', notes: 'Primary supervisor training complete; first registrar assignment under way.' },
-        ],
+        status: 'In Progress'
       },
       {
         id: 'rk-ln16', title: 'Mental health act legislation refresh',
         description: 'Stay current with state-level mental health and guardianship legislation relevant to forensic clients.',
         proposedDate: 'Quarterly legislative reading digest.',
         anticipatedOutcome: 'Client-rights sections of reports updated and accurate.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'rk-ln17', title: 'Working in custodial settings — best practice',
         description: 'Practical skills for assessment and intervention inside correctional facilities.',
         proposedDate: 'On-site shadowing + peer consultation.',
         anticipatedOutcome: 'Comfortable delivering assessments across two correctional facilities.',
-        status: 'In Progress',
-        reviews: [],
+        status: 'In Progress'
       },
       {
         id: 'rk-ln18', title: 'Restorative justice approaches',
         description: 'Introductory engagement with restorative-justice models applicable to forensic psychology.',
         proposedDate: 'Reading list + external seminar Q4.',
         anticipatedOutcome: 'Understanding of when and how restorative approaches can integrate with risk-focused work.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'rk-ln19', title: 'Digital evidence and cyber-behavioural analysis',
         description: 'Emerging area — considerations when digital records are central to forensic formulation.',
         proposedDate: 'Online micro-course Q2.',
         anticipatedOutcome: 'Baseline literacy in digital evidence limitations + ethical pitfalls.',
-        status: 'Not Started',
-        reviews: [],
+        status: 'Not Started'
       },
       {
         id: 'rk-ln20', title: 'Burnout prevention and forensic practice',
         description: 'Proactive wellness — vicarious trauma, caseload management, peer debriefing.',
         proposedDate: 'Monthly peer debriefing + annual wellness audit.',
         anticipatedOutcome: 'Structured wellness routine maintained; caseload caps enforced.',
-        status: 'In Progress',
-        reviews: [
-          { id: 'rk-rv8', reviewedAt: '2025-11-20', notes: 'Q3 wellness audit: caseload within cap; peer debriefing on track.' },
-        ],
+        status: 'In Progress'
       },
     ],
     activities: [
@@ -758,8 +679,8 @@ const rawInitialCpdProfiles = [
     aoPEs: ['Educational & Developmental Psychology'],
     requirementsMet: false,
     learningNeeds: [
-      { id: 'ln11', title: 'Autism spectrum assessment in adolescents', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
-      { id: 'ln12', title: 'School-based intervention programs', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started', reviews: [] },
+      { id: 'ln11', title: 'Autism spectrum assessment in adolescents', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress' },
+      { id: 'ln12', title: 'School-based intervention programs', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started' },
     ],
     activities: [
       { id: 'a17', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-08-10', loggedDate: '2025-08-11', journalNotes: 'ADOS-2 refresher module.' },
@@ -780,7 +701,7 @@ const rawInitialCpdProfiles = [
     learningPlanMethod: 'Free Text',
     requirementsMet: true,
     learningNeeds: [
-      { id: 'ln13', title: 'Mental health in elite athletes', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Completed', reviews: [] },
+      { id: 'ln13', title: 'Mental health in elite athletes', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Completed' },
     ],
     activities: [
       { id: 'a19', cycleId: '2', activityType: 'Conference Attendance', peerHrs: 0, actionHrs: 8, cpdHrs: 8, completedDate: '2025-07-25', loggedDate: '2025-07-26', journalNotes: 'ASCA conference on sports psychology.' },
@@ -803,7 +724,7 @@ const rawInitialCpdProfiles = [
     learningPlanMethod: 'Template',
     requirementsMet: true,
     learningNeeds: [
-      { id: 'ln14', title: 'ACT-based interventions', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Completed', reviews: [] },
+      { id: 'ln14', title: 'ACT-based interventions', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Completed' },
     ],
     activities: [
       { id: 'a23', cycleId: '2', activityType: 'Online Learning', peerHrs: 0, actionHrs: 6, cpdHrs: 6, completedDate: '2024-10-15', loggedDate: '2024-10-16', journalNotes: 'ACT foundations online course.' },
@@ -824,8 +745,8 @@ const rawInitialCpdProfiles = [
     learningPlanMethod: 'Free Text',
     requirementsMet: false,
     learningNeeds: [
-      { id: 'ln15', title: 'Community resilience frameworks', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress', reviews: [] },
-      { id: 'ln16', title: 'Disaster mental health response', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started', reviews: [] },
+      { id: 'ln15', title: 'Community resilience frameworks', description: '', proposedDate: '', anticipatedOutcome: '', status: 'In Progress' },
+      { id: 'ln16', title: 'Disaster mental health response', description: '', proposedDate: '', anticipatedOutcome: '', status: 'Not Started' },
     ],
     activities: [
       { id: 'a25', cycleId: '2', activityType: 'Reading/Research', peerHrs: 0, actionHrs: 3, cpdHrs: 3, completedDate: '2025-08-20', loggedDate: '2025-08-22', journalNotes: 'Literature review on community psychology interventions.' },

@@ -65,7 +65,6 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
       anticipatedOutcome: form.anticipatedOutcome.trim(),
       status: form.status,
       priority: form.priority,
-      reviews: isEdit ? (existingNeed.reviews || []) : [],
     };
     onSave(payload);
   }

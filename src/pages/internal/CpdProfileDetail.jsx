@@ -55,12 +55,6 @@ export default function CpdProfileDetail({ profiles }) {
       ),
     },
     {
-      key: 'reviews',
-      label: 'Reviews',
-      accessor: (row) => row.reviews?.length ?? 0,
-      render: (row) => <span className="text-gray-700">{row.reviews?.length ?? 0}</span>,
-    },
-    {
       key: 'status',
       label: 'Status',
       render: (row) => <StatusBadge status={row.status} />,
