@@ -16,11 +16,17 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-const BOARD_REG_OPTIONS = ['General', 'Provisional', 'Non-Practicing', 'Not Registered'];
+const BOARD_REG_OPTIONS = ['General', 'Provisional', 'Non-Practising', 'Not Registered'];
 
-const EXEMPT_REGISTRATIONS = ['Provisional', 'Non-Practicing', 'Not Registered'];
+const EXEMPT_REGISTRATIONS = ['Provisional', 'Non-Practising', 'Not Registered'];
 
-export default function MyCpdProfile({ cpdProfiles, setCpdProfiles }) {
+// US-603: derive registrar programStatus from boardRegistration
+// General | Not Registered → Open ; Provisional | Non-Practising → Pending
+function deriveRegistrarStatus(boardRegistration) {
+  return ['General', 'Not Registered'].includes(boardRegistration) ? 'Open' : 'Pending';
+}
+
+export default function MyCpdProfile({ cpdProfiles, setCpdProfiles, registrarProfiles, setRegistrarProfiles }) {
   const { member } = useAuth();
   const { selectedCycle } = useSelectedCycle();
 
@@ -138,6 +144,19 @@ export default function MyCpdProfile({ cpdProfiles, setCpdProfiles }) {
           : p
       )
     );
+
+    // US-603: update registrar programStatus based on boardRegistration
+    if (setRegistrarProfiles) {
+      const derivedStatus = deriveRegistrarStatus(form.boardRegistration);
+      setRegistrarProfiles((prev) =>
+        prev.map((p) =>
+          p.memberNumber === member?.memberNumber && p.programStatus !== 'Closed'
+            ? { ...p, programStatus: derivedStatus }
+            : p
+        )
+      );
+    }
+
     setSetupOpen(false);
   }
 
@@ -151,6 +170,19 @@ export default function MyCpdProfile({ cpdProfiles, setCpdProfiles }) {
       aoPEs:                   form.aoPEs,
     });
     persistCycleProfile({ cpdExemption: form.cpdExemption, termsOfUse: form.termsOfUse });
+
+    // US-603: update registrar programStatus based on boardRegistration
+    if (setRegistrarProfiles) {
+      const derivedStatus = deriveRegistrarStatus(form.boardRegistration);
+      setRegistrarProfiles((prev) =>
+        prev.map((p) =>
+          p.memberNumber === member?.memberNumber && p.programStatus !== 'Closed'
+            ? { ...p, programStatus: derivedStatus }
+            : p
+        )
+      );
+    }
+
     setIsEditing(false);
   }
 
@@ -259,8 +291,8 @@ export default function MyCpdProfile({ cpdProfiles, setCpdProfiles }) {
   // ── View / Edit mode (cycleProfile exists) ────────────────────────────────
   const regAlert = form.boardRegistration === 'Provisional'
     ? "As you hold provisional registration with the Psychology Board, you are not required to meet its CPD requirements."
-    : form.boardRegistration === 'Non-Practicing'
-      ? "You currently hold non-practicing registration. CPD requirements are deferred."
+    : form.boardRegistration === 'Non-Practising'
+      ? "You currently hold non-practising registration. CPD requirements are deferred."
       : null;
 
   return (

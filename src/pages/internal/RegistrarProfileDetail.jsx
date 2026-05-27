@@ -1,23 +1,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Info } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import DataTable from '../../components/DataTable';
-
-// US-603: On save, derive programStatus from boardRegistration
-// General | Not Registered → Open
-// Provisional | Non-Practising → Pending
-const OPEN_REG_STATUSES = ['General', 'Not Registered'];
-const PENDING_REG_STATUSES = ['Provisional', 'Non-Practising'];
-const ALL_REG_STATUSES = [...OPEN_REG_STATUSES, ...PENDING_REG_STATUSES];
-
-function deriveStatus(boardRegistration) {
-  if (OPEN_REG_STATUSES.includes(boardRegistration)) return 'Open';
-  if (PENDING_REG_STATUSES.includes(boardRegistration)) return 'Pending';
-  return 'Pending'; // safe fallback
-}
 
 function Field({ label, value, children }) {
   return (
@@ -66,7 +52,6 @@ export default function RegistrarProfileDetail({ profiles, setProfiles }) {
       program: profile.program || '',
       commencementDate: profile.commencementDate || '',
       qualification: profile.qualification || '',
-      boardRegistration: profile.boardRegistration || 'General',
     });
     setEditMode(true);
   }
@@ -77,7 +62,6 @@ export default function RegistrarProfileDetail({ profiles, setProfiles }) {
   }
 
   function handleSave() {
-    const derivedStatus = deriveStatus(form.boardRegistration);
     setProfiles((prev) =>
       prev.map((p) =>
         p.id === id
@@ -87,8 +71,6 @@ export default function RegistrarProfileDetail({ profiles, setProfiles }) {
               program: form.program,
               commencementDate: form.commencementDate,
               qualification: form.qualification,
-              boardRegistration: form.boardRegistration,
-              programStatus: derivedStatus,
             }
           : p
       )
@@ -100,9 +82,6 @@ export default function RegistrarProfileDetail({ profiles, setProfiles }) {
   function set(field) {
     return (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
   }
-
-  // Preview the status that will result from the current boardRegistration selection
-  const previewStatus = form ? deriveStatus(form.boardRegistration) : null;
 
   const inputCls =
     'w-full h-10 px-3 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue';
@@ -189,16 +168,6 @@ export default function RegistrarProfileDetail({ profiles, setProfiles }) {
         {editMode ? (
           /* ── Edit form ─────────────────────────────────────────────── */
           <div>
-            {/* US-603 info banner */}
-            <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-md px-4 py-3 mb-5">
-              <Info size={15} strokeWidth={1.75} className="text-aps-blue mt-0.5 shrink-0" />
-              <p className="text-xs text-blue-800 leading-relaxed">
-                <span className="font-semibold">Program status is automatically set from Board Registration.</span>{' '}
-                General or Not Registered → <span className="font-medium">Open</span>.{' '}
-                Provisional or Non-Practising → <span className="font-medium">Pending</span>.
-              </p>
-            </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
               <FormField label="Grade">
                 <input
@@ -235,31 +204,6 @@ export default function RegistrarProfileDetail({ profiles, setProfiles }) {
                   className={inputCls}
                 />
               </FormField>
-
-              <FormField label="Board Registration">
-                <select
-                  value={form.boardRegistration}
-                  onChange={set('boardRegistration')}
-                  className={inputCls}
-                >
-                  {ALL_REG_STATUSES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-              </FormField>
-
-              {/* Live status preview */}
-              <div className="flex flex-col justify-end">
-                <span className="text-xs font-medium text-gray-500 mb-1">Program Status (on save)</span>
-                <div className="h-10 flex items-center">
-                  <StatusBadge status={previewStatus} />
-                  {previewStatus !== profile.programStatus && (
-                    <span className="ml-2 text-xs text-gray-400">
-                      (was <span className="font-medium">{profile.programStatus}</span>)
-                    </span>
-                  )}
-                </div>
-              </div>
             </div>
 
             <div className="flex items-center gap-3 pt-4 border-t border-gray-100">

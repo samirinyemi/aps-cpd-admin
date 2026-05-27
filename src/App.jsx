@@ -172,7 +172,7 @@ function AppRoutes() {
         <RequireAuth memberOnly><MyCpd cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} programs={programs} aoPEPrograms={aoPEPrograms} /></RequireAuth>
       } />
       <Route path="/member/cpd/profile" element={
-        <RequireAuth memberOnly><MyCpdProfile cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
+        <RequireAuth memberOnly><MyCpdProfile cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} registrarProfiles={registrarProfiles} setRegistrarProfiles={setRegistrarProfiles} /></RequireAuth>
       } />
       <Route path="/member/cpd/learning-plan" element={
         <RequireAuth memberOnly><MyLearningPlan cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
