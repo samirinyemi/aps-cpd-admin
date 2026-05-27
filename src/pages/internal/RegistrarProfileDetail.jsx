@@ -1,23 +1,52 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Info } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import DataTable from '../../components/DataTable';
 
+// US-603: On save, derive programStatus from boardRegistration
+// General | Not Registered → Open
+// Provisional | Non-Practising → Pending
+const OPEN_REG_STATUSES = ['General', 'Not Registered'];
+const PENDING_REG_STATUSES = ['Provisional', 'Non-Practising'];
+const ALL_REG_STATUSES = [...OPEN_REG_STATUSES, ...PENDING_REG_STATUSES];
+
+function deriveStatus(boardRegistration) {
+  if (OPEN_REG_STATUSES.includes(boardRegistration)) return 'Open';
+  if (PENDING_REG_STATUSES.includes(boardRegistration)) return 'Pending';
+  return 'Pending'; // safe fallback
+}
+
 function Field({ label, value, children }) {
   return (
     <div>
       <dt className="text-xs font-medium text-gray-500 mb-0.5">{label}</dt>
-      <dd className="text-sm text-gray-900">{children ?? value}</dd>
+      <dd className="text-sm text-gray-900">{children ?? value ?? <span className="text-gray-400">—</span>}</dd>
     </div>
   );
 }
 
-export default function RegistrarProfileDetail({ profiles }) {
+function FormField({ label, children }) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+export default function RegistrarProfileDetail({ profiles, setProfiles }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { role } = useAuth();
+
   const profile = profiles.find((p) => p.id === id);
+
+  // Edit form state — seeded from current profile
+  const [editMode, setEditMode] = useState(false);
+  const [form, setForm] = useState(null);
 
   if (!profile) {
     return (
@@ -28,34 +57,70 @@ export default function RegistrarProfileDetail({ profiles }) {
   }
 
   const isAdmin = role === 'IT Administrator';
-  const isOpen = profile.programStatus === 'Open';
+  const isEditable = profile.programStatus === 'Open' || profile.programStatus === 'Pending';
+  const isClosed = profile.programStatus === 'Closed';
+
+  function openEdit() {
+    setForm({
+      grade: profile.grade || '',
+      program: profile.program || '',
+      commencementDate: profile.commencementDate || '',
+      qualification: profile.qualification || '',
+      boardRegistration: profile.boardRegistration || 'General',
+    });
+    setEditMode(true);
+  }
+
+  function cancelEdit() {
+    setEditMode(false);
+    setForm(null);
+  }
+
+  function handleSave() {
+    const derivedStatus = deriveStatus(form.boardRegistration);
+    setProfiles((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              grade: form.grade,
+              program: form.program,
+              commencementDate: form.commencementDate,
+              qualification: form.qualification,
+              boardRegistration: form.boardRegistration,
+              programStatus: derivedStatus,
+            }
+          : p
+      )
+    );
+    setEditMode(false);
+    setForm(null);
+  }
+
+  function set(field) {
+    return (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  }
+
+  // Preview the status that will result from the current boardRegistration selection
+  const previewStatus = form ? deriveStatus(form.boardRegistration) : null;
+
+  const inputCls =
+    'w-full h-10 px-3 text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue';
 
   const supervisorColumns = [
     { key: 'name', label: 'Supervisor Name' },
     { key: 'role', label: 'Role' },
     { key: 'aope', label: 'AoPE' },
     { key: 'approvalDate', label: 'Approval Date' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (row) => <StatusBadge status={row.status} />,
-    },
+    { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
   ];
 
   const placeColumns = [
     { key: 'name', label: 'Practice Name' },
     { key: 'type', label: 'Type' },
     { key: 'startDate', label: 'Start Date' },
-    {
-      key: 'endDate',
-      label: 'End Date',
-      render: (row) => row.endDate || <span className="text-gray-400">—</span>,
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (row) => <StatusBadge status={row.status} />,
-    },
+    { key: 'endDate', label: 'End Date', render: (row) => row.endDate || <span className="text-gray-400">—</span> },
+    { key: 'status', label: 'Status', render: (row) => <StatusBadge status={row.status} /> },
   ];
 
   const activityColumns = [
@@ -92,22 +157,27 @@ export default function RegistrarProfileDetail({ profiles }) {
         <span className="text-gray-900">{profile.memberName}</span>
       </nav>
 
+      {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-semibold text-gray-900">{profile.memberName}</h1>
           <StatusBadge status={profile.programStatus} />
         </div>
-        {isAdmin && isOpen && (
-          <button className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark">
+        {isAdmin && isEditable && !editMode && (
+          <button
+            onClick={openEdit}
+            className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+          >
             Edit
           </button>
         )}
       </div>
 
-      {!isOpen && (
+      {/* Read-only banner (Closed only) */}
+      {isClosed && (
         <div className="bg-amber-50 border border-amber-200 rounded-md px-4 py-2 mb-6">
           <p className="text-sm text-amber-800">
-            This program is {profile.programStatus.toLowerCase()}. All fields are read-only.
+            This program is closed. All fields are read-only.
           </p>
         </div>
       )}
@@ -115,15 +185,117 @@ export default function RegistrarProfileDetail({ profiles }) {
       {/* Section A — Profile */}
       <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
         <h2 className="text-base font-semibold text-gray-900 mb-4">Profile</h2>
-        <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <Field label="Name" value={profile.memberName} />
-          <Field label="Number" value={profile.memberNumber} />
-          <Field label="Grade" value={profile.grade} />
-          <Field label="Program" value={profile.program} />
-          <Field label="Commencement Date" value={profile.commencementDate} />
-          <Field label="Qualification" value={profile.qualification} />
-        </dl>
+
+        {editMode ? (
+          /* ── Edit form ─────────────────────────────────────────────── */
+          <div>
+            {/* US-603 info banner */}
+            <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-md px-4 py-3 mb-5">
+              <Info size={15} strokeWidth={1.75} className="text-aps-blue mt-0.5 shrink-0" />
+              <p className="text-xs text-blue-800 leading-relaxed">
+                <span className="font-semibold">Program status is automatically set from Board Registration.</span>{' '}
+                General or Not Registered → <span className="font-medium">Open</span>.{' '}
+                Provisional or Non-Practising → <span className="font-medium">Pending</span>.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+              <FormField label="Grade">
+                <input
+                  type="text"
+                  value={form.grade}
+                  onChange={set('grade')}
+                  className={inputCls}
+                />
+              </FormField>
+
+              <FormField label="Registrar Program">
+                <input
+                  type="text"
+                  value={form.program}
+                  onChange={set('program')}
+                  className={inputCls}
+                />
+              </FormField>
+
+              <FormField label="Commencement Date">
+                <input
+                  type="date"
+                  value={form.commencementDate}
+                  onChange={set('commencementDate')}
+                  className={inputCls}
+                />
+              </FormField>
+
+              <FormField label="Qualification">
+                <input
+                  type="text"
+                  value={form.qualification}
+                  onChange={set('qualification')}
+                  className={inputCls}
+                />
+              </FormField>
+
+              <FormField label="Board Registration">
+                <select
+                  value={form.boardRegistration}
+                  onChange={set('boardRegistration')}
+                  className={inputCls}
+                >
+                  {ALL_REG_STATUSES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </FormField>
+
+              {/* Live status preview */}
+              <div className="flex flex-col justify-end">
+                <span className="text-xs font-medium text-gray-500 mb-1">Program Status (on save)</span>
+                <div className="h-10 flex items-center">
+                  <StatusBadge status={previewStatus} />
+                  {previewStatus !== profile.programStatus && (
+                    <span className="ml-2 text-xs text-gray-400">
+                      (was <span className="font-medium">{profile.programStatus}</span>)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+              >
+                Save changes
+              </button>
+              <button
+                onClick={cancelEdit}
+                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* ── View mode ─────────────────────────────────────────────── */
+          <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <Field label="Name" value={profile.memberName} />
+            <Field label="Number" value={profile.memberNumber} />
+            <Field label="Grade" value={profile.grade} />
+            <Field label="Program" value={profile.program} />
+            <Field label="Commencement Date" value={profile.commencementDate} />
+            <Field label="Qualification" value={profile.qualification} />
+            <Field label="Board Registration" value={profile.boardRegistration} />
+            <div>
+              <dt className="text-xs font-medium text-gray-500 mb-0.5">Program Status</dt>
+              <dd><StatusBadge status={profile.programStatus} /></dd>
+            </div>
+          </dl>
+        )}
       </section>
+
+      {/* Sections B–D are always read-only display */}
 
       {/* Section B — Supervisors */}
       <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">

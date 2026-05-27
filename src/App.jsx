@@ -64,7 +64,7 @@ function AppRoutes() {
   const [programs, setPrograms] = useState(initialPrograms);
   const [cpdProfiles, setCpdProfiles] = useState(initialCpdProfiles);
   const [aoPEPrograms, setAoPEPrograms] = useState(initialAoPEPrograms);
-  const [registrarProfiles] = useState(initialRegistrarProfiles);
+  const [registrarProfiles, setRegistrarProfiles] = useState(initialRegistrarProfiles);
   const [supervisors, setSupervisors] = useState(initialSupervisors);
   const [practiceLocations, setPracticeLocations] = useState(initialPracticeLocations);
 
@@ -161,7 +161,7 @@ function AppRoutes() {
         <RequireAuth><RegistrarProfilesList profiles={registrarProfiles} /></RequireAuth>
       } />
       <Route path="/internal/registrar/profiles/:id" element={
-        <RequireAuth><RegistrarProfileDetail profiles={registrarProfiles} /></RequireAuth>
+        <RequireAuth><RegistrarProfileDetail profiles={registrarProfiles} setProfiles={setRegistrarProfiles} /></RequireAuth>
       } />
       <Route path="/internal/registrar/activities" element={
         <RequireAuth><RegistrarActivitiesList profiles={registrarProfiles} /></RequireAuth>
