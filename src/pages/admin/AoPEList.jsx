@@ -1,10 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil, Clock, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import EmptyState from '../../components/EmptyState';
-import CycleSwitcher from '../../components/CycleSwitcher';
-import { useSelectedCycle } from '../../context/CycleContext';
 
 const EditIcon = () => <Pencil size={16} strokeWidth={1.5} />;
 const ClockIcon = () => <Clock size={14} strokeWidth={1.5} />;
@@ -91,23 +89,10 @@ function AoPECard({ program, layout, onNavigate }) {
   );
 }
 
-export default function AoPEList({ aoPEPrograms, programs = [] }) {
+export default function AoPEList({ aoPEPrograms }) {
   const navigate = useNavigate();
   const [layout, setLayout] = useState('list');
-  const { selectedCycle } = useSelectedCycle();
-
-  // Filter to AoPE templates whose area of practice has at least one
-  // registrar program with a commencementDate in the selected cycle's range.
-  const filtered = useMemo(() => {
-    if (!selectedCycle) return aoPEPrograms;
-    const areasInCycle = new Set(
-      programs
-        .filter((p) => p.commencementDate >= selectedCycle.startDate && p.commencementDate <= selectedCycle.endDate)
-        .map((p) => p.areaOfPractice)
-    );
-    if (areasInCycle.size === 0) return [];
-    return aoPEPrograms.filter((a) => areasInCycle.has(a.areaOfPractice));
-  }, [aoPEPrograms, programs, selectedCycle]);
+  const filtered = aoPEPrograms;
 
   function handleNavigate(program, mode) {
     if (mode === 'edit') {
@@ -156,12 +141,8 @@ export default function AoPEList({ aoPEPrograms, programs = [] }) {
         </div>
       </div>
 
-      <CycleSwitcher className="mb-6" />
-
       {aoPEPrograms.length === 0 ? (
         <EmptyState message="No AoPE compliance programs have been configured yet." />
-      ) : filtered.length === 0 ? (
-        <EmptyState message={`No AoPE programs are active in the ${selectedCycle?.name || 'selected'} cycle.`} />
       ) : layout === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filtered.map((p) => (

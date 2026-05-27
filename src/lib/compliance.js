@@ -135,12 +135,19 @@ export function findLinkedTemplate(program, aoPEPrograms = []) {
 
 /**
  * Extract a member's CPD activities from the profiles store.
- * CPD activities are the unified cycle-scoped store on each CPD profile.
+ * CPD activities are stored per cycle sub-profile; this aggregates activities
+ * across ALL cycle sub-profiles for the member so registrar compliance can see
+ * the full picture. Pass a cycleId to restrict to a single cycle.
  */
-export function findMemberCpdActivities(program, cpdProfiles = []) {
+export function findMemberCpdActivities(program, cpdProfiles = [], cycleId = null) {
   if (!program || !program.memberNumber) return [];
   const profile = cpdProfiles.find((p) => p.memberNumber === program.memberNumber);
-  return profile?.activities || [];
+  if (!profile) return [];
+  const cycleProfiles = profile.cycleProfiles || [];
+  const relevant = cycleId
+    ? cycleProfiles.filter((cp) => cp.cycleId === cycleId)
+    : cycleProfiles;
+  return relevant.flatMap((cp) => cp.activities || []);
 }
 
 /**

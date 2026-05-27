@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, BookOpen } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
@@ -51,9 +51,16 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
   const { member } = useAuth();
   const { selectedCycle } = useSelectedCycle();
 
-  const profile = useMemo(
+  // Step 1: find primary member profile (by memberNumber only)
+  const memberProfile = useMemo(
     () => (cpdProfiles || []).find((p) => p.memberNumber === member?.memberNumber) || null,
     [cpdProfiles, member]
+  );
+
+  // Step 2: find cycle sub-profile (by cycleId)
+  const cycleProfile = useMemo(
+    () => memberProfile?.cycleProfiles?.find((cp) => cp.cycleId === selectedCycle?.id) || null,
+    [memberProfile, selectedCycle]
   );
 
   const myPrograms = useMemo(
@@ -63,25 +70,61 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
 
   // HLBR US-806: logging only when selected cycle is Open.
   const isCycleOpen = selectedCycle?.status === 'Open';
-  const hasExemption = Boolean(profile?.cpdExemption);
+  const hasExemption = Boolean(cycleProfile?.cpdExemption);
 
-  // US-500..506 metrics
+  // US-500..506 metrics — pass merged object so compliance lib can access both levels
   const metrics = useMemo(
-    () => profile && selectedCycle ? computeCpdCycleMetrics(profile, selectedCycle) : null,
-    [profile, selectedCycle]
+    () => cycleProfile && selectedCycle
+      ? computeCpdCycleMetrics({ ...memberProfile, ...cycleProfile }, selectedCycle)
+      : null,
+    [memberProfile, cycleProfile, selectedCycle]
   );
 
   // Log activity modal
   const [logOpen, setLogOpen] = useState(false);
-  function handleLogActivity(activity) {
+
+  function persistCycleProfile(patch) {
     setCpdProfiles((prev) =>
       prev.map((p) =>
-        p.memberNumber === member.memberNumber
-          ? { ...p, activities: [...(p.activities || []), activity] }
+        p.id === memberProfile.id
+          ? {
+              ...p,
+              cycleProfiles: (p.cycleProfiles || []).map((cp) =>
+                cp.id === cycleProfile.id ? { ...cp, ...patch } : cp
+              ),
+            }
           : p
       )
     );
+  }
+
+  function handleLogActivity(activity) {
+    persistCycleProfile({ activities: [...(cycleProfile?.activities || []), activity] });
     setLogOpen(false);
+  }
+
+  // "Start cycle" handler — creates a new empty cycle sub-profile
+  function handleStartCycle() {
+    if (!memberProfile || !selectedCycle) return;
+    const newCp = {
+      id: `cp-${memberProfile.id}-${selectedCycle.id}-${Date.now()}`,
+      cycleId: selectedCycle.id,
+      cpdCycle: selectedCycle.name,
+      cpdExemption: false,
+      termsOfUse: false,
+      requirementsMet: false,
+      learningPlanMethod: 'PD Tool',
+      learningPlanReviews: [],
+      learningNeeds: [],
+      activities: [],
+    };
+    setCpdProfiles((prev) =>
+      prev.map((p) =>
+        p.id === memberProfile.id
+          ? { ...p, cycleProfiles: [...(p.cycleProfiles || []), newCp] }
+          : p
+      )
+    );
   }
 
   if (!member) {
@@ -90,6 +133,75 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         <div className="text-center py-12">
           <p className="text-gray-500">Not logged in as a member.</p>
           <Link to="/login" className="text-aps-blue hover:underline text-sm mt-3 inline-block">Return to login</Link>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!memberProfile) {
+    return (
+      <PageShell>
+        <div className="text-center py-16">
+          <div className="flex justify-center mb-4">
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+              <BookOpen size={26} strokeWidth={1.5} className="text-gray-400" />
+            </div>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">No member profile found</h2>
+          <p className="text-sm text-gray-500 max-w-sm mx-auto">
+            No CPD profile exists for this account.
+          </p>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!cycleProfile && selectedCycle) {
+    // Closed cycles always have a profile (they were once Open).
+    // Only Pending and Open cycles need a "start" flow.
+    if (selectedCycle.status === 'Closed') {
+      return (
+        <PageShell>
+          <div className="text-center py-16">
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+                <BookOpen size={26} strokeWidth={1.5} className="text-gray-400" />
+              </div>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">No records found for {selectedCycle.name}</h2>
+            <p className="text-sm text-gray-500 max-w-sm mx-auto">
+              No CPD records were found for this cycle.
+            </p>
+          </div>
+        </PageShell>
+      );
+    }
+
+    // Pending or Open — offer to create a profile.
+    const isPending = selectedCycle.status === 'Pending';
+    return (
+      <PageShell>
+        <div className="text-center py-16">
+          <div className="flex justify-center mb-4">
+            <div className={`w-14 h-14 rounded-full ${isPending ? 'bg-gray-100' : 'bg-aps-blue-light'} flex items-center justify-center`}>
+              <BookOpen size={26} strokeWidth={1.5} className={isPending ? 'text-gray-400' : 'text-aps-blue'} />
+            </div>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {isPending ? `Set up your CPD for ${selectedCycle.name}` : `Start your CPD for ${selectedCycle.name}`}
+          </h2>
+          <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
+            {isPending
+              ? "This cycle hasn't opened yet, but you can set up your profile and learning plan ahead of time."
+              : "You don't have a CPD profile for this cycle yet. Create one to begin logging your professional development."}
+          </p>
+          <button
+            type="button"
+            onClick={handleStartCycle}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
+          >
+            {isPending ? `Set up my CPD for ${selectedCycle.name}` : `Start my CPD for ${selectedCycle.name}`}
+          </button>
         </div>
       </PageShell>
     );
@@ -260,7 +372,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {myPrograms.map((p) => {
               const template = findLinkedTemplate(p, aoPEPrograms || []);
-              const pct = template ? compliancePercent(p, template, profile?.activities || []) : 0;
+              const pct = template ? compliancePercent(p, template, cycleProfile?.activities || []) : 0;
               const barColour = pct >= 100 ? 'bg-green-500' : pct > 0 ? 'bg-amber-400' : 'bg-gray-300';
               return (
                 <Link key={p.id} to={`/member/registrar/${p.id}`} className="block bg-gray-50/60 border border-gray-100 rounded-lg p-4 hover:border-aps-blue/40 hover:bg-white transition">
@@ -290,7 +402,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         <LogCpdActivityModal
           open={logOpen}
           cycle={selectedCycle}
-          allocationOptions={(profile?.aoPEs || []).map((a) => ({ value: a, label: a }))}
+          allocationOptions={(memberProfile?.aoPEs || []).map((a) => ({ value: a, label: a }))}
           onSave={handleLogActivity}
           onCancel={() => setLogOpen(false)}
         />

@@ -26,34 +26,8 @@ import { useSelectedCycle } from '../../context/CycleContext';
 
 const EXEMPT_REGISTRATIONS = ['Provisional', 'Non-Practicing'];
 
-// ─── Small helper chips ────────────────────────────────────────────────────
-function StatusChip({ status }) {
-  const cls =
-    status === 'Completed' ? 'bg-green-50 text-green-700 border-green-200'
-    : status === 'In Progress' ? 'bg-amber-50 text-amber-700 border-amber-200'
-    : 'bg-gray-100 text-gray-600 border-gray-200';
-  return (
-    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${cls}`}>
-      {status || 'Not Started'}
-    </span>
-  );
-}
-
-function PriorityChip({ priority }) {
-  const p = priority || 'Medium';
-  const cls =
-    p === 'High' ? 'bg-red-50 text-red-700 border-red-200'
-    : p === 'Low' ? 'bg-gray-50 text-gray-600 border-gray-200'
-    : 'bg-sky-50 text-sky-700 border-sky-200';
-  return (
-    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${cls}`}>
-      {p} priority
-    </span>
-  );
-}
-
 // ─── Learning need card (list + grid variants) ─────────────────────────────
-function NeedCard({ need, layout, onOpen, onEdit, onDelete }) {
+function NeedCard({ need, layout, onOpen, onEdit, onDelete, readOnly }) {
   const stop = (e) => e.stopPropagation();
 
   // Resolve field aliases — old records use title/description, new ones use need/activitiesProposed
@@ -62,7 +36,7 @@ function NeedCard({ need, layout, onOpen, onEdit, onDelete }) {
   const proposedDate     = need.proposedDate || '—';
   const anticipatedText  = need.anticipatedOutcome || '';
 
-  const actions = (
+  const actions = readOnly ? null : (
     <div className="flex items-center gap-1 shrink-0" onClick={stop}>
       <button
         type="button"
@@ -90,13 +64,7 @@ function NeedCard({ need, layout, onOpen, onEdit, onDelete }) {
         className="cursor-pointer bg-white border border-gray-200 rounded-lg p-5 hover:border-aps-blue/50 hover:shadow-sm transition"
       >
         <div className="flex items-start justify-between gap-3 mb-2">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900 leading-snug">{needTitle}</p>
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              <StatusChip status={need.status} />
-              <PriorityChip priority={need.priority} />
-            </div>
-          </div>
+          <p className="text-sm font-semibold text-gray-900 leading-snug min-w-0">{needTitle}</p>
           {actions}
         </div>
 
@@ -129,8 +97,6 @@ function NeedCard({ need, layout, onOpen, onEdit, onDelete }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           <p className="text-sm font-semibold text-gray-900">{needTitle}</p>
-          <StatusChip status={need.status} />
-          <PriorityChip priority={need.priority} />
         </div>
 
         <div className="flex flex-wrap items-start gap-x-5 gap-y-1 text-xs text-gray-600 mt-1">
@@ -262,29 +228,31 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
   const navigate   = useNavigate();
   const { selectedCycle } = useSelectedCycle();
 
-  const profile = useMemo(
+  // Step 1: find primary member profile (by memberNumber only)
+  const memberProfile = useMemo(
     () => (cpdProfiles || []).find((p) => p.memberNumber === member?.memberNumber) || null,
     [cpdProfiles, member]
   );
 
+  // Step 2: find cycle sub-profile (by cycleId)
+  const cycleProfile = useMemo(
+    () => memberProfile?.cycleProfiles?.find((cp) => cp.cycleId === selectedCycle?.id) || null,
+    [memberProfile, selectedCycle]
+  );
+
   // ── US-701: Redirect gates ───────────────────────────────────────────────
   useEffect(() => {
-    if (!profile) return;
-    // Gate A: selected CPD cycle is Pending — no open program yet
-    if (selectedCycle?.status === 'Pending') {
-      navigate('/member/cpd/profile', { replace: true });
-      return;
-    }
+    if (!cycleProfile) return;
     // Gate B: board registration type is exempt from the PD tool
-    if (EXEMPT_REGISTRATIONS.includes(profile.boardRegistration)) {
+    if (EXEMPT_REGISTRATIONS.includes(memberProfile?.boardRegistration)) {
       navigate('/member/cpd/profile', { replace: true });
     }
-  }, [profile, selectedCycle, navigate]);
+  }, [cycleProfile, memberProfile, navigate]);
 
   // ── US-701/702: Documentation method ────────────────────────────────────
-  const [docMethod, setDocMethod] = useState(
-    () => profile?.learningPlanMethod || 'PD Tool'
-  );
+  // Derived directly from cycleProfile so it always reflects the selected cycle,
+  // even when the user switches cycles without unmounting this component.
+  const docMethod = cycleProfile?.learningPlanMethod || 'PD Tool';
 
   // ── US-707: Review panel state (multiple reviews) ───────────────────────
   const [reviewFormOpen,   setReviewFormOpen]   = useState(false);
@@ -307,13 +275,13 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
   useEffect(() => { setActiveTab('needs'); }, [docMethod]);
 
   // ── Guard: no profile ────────────────────────────────────────────────────
-  if (!profile) {
+  if (!memberProfile || !cycleProfile) {
     return (
       <PageShell>
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-3">No CPD profile found.</p>
+        <div className="text-center py-16">
+          <p className="text-gray-500 text-sm mb-3">No CPD profile found for the selected cycle.</p>
           <Link to="/member/cpd" className="text-aps-blue hover:underline text-sm">
-            Back to CPD Summary
+            Go to My CPD
           </Link>
         </div>
       </PageShell>
@@ -321,23 +289,32 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
   }
 
   // ── Persist helper ───────────────────────────────────────────────────────
-  function persistProfile(patch) {
+  function persistCycleProfile(patch) {
     setCpdProfiles((prev) =>
-      prev.map((p) => (p.memberNumber === profile.memberNumber ? { ...p, ...patch } : p))
+      prev.map((p) =>
+        p.id === memberProfile.id
+          ? {
+              ...p,
+              cycleProfiles: (p.cycleProfiles || []).map((cp) =>
+                cp.id === cycleProfile.id ? { ...cp, ...patch } : cp
+              ),
+            }
+          : p
+      )
     );
   }
 
-  // ── US-702: method change auto-saves ────────────────────────────────────
+  // ── US-702: method change auto-saves (only when cycle is open) ──────────
   function handleMethodChange(method) {
-    setDocMethod(method);
-    persistProfile({ learningPlanMethod: method });
+    if (!isOpen) return;
+    persistCycleProfile({ learningPlanMethod: method });
   }
 
   // ── Learning needs CRUD ──────────────────────────────────────────────────
   function handleSaveNeed(payload) {
-    const existing = profile.learningNeeds || [];
+    const existing = cycleProfile.learningNeeds || [];
     const isEdit = existing.some((n) => n.id === payload.id);
-    persistProfile({
+    persistCycleProfile({
       learningNeeds: isEdit
         ? existing.map((n) => (n.id === payload.id ? payload : n))
         : [...existing, payload],
@@ -348,17 +325,17 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
 
   function handleDelete() {
     if (!confirmDelete) return;
-    persistProfile({
-      learningNeeds: (profile.learningNeeds || []).filter((n) => n.id !== confirmDelete.id),
+    persistCycleProfile({
+      learningNeeds: (cycleProfile.learningNeeds || []).filter((n) => n.id !== confirmDelete.id),
     });
     setConfirmDelete(null);
   }
 
   // ── US-707: reviews CRUD ────────────────────────────────────────────────
   function handleSaveReview(data) {
-    const existing = profile.learningPlanReviews || [];
+    const existing = cycleProfile.learningPlanReviews || [];
     const isEdit   = existing.some((r) => r.id === data.id);
-    persistProfile({
+    persistCycleProfile({
       learningPlanReviews: isEdit
         ? existing.map((r) => (r.id === data.id ? data : r))
         : [...existing, { ...data, id: `pr-${Date.now()}` }],
@@ -369,8 +346,8 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
 
   function handleDeleteReview() {
     if (!confirmDelReview) return;
-    persistProfile({
-      learningPlanReviews: (profile.learningPlanReviews || []).filter(
+    persistCycleProfile({
+      learningPlanReviews: (cycleProfile.learningPlanReviews || []).filter(
         (r) => r.id !== confirmDelReview.id
       ),
     });
@@ -379,13 +356,11 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
 
   const isPDTool  = docMethod === 'PD Tool';
   const isOpen    = selectedCycle?.status === 'Open';
-  const needs     = profile.learningNeeds || [];
+  const needs     = cycleProfile.learningNeeds || [];
   // Reviews sorted newest-first by date
-  const reviews   = [...(profile.learningPlanReviews || [])].sort(
+  const reviews   = [...(cycleProfile.learningPlanReviews || [])].sort(
     (a, b) => (b.reviewDate || '').localeCompare(a.reviewDate || '')
   );
-  // Cycle date bounds for the review date validator
-
   // Cycle date bounds for the review date validator
   const cycleStart = selectedCycle?.startDate || '';
   const cycleEnd   = selectedCycle?.endDate   || '';
@@ -407,7 +382,9 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
           Learning Plan Documentation Method
         </h2>
         <p className="text-xs text-gray-500 mb-4">
-          How are you documenting your learning plan this cycle? Your selection is saved automatically.
+          {isOpen
+            ? 'How are you documenting your learning plan this cycle? Your selection is saved automatically.'
+            : 'This cycle is closed — the documentation method is read-only.'}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -415,7 +392,8 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
           <button
             type="button"
             onClick={() => handleMethodChange('Offline')}
-            className={`flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-colors ${
+            disabled={!isOpen}
+            className={`flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-colors ${!isOpen ? 'cursor-default' : ''} ${
               docMethod === 'Offline'
                 ? 'border-aps-blue bg-aps-blue-light/40'
                 : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
@@ -445,7 +423,8 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
           <button
             type="button"
             onClick={() => handleMethodChange('PD Tool')}
-            className={`flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-colors ${
+            disabled={!isOpen}
+            className={`flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-colors ${!isOpen ? 'cursor-default' : ''} ${
               isPDTool
                 ? 'border-aps-blue bg-aps-blue-light/40'
                 : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
@@ -634,6 +613,7 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
                           key={n.id}
                           need={n}
                           layout="grid"
+                          readOnly={!isOpen}
                           onOpen={() => navigate(`/member/cpd/learning-plan/${n.id}`)}
                           onEdit={() => { setEditingNeed(n); setFormOpen(true); }}
                           onDelete={() => setConfirmDelete(n)}
@@ -647,6 +627,7 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
                           key={n.id}
                           need={n}
                           layout="list"
+                          readOnly={!isOpen}
                           onOpen={() => navigate(`/member/cpd/learning-plan/${n.id}`)}
                           onEdit={() => { setEditingNeed(n); setFormOpen(true); }}
                           onDelete={() => setConfirmDelete(n)}
@@ -758,7 +739,6 @@ export default function MyLearningPlan({ cpdProfiles, setCpdProfiles }) {
                               onClick={() => {
                                 setEditingReview(r);
                                 setReviewFormOpen(true);
-                                // scroll form into view if needed
                               }}
                               className="p-1.5 rounded text-aps-blue hover:bg-aps-blue-light"
                               title="Edit"

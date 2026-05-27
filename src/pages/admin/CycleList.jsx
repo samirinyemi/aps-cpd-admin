@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pencil, Calendar, List, LayoutGrid, Play, Square } from 'lucide-react';
+import { Pencil, Calendar, List, LayoutGrid, Play, Square, Users } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -22,6 +22,13 @@ const StopIcon = () => <Square size={16} strokeWidth={1.5} />;
 function ActionButtons({ cycle, onNavigate, onAction }) {
   return (
     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => onNavigate(cycle, 'members')}
+        className="p-2 rounded-md text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors"
+        title="View members"
+      >
+        <Users size={14} strokeWidth={1.5} />
+      </button>
       <button
         onClick={() => onNavigate(cycle, 'edit')}
         className="p-2 rounded-md text-aps-blue bg-aps-blue-light/60 hover:bg-aps-blue-light transition-colors"
@@ -158,6 +165,8 @@ export default function CycleList({ cycles, setCycles }) {
   function handleNavigate(cycle, mode) {
     if (mode === 'edit') {
       navigate(`/admin/cpd/cycles/${cycle.id}/edit`);
+    } else if (mode === 'members') {
+      navigate(`/admin/cpd/cycles/${cycle.id}/members`);
     } else {
       navigate(`/admin/cpd/cycles/${cycle.id}`);
     }

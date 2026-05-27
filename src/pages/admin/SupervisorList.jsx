@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Pencil, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import EmptyState from '../../components/EmptyState';
-import CycleSwitcher from '../../components/CycleSwitcher';
-import { useSelectedCycle } from '../../context/CycleContext';
 
 function fullName(s) {
-  return `${s.title} ${s.firstName} ${s.lastName}`;
+  const displayTitle = s.title === 'Other' ? (s.titleOther || 'Other') : s.title;
+  return `${displayTitle} ${s.firstName} ${s.lastName}`;
 }
 
 const EditIcon = () => <Pencil size={14} strokeWidth={1.5} />;
@@ -125,27 +124,13 @@ export default function SupervisorList({ supervisors, programs }) {
   const [aoPEFilter, setAoPEFilter] = useState('');
   const [assignmentFilter, setAssignmentFilter] = useState('all');
   const [layout, setLayout] = useState('list');
-  const { selectedCycle } = useSelectedCycle();
-
   const aoPEs = useMemo(
     () => Array.from(new Set(supervisors.map((s) => s.supervisorAoPE))).sort(),
     [supervisors]
   );
 
-  // IDs of programs whose commencementDate falls within the selected cycle.
-  const cycleProgramIds = useMemo(() => {
-    if (!selectedCycle) return null;
-    return new Set(
-      programs
-        .filter((p) => p.commencementDate >= selectedCycle.startDate && p.commencementDate <= selectedCycle.endDate)
-        .map((p) => p.id)
-    );
-  }, [programs, selectedCycle]);
-
   const filtered = useMemo(() => {
     return supervisors.filter((s) => {
-      // Cycle filter: only show supervisors assigned to a program in this cycle.
-      if (cycleProgramIds && !s.assignedPrograms.some((ap) => cycleProgramIds.has(ap.programId))) return false;
       if (search) {
         const q = search.toLowerCase();
         const hay = `${fullName(s)} ${s.ahpraNumber} ${s.email || ''}`.toLowerCase();
@@ -156,7 +141,7 @@ export default function SupervisorList({ supervisors, programs }) {
       if (assignmentFilter === 'unassigned' && s.assignedPrograms.length > 0) return false;
       return true;
     });
-  }, [supervisors, cycleProgramIds, search, aoPEFilter, assignmentFilter]);
+  }, [supervisors, search, aoPEFilter, assignmentFilter]);
 
   function programLabel(programId) {
     const p = programs.find((pr) => pr.id === programId);
@@ -202,8 +187,6 @@ export default function SupervisorList({ supervisors, programs }) {
           </button>
         </div>
       </div>
-
-      <CycleSwitcher className="mb-4" />
 
       {/* Filters */}
       <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 flex flex-wrap items-center gap-3">

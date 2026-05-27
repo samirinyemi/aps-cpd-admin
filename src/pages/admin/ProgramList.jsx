@@ -1,11 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil, Calendar, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import EmptyState from '../../components/EmptyState';
-import CycleSwitcher from '../../components/CycleSwitcher';
-import { useSelectedCycle } from '../../context/CycleContext';
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
@@ -100,14 +98,7 @@ function ProgramCard({ program, layout, onNavigate }) {
 export default function ProgramList({ programs }) {
   const navigate = useNavigate();
   const [layout, setLayout] = useState('list');
-  const { selectedCycle } = useSelectedCycle();
-
-  const filtered = useMemo(() => {
-    if (!selectedCycle) return programs;
-    return programs.filter(
-      (p) => p.commencementDate >= selectedCycle.startDate && p.commencementDate <= selectedCycle.endDate
-    );
-  }, [programs, selectedCycle]);
+  const filtered = programs;
 
   function handleNavigate(program, mode) {
     if (mode === 'edit') {
@@ -123,7 +114,7 @@ export default function ProgramList({ programs }) {
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Registrar Programs</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {filtered.length} of {programs.length} program{programs.length !== 1 ? 's' : ''}
+            {programs.length} program{programs.length !== 1 ? 's' : ''}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -156,12 +147,8 @@ export default function ProgramList({ programs }) {
         </div>
       </div>
 
-      <CycleSwitcher className="mb-6" />
-
       {programs.length === 0 ? (
         <EmptyState message="No registrar programs have been created yet." />
-      ) : filtered.length === 0 ? (
-        <EmptyState message={`No registrar programs commenced in the ${selectedCycle?.name || 'selected'} cycle.`} />
       ) : layout === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filtered.map((p) => (

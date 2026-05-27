@@ -6,6 +6,7 @@ export const initialSupervisors = [
   {
     id: 's1',
     title: 'Dr',
+    titleOther: '',
     firstName: 'James',
     lastName: 'Mitchell',
     ahpraNumber: 'PSY0001234567',
@@ -21,6 +22,7 @@ export const initialSupervisors = [
   {
     id: 's2',
     title: 'Prof',
+    titleOther: '',
     firstName: 'Linda',
     lastName: 'Nguyen',
     ahpraNumber: 'PSY0009876543',
@@ -35,6 +37,7 @@ export const initialSupervisors = [
   {
     id: 's3',
     title: 'Dr',
+    titleOther: '',
     firstName: 'Karen',
     lastName: 'Patel',
     ahpraNumber: 'PSY0002345678',
@@ -51,6 +54,7 @@ export const initialSupervisors = [
   {
     id: 's4',
     title: 'Dr',
+    titleOther: '',
     firstName: 'Michael',
     lastName: "O'Brien",
     ahpraNumber: 'PSY0003456789',
@@ -66,6 +70,7 @@ export const initialSupervisors = [
   {
     id: 's5',
     title: 'Dr',
+    titleOther: '',
     firstName: 'Amanda',
     lastName: 'Foster',
     ahpraNumber: 'PSY0004567890',
@@ -79,6 +84,7 @@ export const initialSupervisors = [
   {
     id: 's6',
     title: 'Prof',
+    titleOther: '',
     firstName: 'Robert',
     lastName: 'Shaw',
     ahpraNumber: 'PSY0005678901',
@@ -93,6 +99,7 @@ export const initialSupervisors = [
   {
     id: 's7',
     title: 'Dr',
+    titleOther: '',
     firstName: 'Priya',
     lastName: 'Sharma',
     ahpraNumber: 'PSY0006789012',
@@ -107,6 +114,7 @@ export const initialSupervisors = [
   {
     id: 's8',
     title: 'Mr',
+    titleOther: '',
     firstName: 'Daniel',
     lastName: 'Kovacs',
     ahpraNumber: 'PSY0007890123',

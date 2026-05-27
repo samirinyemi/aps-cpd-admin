@@ -13,6 +13,7 @@ import { initialPracticeLocations } from './data/mockPracticeLocations';
 import Login from './pages/Login';
 import CycleList from './pages/admin/CycleList';
 import CycleForm from './pages/admin/CycleForm';
+import CycleMembersList from './pages/admin/CycleMembersList';
 import ProgramList from './pages/admin/ProgramList';
 import ProgramForm from './pages/admin/ProgramForm';
 import ProgramDetail from './pages/admin/ProgramDetail';
@@ -81,6 +82,9 @@ function AppRoutes() {
       } />
       <Route path="/admin/cpd/cycles/:id/edit" element={
         <RequireAuth adminOnly><CycleForm cycles={cycles} setCycles={setCycles} /></RequireAuth>
+      } />
+      <Route path="/admin/cpd/cycles/:id/members" element={
+        <RequireAuth adminOnly><CycleMembersList cycles={cycles} cpdProfiles={cpdProfiles} /></RequireAuth>
       } />
       <Route path="/admin/cpd/cycles/:id" element={
         <RequireAuth adminOnly><CycleDetail cycles={cycles} setCycles={setCycles} /></RequireAuth>

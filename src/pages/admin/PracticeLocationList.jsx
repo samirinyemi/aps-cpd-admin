@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Pencil, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import EmptyState from '../../components/EmptyState';
-import CycleSwitcher from '../../components/CycleSwitcher';
-import { useSelectedCycle } from '../../context/CycleContext';
 
 const EditIcon = () => <Pencil size={14} strokeWidth={1.5} />;
 
@@ -124,27 +122,14 @@ export default function PracticeLocationList({ locations, programs }) {
   const [stateFilter, setStateFilter] = useState('');
   const [assignmentFilter, setAssignmentFilter] = useState('all');
   const [layout, setLayout] = useState('list');
-  const { selectedCycle } = useSelectedCycle();
 
   const states = useMemo(
     () => Array.from(new Set(locations.map((l) => l.state))).sort(),
     [locations]
   );
 
-  // IDs of programs whose commencementDate falls within the selected cycle.
-  const cycleProgramIds = useMemo(() => {
-    if (!selectedCycle) return null;
-    return new Set(
-      programs
-        .filter((p) => p.commencementDate >= selectedCycle.startDate && p.commencementDate <= selectedCycle.endDate)
-        .map((p) => p.id)
-    );
-  }, [programs, selectedCycle]);
-
   const filtered = useMemo(() => {
     return locations.filter((l) => {
-      // Cycle filter: only show locations assigned to a program in this cycle.
-      if (cycleProgramIds && !l.assignedPrograms.some((ap) => cycleProgramIds.has(ap.programId))) return false;
       if (search) {
         const q = search.toLowerCase();
         const hay = `${l.employerName} ${l.positionTitle || ''} ${l.suburb} ${l.addressLine1 || ''}`.toLowerCase();
@@ -155,7 +140,7 @@ export default function PracticeLocationList({ locations, programs }) {
       if (assignmentFilter === 'unassigned' && l.assignedPrograms.length > 0) return false;
       return true;
     });
-  }, [locations, cycleProgramIds, search, stateFilter, assignmentFilter]);
+  }, [locations, search, stateFilter, assignmentFilter]);
 
   function programLabel(programId) {
     const p = programs.find((pr) => pr.id === programId);
@@ -200,8 +185,6 @@ export default function PracticeLocationList({ locations, programs }) {
           </button>
         </div>
       </div>
-
-      <CycleSwitcher className="mb-4" />
 
       <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 flex flex-wrap items-center gap-3">
         <input

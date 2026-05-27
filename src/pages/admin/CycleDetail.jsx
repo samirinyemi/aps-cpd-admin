@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Users } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -101,6 +102,13 @@ export default function CycleDetail({ cycles, setCycles }) {
           </div>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={() => navigate(`/admin/cpd/cycles/${cycle.id}/members`)}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            <Users size={15} strokeWidth={1.75} />
+            View Members
+          </button>
           <button
             onClick={() => navigate(`/admin/cpd/cycles/${cycle.id}/edit`)}
             className="px-4 py-2 text-sm font-medium text-aps-blue border border-aps-blue rounded-md hover:bg-aps-blue-light"

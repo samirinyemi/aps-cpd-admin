@@ -22,7 +22,7 @@ function formatDateRange(startDate, endDate) {
   return `${fmt(startDate)} – ${fmt(endDate)}`;
 }
 
-export default function CycleSwitcher({ className = '' }) {
+export default function CycleSwitcher({ className = '', variant = 'default' }) {
   const { availableCycles, selectedCycle, selectedCycleId, selectCycle } = useSelectedCycle();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(null); // id being considered inside modal
@@ -47,6 +47,8 @@ export default function CycleSwitcher({ className = '' }) {
   const pendingCycle = availableCycles.find((c) => c.id === pending);
   const unchanged = pending === selectedCycleId;
 
+  const isNav = variant === 'nav';
+
   return (
     <>
       {/* Trigger button */}
@@ -54,13 +56,17 @@ export default function CycleSwitcher({ className = '' }) {
         <button
           type="button"
           onClick={openModal}
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:border-aps-blue/50 hover:text-aps-blue hover:bg-aps-blue-light/30 transition-colors"
+          className={
+            isNav
+              ? 'inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-white/15 border border-white/30 rounded-md hover:bg-white/25 hover:border-white/50 transition-colors'
+              : 'inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:border-aps-blue/50 hover:text-aps-blue hover:bg-aps-blue-light/30 transition-colors'
+          }
         >
           {selectedCycle && (
             <span className={`w-2 h-2 rounded-full shrink-0 ${STATUS_DOT[selectedCycle.status] || 'bg-gray-400'}`} />
           )}
           <span>{selectedCycle?.name ?? 'Select cycle'}</span>
-          <ChevronDown size={14} strokeWidth={1.75} className="text-gray-400 shrink-0" />
+          <ChevronDown size={14} strokeWidth={1.75} className={isNav ? 'text-white/60 shrink-0' : 'text-gray-400 shrink-0'} />
         </button>
       </div>
 
@@ -77,7 +83,7 @@ export default function CycleSwitcher({ className = '' }) {
                 <h3 className="text-base font-semibold text-gray-900">Switch CPD Cycle</h3>
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                Select a cycle to filter the view. The selection is shared across all registrar pages.
+                Select a cycle to filter the view. The selection is shared across all pages.
               </p>
             </div>
 

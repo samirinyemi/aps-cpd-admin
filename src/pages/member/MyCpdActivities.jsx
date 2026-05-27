@@ -26,10 +26,10 @@ function formatHours(decimal) {
 const EditIcon = () => <Pencil size={14} strokeWidth={1.5} />;
 const TrashIcon = () => <Trash2 size={14} strokeWidth={1.5} />;
 
-function ActivityCard({ activity, layout, onOpen, onEdit, onDelete }) {
+function ActivityCard({ activity, layout, onOpen, onEdit, onDelete, readOnly }) {
   const kind = activity.activityKind || activity.activityType || 'CPD';
   const stop = (e) => e.stopPropagation();
-  const actions = (
+  const actions = readOnly ? null : (
     <div className="flex items-center gap-1" onClick={stop}>
       <button type="button" onClick={(e) => { stop(e); onEdit(); }} className="p-1.5 rounded text-aps-blue hover:bg-aps-blue-light" title="Edit"><EditIcon /></button>
       <button type="button" onClick={(e) => { stop(e); onDelete(); }} className="p-1.5 rounded text-red-500 hover:bg-red-50" title="Delete"><TrashIcon /></button>
@@ -108,9 +108,16 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles }) {
     }
   }, [searchParams, setSearchParams]);
 
-  const profile = useMemo(
+  // Step 1: find primary member profile (by memberNumber only)
+  const memberProfile = useMemo(
     () => (cpdProfiles || []).find((p) => p.memberNumber === member?.memberNumber) || null,
     [cpdProfiles, member]
+  );
+
+  // Step 2: find cycle sub-profile (by cycleId)
+  const cycleProfile = useMemo(
+    () => memberProfile?.cycleProfiles?.find((cp) => cp.cycleId === selectedCycle?.id) || null,
+    [memberProfile, selectedCycle]
   );
 
   const isCycleOpen = selectedCycle?.status === 'Open';
@@ -136,63 +143,77 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles }) {
   }, [range]);
 
   const statsActivities = useMemo(() => {
-    if (!profile) return [];
-    return (profile.activities || []).filter((a) => {
+    if (!cycleProfile) return [];
+    return (cycleProfile.activities || []).filter((a) => {
       if (!rangeCutoff) return true;
       if (!a.completedDate) return false;
       return new Date(a.completedDate + 'T00:00:00') >= rangeCutoff;
     });
-  }, [profile, rangeCutoff]);
+  }, [cycleProfile, rangeCutoff]);
 
   const totalActivities = statsActivities.length;
   const totalHours = statsActivities.reduce((acc, a) => acc + Number(a.cpdHrs || 0), 0);
   const activeHours = statsActivities.reduce((acc, a) => acc + Number(a.actionHrs || 0), 0);
 
   const activities = useMemo(() => {
-    if (!profile || !selectedCycle) return [];
-    return (profile.activities || []).filter((a) => {
+    if (!cycleProfile || !selectedCycle) return [];
+    return (cycleProfile.activities || []).filter((a) => {
       if (a.cycleId !== selectedCycle.id) return false;
       if (kindFilter && (a.activityKind || a.activityType) !== kindFilter) return false;
       if (aoPEFilter && a.allocation !== aoPEFilter) return false;
       return true;
     });
-  }, [profile, selectedCycle, kindFilter, aoPEFilter]);
+  }, [cycleProfile, selectedCycle, kindFilter, aoPEFilter]);
 
-  function handleLogSave(activity) {
+  function persistCycleProfile(patch) {
     setCpdProfiles((prev) =>
       prev.map((p) =>
-        p.memberNumber === profile.memberNumber
-          ? { ...p, activities: [...(p.activities || []), activity] }
+        p.id === memberProfile.id
+          ? {
+              ...p,
+              cycleProfiles: (p.cycleProfiles || []).map((cp) =>
+                cp.id === cycleProfile.id ? { ...cp, ...patch } : cp
+              ),
+            }
           : p
       )
     );
+  }
+
+  function handleLogSave(activity) {
+    persistCycleProfile({ activities: [...(cycleProfile.activities || []), activity] });
     setLogOpen(false);
   }
 
   function handleDelete() {
     if (!confirmDelete) return;
-    setCpdProfiles((prev) =>
-      prev.map((p) =>
-        p.memberNumber === profile.memberNumber
-          ? { ...p, activities: (p.activities || []).filter((a) => a.id !== confirmDelete.id) }
-          : p
-      )
-    );
+    persistCycleProfile({
+      activities: (cycleProfile.activities || []).filter((a) => a.id !== confirmDelete.id),
+    });
     setConfirmDelete(null);
   }
 
-  if (!profile) {
+  if (!memberProfile || !cycleProfile) {
+    const isClosed = selectedCycle?.status === 'Closed';
     return (
       <PageShell>
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-3">No CPD profile found.</p>
-          <Link to="/member/cpd" className="text-aps-blue hover:underline text-sm">Back to CPD Summary</Link>
+        <div className="text-center py-16">
+          {isClosed ? (
+            <p className="text-gray-500 text-sm">No CPD activities recorded for this cycle.</p>
+          ) : (
+            <>
+              <p className="text-gray-500 text-sm mb-3">No CPD profile found for the selected cycle.</p>
+              <Link to="/member/cpd" className="text-aps-blue hover:underline text-sm">
+                Go to My CPD
+              </Link>
+            </>
+          )}
         </div>
       </PageShell>
     );
   }
 
-  const kinds = Array.from(new Set((profile.activities || []).map((a) => a.activityKind || a.activityType).filter(Boolean)));
+  const kinds = Array.from(new Set((cycleProfile.activities || []).map((a) => a.activityKind || a.activityType).filter(Boolean)));
 
   return (
     <PageShell>
@@ -264,7 +285,7 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles }) {
             <label className="block text-xs text-gray-500 mb-1">Allocation (AoPE)</label>
             <SelectField value={aoPEFilter} onChange={(e) => setAoPEFilter(e.target.value)}>
               <option value="">All AoPEs</option>
-              {(profile.aoPEs || []).map((a) => <option key={a} value={a}>{a}</option>)}
+              {(memberProfile.aoPEs || []).map((a) => <option key={a} value={a}>{a}</option>)}
             </SelectField>
           </div>
         </div>
@@ -297,6 +318,7 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles }) {
                     key={a.id}
                     activity={a}
                     layout="grid"
+                    readOnly={!isCycleOpen}
                     onOpen={() => navigate(`/member/cpd/activities/${a.id}`)}
                     onEdit={() => navigate(`/member/cpd/activities/${a.id}?edit=1`)}
                     onDelete={() => setConfirmDelete(a)}
@@ -310,6 +332,7 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles }) {
                     key={a.id}
                     activity={a}
                     layout="list"
+                    readOnly={!isCycleOpen}
                     onOpen={() => navigate(`/member/cpd/activities/${a.id}`)}
                     onEdit={() => navigate(`/member/cpd/activities/${a.id}?edit=1`)}
                     onDelete={() => setConfirmDelete(a)}
@@ -393,7 +416,7 @@ export default function MyCpdActivities({ cpdProfiles, setCpdProfiles }) {
         <LogCpdActivityModal
           open={logOpen}
           cycle={selectedCycle}
-          allocationOptions={(profile.aoPEs || []).map((a) => ({ value: a, label: a }))}
+          allocationOptions={(memberProfile.aoPEs || []).map((a) => ({ value: a, label: a }))}
           onSave={handleLogSave}
           onCancel={() => setLogOpen(false)}
         />

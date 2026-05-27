@@ -4,6 +4,7 @@ import PageShell from '../../components/PageShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
 import { useAuth } from '../../context/AuthContext';
+import { useSelectedCycle } from '../../context/CycleContext';
 
 function formatDate(dateStr) {
   if (!dateStr) return '—';
@@ -34,14 +35,23 @@ export default function MyCpdActivityDetail({ cpdProfiles, setCpdProfiles, cycle
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { selectedCycle } = useSelectedCycle();
 
-  const profile = useMemo(
+  // Step 1: find primary member profile (by memberNumber only)
+  const memberProfile = useMemo(
     () => (cpdProfiles || []).find((p) => p.memberNumber === member?.memberNumber) || null,
     [cpdProfiles, member]
   );
+
+  // Step 2: find cycle sub-profile (by cycleId)
+  const cycleProfile = useMemo(
+    () => memberProfile?.cycleProfiles?.find((cp) => cp.cycleId === selectedCycle?.id) || null,
+    [memberProfile, selectedCycle]
+  );
+
   const activity = useMemo(
-    () => (profile?.activities || []).find((a) => a.id === id) || null,
-    [profile, id]
+    () => (cycleProfile?.activities || []).find((a) => a.id === id) || null,
+    [cycleProfile, id]
   );
   const cycle = useMemo(
     () => (cycles || []).find((c) => c.id === activity?.cycleId) || null,
@@ -53,8 +63,8 @@ export default function MyCpdActivityDetail({ cpdProfiles, setCpdProfiles, cycle
 
   // If deleted externally, bounce to the list.
   useEffect(() => {
-    if (profile && !activity) navigate('/member/cpd/activities', { replace: true });
-  }, [profile, activity, navigate]);
+    if (cycleProfile && !activity) navigate('/member/cpd/activities', { replace: true });
+  }, [cycleProfile, activity, navigate]);
 
   useEffect(() => {
     if (searchParams.get('edit') === '1') {
@@ -64,12 +74,27 @@ export default function MyCpdActivityDetail({ cpdProfiles, setCpdProfiles, cycle
     }
   }, [searchParams, setSearchParams]);
 
-  if (!profile || !activity) {
+  if (!memberProfile || !cycleProfile) {
     return (
       <PageShell>
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-3">Activity not found.</p>
-          <Link to="/member/cpd/activities" className="text-aps-blue hover:underline text-sm">Back to Activities</Link>
+        <div className="text-center py-16">
+          <p className="text-gray-500 text-sm mb-3">No CPD profile found for the selected cycle.</p>
+          <Link to="/member/cpd" className="text-aps-blue hover:underline text-sm">
+            Go to My CPD
+          </Link>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!activity) {
+    return (
+      <PageShell>
+        <div className="text-center py-16">
+          <p className="text-gray-500 text-sm mb-3">Activity not found.</p>
+          <Link to="/member/cpd/activities" className="text-aps-blue hover:underline text-sm">
+            Back to Activities
+          </Link>
         </div>
       </PageShell>
     );
@@ -79,25 +104,32 @@ export default function MyCpdActivityDetail({ cpdProfiles, setCpdProfiles, cycle
   const isPeer = kind === 'Peer Consultation';
   const isActiveOrOther = kind === 'Active CPD' || kind === 'Other CPD';
 
-  function handleSave(updated) {
+  function persistCycleProfile(patch) {
     setCpdProfiles((prev) =>
       prev.map((p) =>
-        p.memberNumber === profile.memberNumber
-          ? { ...p, activities: (p.activities || []).map((a) => (a.id === updated.id ? updated : a)) }
+        p.id === memberProfile.id
+          ? {
+              ...p,
+              cycleProfiles: (p.cycleProfiles || []).map((cp) =>
+                cp.id === cycleProfile.id ? { ...cp, ...patch } : cp
+              ),
+            }
           : p
       )
     );
+  }
+
+  function handleSave(updated) {
+    persistCycleProfile({
+      activities: (cycleProfile.activities || []).map((a) => (a.id === updated.id ? updated : a)),
+    });
     setEditOpen(false);
   }
 
   function handleDelete() {
-    setCpdProfiles((prev) =>
-      prev.map((p) =>
-        p.memberNumber === profile.memberNumber
-          ? { ...p, activities: (p.activities || []).filter((a) => a.id !== activity.id) }
-          : p
-      )
-    );
+    persistCycleProfile({
+      activities: (cycleProfile.activities || []).filter((a) => a.id !== activity.id),
+    });
     setConfirmDelete(false);
     navigate('/member/cpd/activities');
   }
@@ -181,7 +213,7 @@ export default function MyCpdActivityDetail({ cpdProfiles, setCpdProfiles, cycle
       <LogCpdActivityModal
         open={editOpen}
         cycle={cycle || (cycles || []).find((c) => c.status === 'Open')}
-        allocationOptions={(profile.aoPEs || []).map((a) => ({ value: a, label: a }))}
+        allocationOptions={(memberProfile.aoPEs || []).map((a) => ({ value: a, label: a }))}
         existingActivity={activity}
         onSave={handleSave}
         onCancel={() => setEditOpen(false)}

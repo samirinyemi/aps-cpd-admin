@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import SelectField from './SelectField';
 
 // US-704/705: Learning need form — 4 mandatory fields per spec.
 // Field sizes: learning need 250, activities proposed 250, proposed dates 60, anticipated outcomes 250.
@@ -8,8 +7,6 @@ const emptyForm = {
   activitiesProposed: '',
   proposedDate: '',
   anticipatedOutcome: '',
-  status: 'Not Started',
-  priority: 'Medium',
 };
 
 export default function LearningNeedFormModal({ open, existingNeed, onSave, onCancel }) {
@@ -26,8 +23,6 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
         activitiesProposed: existingNeed.activitiesProposed || existingNeed.description || '',
         proposedDate: existingNeed.proposedDate || '',
         anticipatedOutcome: existingNeed.anticipatedOutcome || '',
-        status: existingNeed.status || 'Not Started',
-        priority: existingNeed.priority || 'Medium',
       });
     } else {
       setForm({ ...emptyForm });
@@ -63,8 +58,6 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
       description: form.activitiesProposed.trim(),        // backward-compat alias
       proposedDate: form.proposedDate.trim(),
       anticipatedOutcome: form.anticipatedOutcome.trim(),
-      status: form.status,
-      priority: form.priority,
     };
     onSave(payload);
   }
@@ -170,29 +163,6 @@ export default function LearningNeedFormModal({ open, existingNeed, onSave, onCa
             </div>
           </div>
 
-          {/* Status + Priority — optional helpers, not in spec as mandatory */}
-          <div className="grid grid-cols-2 gap-4 pt-1 border-t border-gray-100">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">
-                Status <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <SelectField value={form.status} onChange={(e) => update('status', e.target.value)}>
-                <option value="Not Started">Not Started</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
-              </SelectField>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">
-                Priority <span className="text-gray-400 font-normal">(optional)</span>
-              </label>
-              <SelectField value={form.priority} onChange={(e) => update('priority', e.target.value)}>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </SelectField>
-            </div>
-          </div>
         </div>
 
         <div className="flex justify-end gap-3">

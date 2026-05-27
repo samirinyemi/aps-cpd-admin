@@ -4,44 +4,30 @@ import PageShell from '../../components/PageShell';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import LearningNeedFormModal from '../../components/LearningNeedFormModal';
 import { useAuth } from '../../context/AuthContext';
+import { useSelectedCycle } from '../../context/CycleContext';
 
-function StatusChip({ status }) {
-  const cls =
-    status === 'Completed' ? 'bg-green-50 text-green-700 border-green-200'
-    : status === 'In Progress' ? 'bg-amber-50 text-amber-700 border-amber-200'
-    : 'bg-gray-100 text-gray-600 border-gray-200';
-  return (
-    <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${cls}`}>
-      {status || 'Not Started'}
-    </span>
-  );
-}
-
-function PriorityChip({ priority }) {
-  const p = priority || 'Medium';
-  const cls =
-    p === 'High' ? 'bg-red-50 text-red-700 border-red-200'
-    : p === 'Low' ? 'bg-gray-50 text-gray-600 border-gray-200'
-    : 'bg-sky-50 text-sky-700 border-sky-200';
-  return (
-    <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${cls}`}>
-      {p} priority
-    </span>
-  );
-}
 
 export default function MyLearningPlanDetail({ cpdProfiles, setCpdProfiles }) {
   const { member }   = useAuth();
   const { id }       = useParams();
   const navigate     = useNavigate();
+  const { selectedCycle } = useSelectedCycle();
 
-  const profile = useMemo(
+  // Step 1: find primary member profile (by memberNumber only)
+  const memberProfile = useMemo(
     () => (cpdProfiles || []).find((p) => p.memberNumber === member?.memberNumber) || null,
     [cpdProfiles, member]
   );
+
+  // Step 2: find cycle sub-profile (by cycleId)
+  const cycleProfile = useMemo(
+    () => memberProfile?.cycleProfiles?.find((cp) => cp.cycleId === selectedCycle?.id) || null,
+    [memberProfile, selectedCycle]
+  );
+
   const need = useMemo(
-    () => (profile?.learningNeeds || []).find((n) => n.id === id) || null,
-    [profile, id]
+    () => (cycleProfile?.learningNeeds || []).find((n) => n.id === id) || null,
+    [cycleProfile, id]
   );
 
   const [editOpen,          setEditOpen]          = useState(false);
@@ -49,31 +35,53 @@ export default function MyLearningPlanDetail({ cpdProfiles, setCpdProfiles }) {
 
   // If the need no longer exists (deleted externally), bounce back.
   useEffect(() => {
-    if (profile && !need) navigate('/member/cpd/learning-plan', { replace: true });
-  }, [profile, need, navigate]);
+    if (cycleProfile && !need) navigate('/member/cpd/learning-plan', { replace: true });
+  }, [cycleProfile, need, navigate]);
 
-  if (!profile || !need) {
+  if (!memberProfile || !cycleProfile) {
     return (
       <PageShell>
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-3">Learning need not found.</p>
-          <Link to="/member/cpd/learning-plan" className="text-aps-blue hover:underline text-sm">
-            Back to Manage Learning Plan
+        <div className="text-center py-16">
+          <p className="text-gray-500 text-sm mb-3">No CPD profile found for the selected cycle.</p>
+          <Link to="/member/cpd" className="text-aps-blue hover:underline text-sm">
+            Go to My CPD
           </Link>
         </div>
       </PageShell>
     );
   }
 
-  function persistProfile(patch) {
+  if (!need) {
+    return (
+      <PageShell>
+        <div className="text-center py-16">
+          <p className="text-gray-500 text-sm mb-3">Learning need not found.</p>
+          <Link to="/member/cpd/learning-plan" className="text-aps-blue hover:underline text-sm">
+            Back to Learning Plan
+          </Link>
+        </div>
+      </PageShell>
+    );
+  }
+
+  function persistCycleProfile(patch) {
     setCpdProfiles((prev) =>
-      prev.map((p) => (p.memberNumber === profile.memberNumber ? { ...p, ...patch } : p))
+      prev.map((p) =>
+        p.id === memberProfile.id
+          ? {
+              ...p,
+              cycleProfiles: (p.cycleProfiles || []).map((cp) =>
+                cp.id === cycleProfile.id ? { ...cp, ...patch } : cp
+              ),
+            }
+          : p
+      )
     );
   }
 
   function handleSavePlan(payload) {
-    persistProfile({
-      learningNeeds: (profile.learningNeeds || []).map((n) =>
+    persistCycleProfile({
+      learningNeeds: (cycleProfile.learningNeeds || []).map((n) =>
         n.id === payload.id ? { ...n, ...payload } : n
       ),
     });
@@ -81,8 +89,8 @@ export default function MyLearningPlanDetail({ cpdProfiles, setCpdProfiles }) {
   }
 
   function handleDeletePlan() {
-    persistProfile({
-      learningNeeds: (profile.learningNeeds || []).filter((n) => n.id !== need.id),
+    persistCycleProfile({
+      learningNeeds: (cycleProfile.learningNeeds || []).filter((n) => n.id !== need.id),
     });
     setConfirmDeletePlan(false);
     navigate('/member/cpd/learning-plan');
@@ -109,8 +117,6 @@ export default function MyLearningPlanDetail({ cpdProfiles, setCpdProfiles }) {
         <div className="min-w-0">
           <div className="flex items-center gap-3 mb-1 flex-wrap">
             <h1 className="text-xl font-semibold text-gray-900">{needTitle}</h1>
-            <StatusChip status={need.status} />
-            <PriorityChip priority={need.priority} />
           </div>
         </div>
         <div className="flex items-center gap-2">
