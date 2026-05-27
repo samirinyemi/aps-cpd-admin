@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import PageShell from '../../components/PageShell';
+import StatusBadge from '../../components/StatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import { useSelectedCycle } from '../../context/CycleContext';
 import { aoPEOptions } from '../../data/mockPrograms';
@@ -387,6 +388,16 @@ function ProfileFormBody({ form, errors, isEditing, update, toggleAoPE, aoPEsWit
             {errors.boardRegistration && <p className="mt-1 text-xs text-red-600">{errors.boardRegistration}</p>}
           </dd>
         </div>
+
+        {/* Status — derived from boardRegistration, view mode only */}
+        {!isEditing && (
+          <div>
+            <dt className="text-xs text-gray-500 mb-0.5">Status</dt>
+            <dd className="mt-0.5">
+              <StatusBadge status={deriveRegistrarStatus(form.boardRegistration)} />
+            </dd>
+          </div>
+        )}
 
         {/* General Registration Date — conditional on board reg */}
         {form.boardRegistration === 'General' && (
