@@ -16,6 +16,8 @@ export default function CycleForm({ cycles, setCycles }) {
     endDate: existing?.endDate || '',
     minRequiredHours: existing?.minRequiredHours ?? '',
     minPeerHours: existing?.minPeerHours ?? '',
+    minAoPEHoursSingle: existing?.minAoPEHoursSingle ?? '',
+    minAoPEHoursMultiple: existing?.minAoPEHoursMultiple ?? '',
   });
 
   const [errors, setErrors] = useState({});
@@ -52,6 +54,8 @@ export default function CycleForm({ cycles, setCycles }) {
     }
     if (form.minRequiredHours === '' || Number(form.minRequiredHours) < 0) errs.minRequiredHours = 'Required';
     if (form.minPeerHours === '' || Number(form.minPeerHours) < 0) errs.minPeerHours = 'Required';
+    if (form.minAoPEHoursSingle === '' || Number(form.minAoPEHoursSingle) < 0) errs.minAoPEHoursSingle = 'Required';
+    if (form.minAoPEHoursMultiple === '' || Number(form.minAoPEHoursMultiple) < 0) errs.minAoPEHoursMultiple = 'Required';
     if (overlapError) errs.dates = overlapError;
     return errs;
   }
@@ -68,6 +72,8 @@ export default function CycleForm({ cycles, setCycles }) {
       ...form,
       minRequiredHours: Number(form.minRequiredHours),
       minPeerHours: Number(form.minPeerHours),
+      minAoPEHoursSingle: Number(form.minAoPEHoursSingle),
+      minAoPEHoursMultiple: Number(form.minAoPEHoursMultiple),
     };
 
     if (isEdit) {
@@ -219,6 +225,28 @@ export default function CycleForm({ cycles, setCycles }) {
                 className={inputClass('minPeerHours')}
               />
               {errors.minPeerHours && <p className="mt-1 text-sm text-red-600">{errors.minPeerHours}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Min AoPE Hours (Single)</label>
+              <input
+                type="number"
+                min="0"
+                value={form.minAoPEHoursSingle}
+                onChange={(e) => update('minAoPEHoursSingle', e.target.value)}
+                className={inputClass('minAoPEHoursSingle')}
+              />
+              {errors.minAoPEHoursSingle && <p className="mt-1 text-sm text-red-600">{errors.minAoPEHoursSingle}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Min AoPE Hours (Multiple)</label>
+              <input
+                type="number"
+                min="0"
+                value={form.minAoPEHoursMultiple}
+                onChange={(e) => update('minAoPEHoursMultiple', e.target.value)}
+                className={inputClass('minAoPEHoursMultiple')}
+              />
+              {errors.minAoPEHoursMultiple && <p className="mt-1 text-sm text-red-600">{errors.minAoPEHoursMultiple}</p>}
             </div>
           </div>
 

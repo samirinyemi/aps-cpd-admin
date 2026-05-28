@@ -170,6 +170,14 @@ export default function CycleDetail({ cycles, setCycles }) {
             <dt className="text-sm text-gray-500">Min Peer Hours</dt>
             <dd className="text-sm font-medium text-gray-900 mt-0.5">{cycle.minPeerHours}</dd>
           </div>
+          <div>
+            <dt className="text-sm text-gray-500">Min AoPE Hours (Single)</dt>
+            <dd className="text-sm font-medium text-gray-900 mt-0.5">{cycle.minAoPEHoursSingle ?? '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-sm text-gray-500">Min AoPE Hours (Multiple)</dt>
+            <dd className="text-sm font-medium text-gray-900 mt-0.5">{cycle.minAoPEHoursMultiple ?? '—'}</dd>
+          </div>
         </dl>
       </section>
 
