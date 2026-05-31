@@ -7,6 +7,7 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 10,
     minAoPEHoursSingle: 10,
+    minAoPEHoursMultiple: 20,
     status: 'Closed',
     statusHistory: [
       { action: 'Opened',   date: '2021-07-01T00:00:00', triggeredBy: 'Admin (Manual)' },
@@ -64,6 +65,7 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 10,
     minAoPEHoursSingle: 10,
+    minAoPEHoursMultiple: 20,
     status: 'Open',
     statusHistory: [
       { action: 'Opened',   date: '2025-07-01T08:00:00', triggeredBy: 'Admin (Manual)' },
@@ -77,6 +79,7 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 12,
     minAoPEHoursSingle: 10,
+    minAoPEHoursMultiple: 20,
     status: 'Pending',
     statusHistory: [],
   },
@@ -88,6 +91,7 @@ export const initialCycles = [
     minRequiredHours: 35,
     minPeerHours: 12,
     minAoPEHoursSingle: 12,
+    minAoPEHoursMultiple: 24,
     status: 'Pending',
     statusHistory: [],
   },
