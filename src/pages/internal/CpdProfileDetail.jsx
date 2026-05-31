@@ -1,31 +1,83 @@
 import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { BookOpen, Activity } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSelectedCycle } from '../../context/CycleContext';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
-import DataTable from '../../components/DataTable';
+import EmptyState from '../../components/EmptyState';
 
 function Field({ label, value, children }) {
   return (
     <div>
       <dt className="text-xs font-medium text-gray-500 mb-0.5">{label}</dt>
-      <dd className="text-sm text-gray-900">{children ?? value}</dd>
+      <dd className="text-sm text-gray-900">{children ?? value ?? <span className="text-gray-400">—</span>}</dd>
     </div>
   );
 }
 
+// ── Learning Need card ────────────────────────────────────────────────────────
+function LearningNeedCard({ need }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-5 flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm font-semibold text-gray-900 leading-snug">{need.title}</p>
+        <StatusBadge status={need.status} />
+      </div>
+      {need.proposedDate && (
+        <p className="text-xs text-gray-500">
+          Proposed: <span className="font-medium text-gray-700">{need.proposedDate}</span>
+        </p>
+      )}
+    </div>
+  );
+}
 
+// ── CPD Activity card ─────────────────────────────────────────────────────────
+function ActivityCard({ activity }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-5 flex flex-col gap-3">
+      {/* Activity type */}
+      <p className="text-sm font-semibold text-gray-900">{activity.activityType}</p>
+
+      {/* Hours row */}
+      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-100 text-xs text-center">
+        <div>
+          <p className="text-gray-400 mb-0.5">Peer Hrs</p>
+          <p className="font-semibold text-gray-900">{activity.peerHrs ?? '—'}</p>
+        </div>
+        <div>
+          <p className="text-gray-400 mb-0.5">Action Hrs</p>
+          <p className="font-semibold text-gray-900">{activity.actionHrs ?? '—'}</p>
+        </div>
+        <div>
+          <p className="text-gray-400 mb-0.5">CPD Hrs</p>
+          <p className="font-semibold text-gray-900">{activity.cpdHrs ?? '—'}</p>
+        </div>
+      </div>
+
+      {/* Dates row */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 pt-1 border-t border-gray-100">
+        {activity.completedDate && (
+          <span>Completed: <span className="font-medium text-gray-700">{activity.completedDate}</span></span>
+        )}
+        {activity.loggedDate && (
+          <span>Logged: <span className="font-medium text-gray-700">{activity.loggedDate}</span></span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function CpdProfileDetail({ profiles }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const { role } = useAuth();
   const { selectedCycle } = useSelectedCycle();
 
-  // Step 1: find primary member profile by id
   const memberProfile = profiles.find((p) => p.id === id);
 
-  // Step 2: find cycle sub-profile — prefer selectedCycle, fall back to first available
   const cycleProfile = useMemo(() => {
     if (!memberProfile) return null;
     return (
@@ -44,33 +96,8 @@ export default function CpdProfileDetail({ profiles }) {
   }
 
   const isAdmin = role === 'IT Administrator';
-
-  const learningNeedsColumns = [
-    { key: 'title', label: 'Learning Need' },
-    {
-      key: 'proposedDate',
-      label: 'Proposed Date',
-      render: (row) => (
-        <span className="block max-w-xs truncate text-gray-700" title={row.proposedDate}>
-          {row.proposedDate || '—'}
-        </span>
-      ),
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (row) => <StatusBadge status={row.status} />,
-    },
-  ];
-
-  const activityColumns = [
-    { key: 'activityType', label: 'Activity Type' },
-    { key: 'peerHrs', label: 'Peer Hrs' },
-    { key: 'actionHrs', label: 'Action Hrs' },
-    { key: 'cpdHrs', label: 'CPD Hrs' },
-    { key: 'completedDate', label: 'Completed Date' },
-    { key: 'loggedDate', label: 'Logged Date' },
-  ];
+  const learningNeeds = cycleProfile?.learningNeeds || [];
+  const activities = cycleProfile?.activities || [];
 
   return (
     <PageShell>
@@ -83,6 +110,7 @@ export default function CpdProfileDetail({ profiles }) {
         <span className="text-gray-900">{memberProfile.memberName}</span>
       </nav>
 
+      {/* Page header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-gray-900">{memberProfile.memberName}</h1>
         {isAdmin && (
@@ -138,18 +166,36 @@ export default function CpdProfileDetail({ profiles }) {
 
       {/* Section B — Learning Plan */}
       <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-2">Learning Plan</h2>
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen size={16} strokeWidth={1.75} className="text-aps-blue" />
+          <h2 className="text-base font-semibold text-gray-900">Learning Plan</h2>
+        </div>
+
         {cycleProfile ? (
           <>
-            <p className="text-sm text-gray-600 mb-4">
-              Documentation Method: <span className="font-medium text-gray-900">{cycleProfile.learningPlanMethod}</span>
+            <p className="text-sm text-gray-600 mb-5">
+              Documentation Method:{' '}
+              <span className="font-medium text-gray-900">{cycleProfile.learningPlanMethod}</span>
             </p>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Learning Needs</h3>
-            <DataTable
-              columns={learningNeedsColumns}
-              data={cycleProfile.learningNeeds || []}
-              emptyMessage="No learning needs recorded."
-            />
+
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-gray-700">
+                Learning Needs
+                <span className="ml-2 text-xs font-normal text-gray-400">
+                  ({learningNeeds.length})
+                </span>
+              </h3>
+            </div>
+
+            {learningNeeds.length === 0 ? (
+              <EmptyState message="No learning needs recorded." />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {learningNeeds.map((need) => (
+                  <LearningNeedCard key={need.id} need={need} />
+                ))}
+              </div>
+            )}
           </>
         ) : (
           <p className="text-sm text-gray-400">No learning plan data for the selected cycle.</p>
@@ -158,12 +204,25 @@ export default function CpdProfileDetail({ profiles }) {
 
       {/* Section C — CPD Activities (Journal Entry Notes always hidden) */}
       <section className="bg-white border border-gray-200 rounded-lg p-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">CPD Activities</h2>
-        <DataTable
-          columns={activityColumns}
-          data={cycleProfile?.activities || []}
-          emptyMessage="No CPD activities logged."
-        />
+        <div className="flex items-center gap-2 mb-5">
+          <Activity size={16} strokeWidth={1.75} className="text-aps-blue" />
+          <h2 className="text-base font-semibold text-gray-900">
+            CPD Activities
+            <span className="ml-2 text-xs font-normal text-gray-400">
+              ({activities.length})
+            </span>
+          </h2>
+        </div>
+
+        {activities.length === 0 ? (
+          <EmptyState message="No CPD activities logged." />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {activities.map((activity) => (
+              <ActivityCard key={activity.id} activity={activity} />
+            ))}
+          </div>
+        )}
       </section>
     </PageShell>
   );
