@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Users, Table2, List, LayoutGrid, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Users, Table2, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
@@ -16,17 +16,6 @@ const REG_STATUSES = ['General', 'Not Registered', 'Provisional', 'Non-Practisin
 const TABLE_COLUMNS = [
   { key: 'memberName', label: 'Member Name' },
   { key: 'memberNumber', label: 'Member Number' },
-  { key: 'boardRegistration', label: 'Reg. Status', render: (r) => <span>{r.boardRegistration || '—'}</span> },
-  {
-    key: 'aoPEs',
-    label: 'AoPE',
-    render: (r) =>
-      r.aoPEs.length === 0 ? (
-        <span className="text-gray-400">—</span>
-      ) : (
-        <span>{r.aoPEs.join(', ')}</span>
-      ),
-  },
   {
     key: 'cpdExemption',
     label: 'CPD Exemption',
@@ -52,68 +41,34 @@ const TABLE_COLUMNS = [
 // ─── Card component ───────────────────────────────────────────────────────────
 
 function MemberCard({ member, layout, onView }) {
-  const aoPEs = member.aoPEs || [];
-
   const exemptionBadge =
     member.cpdExemption == null ? null : (
       <StatusBadge status={member.cpdExemption ? 'Yes' : 'No'} />
     );
 
   const reqMetBadge =
-    member.requirementsMet == null ? null : member.requirementsMet ? (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-status-open">
-        <ShieldCheck size={12} strokeWidth={2} /> Met
-      </span>
-    ) : (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-status-closed">
-        <ShieldOff size={12} strokeWidth={2} /> Not met
-      </span>
+    member.requirementsMet == null ? null : (
+      <StatusBadge status={member.requirementsMet ? 'Yes' : 'No'} />
     );
 
   if (layout === 'grid') {
     return (
       <div
         onClick={onView}
-        className="cursor-pointer bg-white border border-gray-200 rounded-lg p-5 hover:border-aps-blue/50 hover:shadow-sm transition-all flex flex-col"
+        className="cursor-pointer bg-white border border-gray-200 rounded-lg p-5 hover:border-aps-blue/50 hover:shadow-sm transition-all flex flex-col gap-3"
       >
-        {/* Name + number */}
-        <div className="mb-3">
+        <div>
           <p className="text-sm font-semibold text-gray-900">{member.memberName}</p>
           <p className="text-xs text-gray-500 mt-0.5">{member.memberNumber}</p>
         </div>
-
-        {/* Key fields */}
-        <dl className="text-xs space-y-1.5 mb-3 flex-1">
-          <div className="flex items-baseline justify-between gap-2">
-            <dt className="text-gray-500">Reg. Status</dt>
-            <dd className="font-medium text-gray-900 text-right">{member.boardRegistration || '—'}</dd>
-          </div>
-          <div className="flex items-baseline justify-between gap-2">
-            <dt className="text-gray-500">CPD Exemption</dt>
-            <dd>{exemptionBadge ?? <span className="text-gray-400">—</span>}</dd>
-          </div>
-          <div className="flex items-baseline justify-between gap-2">
-            <dt className="text-gray-500">Requirements</dt>
-            <dd>{reqMetBadge ?? <span className="text-gray-400">—</span>}</dd>
-          </div>
-        </dl>
-
-        {/* AoPE chips */}
-        {aoPEs.length > 0 && (
-          <div className="pt-3 border-t border-gray-100">
-            <p className="text-xs text-gray-500 mb-1.5">AoPE</p>
-            <div className="flex flex-wrap gap-1">
-              {aoPEs.map((a) => (
-                <span
-                  key={a}
-                  className="px-2 py-0.5 rounded text-xs font-medium bg-aps-blue-light text-aps-blue border border-aps-blue/20"
-                >
-                  {a}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className="flex items-center gap-3 flex-wrap pt-3 border-t border-gray-100 text-xs text-gray-500">
+          {exemptionBadge && (
+            <span className="flex items-center gap-1">Exemption: {exemptionBadge}</span>
+          )}
+          {reqMetBadge && (
+            <span className="flex items-center gap-1">Requirements: {reqMetBadge}</span>
+          )}
+        </div>
       </div>
     );
   }
@@ -122,51 +77,19 @@ function MemberCard({ member, layout, onView }) {
   return (
     <div
       onClick={onView}
-      className="cursor-pointer bg-white border border-gray-200 rounded-lg p-4 hover:border-aps-blue/50 hover:shadow-sm transition-all"
+      className="cursor-pointer bg-white border border-gray-200 rounded-lg px-5 py-4 hover:border-aps-blue/50 hover:shadow-sm transition-all flex items-center justify-between gap-4"
     >
-      <div className="flex items-start gap-4">
-        <div className="min-w-0 flex-1">
-          {/* Name row */}
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <p className="text-sm font-semibold text-gray-900">{member.memberName}</p>
-            <span className="text-xs text-gray-400">·</span>
-            <p className="text-xs text-gray-500">{member.memberNumber}</p>
-          </div>
-
-          {/* Metadata row */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600">
-            <span>
-              <span className="text-gray-500">Reg. Status: </span>
-              <span className="font-medium text-gray-900">{member.boardRegistration || '—'}</span>
-            </span>
-            {exemptionBadge && (
-              <span className="flex items-center gap-1">
-                <span className="text-gray-500">CPD Exemption:</span>
-                {exemptionBadge}
-              </span>
-            )}
-            {reqMetBadge && (
-              <span className="flex items-center gap-1">
-                <span className="text-gray-500">Requirements:</span>
-                {reqMetBadge}
-              </span>
-            )}
-          </div>
-
-          {/* AoPE chips */}
-          {aoPEs.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {aoPEs.map((a) => (
-                <span
-                  key={a}
-                  className="px-2 py-0.5 rounded text-xs font-medium bg-aps-blue-light text-aps-blue border border-aps-blue/20"
-                >
-                  {a}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-gray-900">{member.memberName}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{member.memberNumber}</p>
+      </div>
+      <div className="flex items-center gap-3 flex-shrink-0 text-xs text-gray-500">
+        {exemptionBadge && (
+          <span className="flex items-center gap-1">Exemption: {exemptionBadge}</span>
+        )}
+        {reqMetBadge && (
+          <span className="flex items-center gap-1">Requirements: {reqMetBadge}</span>
+        )}
       </div>
     </div>
   );
