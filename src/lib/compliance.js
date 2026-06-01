@@ -67,6 +67,16 @@ export function computeCpdCycleMetrics(profile, cycle) {
   // (in our data we store peerHrs and actionHrs separately on Peer Consultation)
   const loggedActive = sum(activities, (a) => a.actionHrs);
 
+  // Per-type totals for the three CPD activity types
+  const loggedActiveCpd = sum(
+    activities.filter((a) => (a.activityKind || a.activityType) === 'Active CPD'),
+    (a) => a.cpdHrs
+  );
+  const loggedOtherCpd = sum(
+    activities.filter((a) => (a.activityKind || a.activityType) === 'Other CPD'),
+    (a) => a.cpdHrs
+  );
+
   const aoPEs = Array.isArray(profile.aoPEs) ? profile.aoPEs : [];
   const perAoPERequired = aoPEs.length > 1
     ? Math.round((cycle.minRequiredHours || 0) / aoPEs.length)
@@ -108,6 +118,12 @@ export function computeCpdCycleMetrics(profile, cycle) {
     },
     activeHours: {
       logged: Math.round(loggedActive * 100) / 100,
+    },
+    activeCpd: {
+      logged: Math.round(loggedActiveCpd * 100) / 100,
+    },
+    otherCpd: {
+      logged: Math.round(loggedOtherCpd * 100) / 100,
     },
     perAoPE,
     cpdExemption: Boolean(profile.cpdExemption),

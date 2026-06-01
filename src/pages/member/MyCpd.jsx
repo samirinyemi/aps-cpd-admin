@@ -9,7 +9,11 @@ import StatusBadge from '../../components/StatusBadge';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
 import { useAuth } from '../../context/AuthContext';
 import { useSelectedCycle } from '../../context/CycleContext';
-import { compliancePercent, findLinkedTemplate, computeCpdCycleMetrics } from '../../lib/compliance';
+import { compliancePercent, findLinkedTemplate, computeCpdCycleMetrics, formatHours } from '../../lib/compliance';
+
+function fmtH(decimalHours) {
+  return formatHours(decimalHours, { fromDecimalHours: true });
+}
 
 // HLBR §3.4.4 CPD Summary — US-500 through US-506, plus US-803/805/806/807.
 
@@ -252,7 +256,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               <div className="flex items-center gap-3">
                 <ProgressBar pct={basePct} exempt={hasExemption} />
                 <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                  {metrics.baseMin.logged}/{metrics.baseMin.required}
+                  {fmtH(metrics.baseMin.logged)} / {fmtH(metrics.baseMin.required)}
                 </span>
               </div>
               <p className="text-[11px] text-gray-500 mt-1.5">
@@ -285,7 +289,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               <p className="text-sm text-gray-600 mb-2">Activities Logged</p>
               <p className="text-3xl font-bold text-gray-900">{activitiesCount}</p>
               <p className="text-[11px] text-gray-500 mt-1.5">
-                Active hours: {metrics.activeHours.logged}h
+                Active hours: {fmtH(metrics.activeHours.logged)}
               </p>
             </div>
           </div>
@@ -313,8 +317,8 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
                     />
                   </div>
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{row.logged}h active logged</span>
-                    <span>{row.required}h (Minimum hours required)</span>
+                    <span>{fmtH(row.logged)} logged</span>
+                    <span>{fmtH(row.required)} required</span>
                   </div>
                 </div>
               );
@@ -323,28 +327,51 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         </div>
       )}
 
-      {/* ── Peer Consultation — US-503 ───────────────────────────────────────── */}
+      {/* ── CPD Hours by Activity Type — US-503 (Peer), US-802/803 ─────────── */}
       {metrics && (
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-gray-900">Peer Consultation</p>
-            <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-              hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
-              : metrics.peerConsultation.met ? 'bg-green-50 text-green-700 border-green-200'
-              : 'bg-red-50 text-red-700 border-red-200'
-            }`}>
-              {hasExemption ? 'Exempt' : metrics.peerConsultation.met ? 'Met' : 'Not met'}
+          {/* Peer Consultation — has a required-hours compliance threshold */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold text-gray-900">Peer Consultation</p>
+              <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
+                hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
+                : metrics.peerConsultation.met ? 'bg-green-50 text-green-700 border-green-200'
+                : 'bg-red-50 text-red-700 border-red-200'
+              }`}>
+                {hasExemption ? 'Exempt' : metrics.peerConsultation.met ? 'Met' : 'Not met'}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <ProgressBar
+                pct={metrics.peerConsultation.required > 0
+                  ? Math.round((metrics.peerConsultation.logged / metrics.peerConsultation.required) * 100)
+                  : 0}
+                exempt={hasExemption}
+              />
+              <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                {fmtH(metrics.peerConsultation.logged)} / {fmtH(metrics.peerConsultation.required)}
+              </span>
+            </div>
+          </div>
+
+          <div className="border-t border-blue-200 my-3" />
+
+          {/* Active CPD — informational, no compliance threshold */}
+          <div className="flex items-center justify-between py-1">
+            <p className="text-sm font-medium text-gray-700">Active CPD</p>
+            <span className="text-sm font-bold text-gray-900">
+              {fmtH(metrics.activeCpd.logged)} <span className="text-xs font-normal text-gray-500">logged</span>
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <ProgressBar
-              pct={metrics.peerConsultation.required > 0
-                ? Math.round((metrics.peerConsultation.logged / metrics.peerConsultation.required) * 100)
-                : 0}
-              exempt={hasExemption}
-            />
-            <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-              {metrics.peerConsultation.logged}/{metrics.peerConsultation.required}h
+
+          <div className="border-t border-blue-200 my-3" />
+
+          {/* Other CPD — informational, no compliance threshold */}
+          <div className="flex items-center justify-between py-1">
+            <p className="text-sm font-medium text-gray-700">Other CPD</p>
+            <span className="text-sm font-bold text-gray-900">
+              {fmtH(metrics.otherCpd.logged)} <span className="text-xs font-normal text-gray-500">logged</span>
             </span>
           </div>
         </div>
