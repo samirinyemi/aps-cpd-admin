@@ -9,7 +9,7 @@ import StatusBadge from '../../components/StatusBadge';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
 import { useAuth } from '../../context/AuthContext';
 import { useSelectedCycle } from '../../context/CycleContext';
-import { compliancePercent, findLinkedTemplate, computeCpdCycleMetrics, formatHours } from '../../lib/compliance';
+import { compliancePercent, findLinkedTemplate, computeCpdCycleMetrics } from '../../lib/compliance';
 
 // HLBR §3.4.4 CPD Summary — US-500 through US-506, plus US-803/805/806/807.
 
@@ -34,18 +34,18 @@ function NavCard({ to, icon: Icon, title, description }) {
   return (
     <Link
       to={to}
-      className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2 hover:border-aps-blue/50 hover:shadow-sm transition-all group"
+      className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between gap-4 hover:border-aps-blue/50 hover:shadow-sm transition-all group"
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-lg bg-aps-blue-light flex items-center justify-center shrink-0">
           <Icon size={16} strokeWidth={1.75} className="text-aps-blue" />
         </div>
-        <ChevronRight size={14} strokeWidth={2} className="text-gray-300 group-hover:text-aps-blue transition-colors" />
+        <div>
+          <p className="text-sm font-semibold text-gray-900">{title}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        </div>
       </div>
-      <div>
-        <p className="text-sm font-semibold text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500 mt-0.5 leading-snug">{description}</p>
-      </div>
+      <ChevronRight size={16} strokeWidth={2} className="text-gray-400 shrink-0 group-hover:text-aps-blue transition-colors" />
     </Link>
   );
 }
@@ -71,10 +71,6 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
 
   const isCycleOpen = selectedCycle?.status === 'Open';
   const hasExemption = Boolean(cycleProfile?.cpdExemption);
-
-  // US-500: board registration eligibility check
-  const ELIGIBLE_BOARD_REG = ['General', 'Not Registered'];
-  const boardRegEligible = ELIGIBLE_BOARD_REG.includes(memberProfile?.boardRegistration || '');
 
   const metrics = useMemo(
     () => cycleProfile && selectedCycle
@@ -197,56 +193,23 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
     );
   }
 
-  // US-500: if board registration is not General or Not Registered, redirect to Manage Profile
-  if (cycleProfile && !boardRegEligible) {
-    return (
-      <PageShell>
-        <div className="max-w-md mx-auto text-center py-16">
-          <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle size={24} strokeWidth={1.75} className="text-amber-600" />
-          </div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Profile update required</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            Your board registration is currently <span className="font-medium text-gray-700">{memberProfile.boardRegistration}</span>.
-            To access the CPD dashboard you need to update your profile with your current registration details.
-          </p>
-          <Link
-            to="/member/cpd/profile"
-            className="px-5 py-2.5 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark inline-block"
-          >
-            Go to Manage Profile
-          </Link>
-        </div>
-      </PageShell>
-    );
-  }
-
   // ── Derived values for the progress cards ──────────────────────────────────
-  const learningNeeds    = cycleProfile?.learningNeeds || [];
-  const totalNeeds       = learningNeeds.length;
-  // Per-status breakdown for the Learning Plan progress bars
-  const notStartedNeeds  = learningNeeds.filter((n) => n.status === 'Not Started').length;
-  const inProgressNeeds  = learningNeeds.filter((n) => n.status === 'In Progress').length;
-  const completedNeeds   = learningNeeds.filter((n) => n.status === 'Completed' || n.status === 'Closed').length;
-  const activitiesCount  = (cycleProfile?.activities || []).length;
+  const learningNeeds = cycleProfile?.learningNeeds || [];
+  const totalNeeds    = learningNeeds.length;
+  const doneNeeds     = learningNeeds.filter((n) => n.status === 'Closed').length;
+  const needsPct      = totalNeeds > 0 ? Math.round((doneNeeds / totalNeeds) * 100) : 0;
+  const activitiesCount = (cycleProfile?.activities || []).length;
 
   const basePct = metrics && metrics.baseMin.required > 0
     ? Math.round((metrics.baseMin.logged / metrics.baseMin.required) * 100)
     : 0;
-
-  const peerPct = metrics && metrics.activeCpd.required > 0
-    ? Math.round((metrics.activeCpd.logged / metrics.activeCpd.required) * 100)
-    : 0;
-
-  // Helper: decimal hours → "Xh Ym" display (US-502/503/504/505 all require minute precision)
-  const fmtH = (h) => formatHours(h, { fromDecimalHours: true });
 
   const hasAnyRegistrar = myPrograms.length > 0;
 
   return (
     <PageShell>
       {/* Page header */}
-      <div className="flex items-start justify-between mb-5 gap-4 flex-wrap">
+      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">CPD Summary</h1>
           <p className="text-sm text-gray-500 mt-0.5">Welcome back, {member.firstName}.</p>
@@ -259,165 +222,72 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         )}
       </div>
 
-      {/* ── Navigation cards — 2×2 grid ─────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <NavCard to="/member/cpd/profile"       icon={User}          title="Manage Profile"  description="Update your personal details and preferences" />
-        <NavCard to="/member/cpd/learning-plan" icon={ClipboardList} title="Learning Plan"   description="Manage learning needs and submit reviews" />
-        <NavCard to="/member/cpd/activities"    icon={TrendingUp}    title="Activities"      description="Record, view, and edit your CPD activities" />
-        <NavCard to="/member/cpd/report"        icon={BarChart2}     title="Reports"         description="Generate progress and compliance reports" />
-      </div>
-
-      {/* ── Learning Plan Progress — US-501 ─────────────────────────────────── */}
-      {metrics && (
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-5">
-          {/* Header row */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <ClipboardList size={15} strokeWidth={1.75} className="text-aps-blue" />
-              <p className="text-sm font-bold text-gray-900">Learning Plan</p>
-            </div>
-            {/* Overall compliance badge */}
-            {(() => {
-              const s = metrics.learningPlanStatus;
-              const badge =
-                s === 'Reviewed'  ? { label: 'Met',         cls: 'bg-green-50 text-green-700 border-green-200' }
-                : s === 'Developed' ? { label: 'In progress', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
-                : s === 'Offline'   ? { label: 'Offline',     cls: 'bg-gray-100 text-gray-600 border-gray-200' }
-                :                    { label: 'Not met',      cls: 'bg-red-50 text-red-700 border-red-200' };
-              return (
-                <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${badge.cls}`}>
-                  {badge.label}
-                </span>
-              );
-            })()}
-          </div>
-
-          {/* Per-status breakdown bars */}
-          {totalNeeds > 0 ? (
-            <div className="space-y-3">
-              {[
-                { label: 'Not Started', count: notStartedNeeds, barCls: 'bg-gray-400' },
-                { label: 'Developed',   count: inProgressNeeds, barCls: 'bg-amber-400' },
-                { label: 'Reviewed',    count: completedNeeds,  barCls: 'bg-[#185FA5]' },
-              ].map(({ label, count, barCls }) => (
-                <div key={label}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs text-gray-700">{label}</span>
-                    <span className="text-xs font-semibold text-gray-900">{count}</span>
-                  </div>
-                  <div className="h-2.5 bg-blue-200 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${barCls} rounded-full transition-all`}
-                      style={{ width: `${totalNeeds > 0 ? Math.round((count / totalNeeds) * 100) : 0}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-              <p className="text-[11px] text-gray-500 pt-0.5">
-                {totalNeeds} learning need{totalNeeds !== 1 ? 's' : ''} this cycle
-              </p>
-            </div>
-          ) : (
-            <p className="text-xs text-gray-500">
-              No active learning plan records exist for the selected CPD cycle.
-            </p>
-          )}
-
-          <div className="mt-4 pt-3 border-t border-blue-200">
-            <Link to="/member/cpd/learning-plan" className="text-xs font-medium text-aps-blue hover:underline">
-              View learning plan →
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* US-405: CPD Exemption alert — exact spec wording required */}
+      {/* US-807: CPD Exemption alert */}
       {hasExemption && (
         <div className="mb-5 border border-amber-200 bg-amber-50 rounded-xl p-4 flex items-start gap-3">
           <AlertTriangle size={18} strokeWidth={1.8} className="mt-0.5 shrink-0 text-amber-700" />
           <div>
-            <p className="text-sm font-semibold text-amber-900">CPD exemption/reduced requirements</p>
-            <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-              You have indicated that your individual CPD requirements have been reduced by the
-              PsyBA/AHPRA for this cycle. This system can only track progress to standard
-              requirements, so you will therefore need to personally monitor your progress towards
-              meeting these reduced CPD hours as you log your CPD. Change settings in your{' '}
-              <Link to="/member/cpd/profile" className="underline font-medium hover:text-amber-900">
-                Profile
-              </Link>.
+            <p className="text-sm font-medium text-amber-900">CPD Exemption is active for this cycle</p>
+            <p className="text-xs text-amber-800 mt-0.5">
+              Your CPD requirements are waived. Metrics below show progress against standard hours.
             </p>
           </div>
         </div>
       )}
 
-      {/* ── CPD Cycle Progress — US-502 / US-503 / US-504 / US-501 ────────────── */}
+      {/* ── CPD Cycle Progress card ─────────────────────────────────────────── */}
       {metrics && (
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-5">
           <div className="flex items-center gap-2 mb-5">
             <RefreshCw size={16} strokeWidth={1.75} className="text-aps-blue" />
             <h2 className="text-base font-bold text-gray-900">
-              CPD Cycle Progress — {selectedCycle?.name}
+              CPD Cycle Progress: {selectedCycle?.name}
             </h2>
           </div>
 
-          <div className="space-y-5 divide-y divide-blue-200">
-            {/* CPD (Total) — US-502 */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-gray-800">CPD</p>
-                <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-                  hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
-                  : metrics.baseMin.met ? 'bg-green-50 text-green-700 border-green-200'
-                  : 'bg-red-50 text-red-700 border-red-200'
-                }`}>
-                  {hasExemption ? 'Exempt' : metrics.baseMin.met ? 'Met' : 'Not met'}
-                </span>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:divide-x sm:divide-blue-200">
+            {/* Total Hours — US-502 */}
+            <div className="sm:pr-5">
+              <p className="text-sm text-gray-600 mb-3">Total Hours</p>
               <div className="flex items-center gap-3">
                 <ProgressBar pct={basePct} exempt={hasExemption} />
                 <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                  {fmtH(metrics.baseMin.logged)} / {fmtH(metrics.baseMin.required)}
+                  {metrics.baseMin.logged}/{metrics.baseMin.required}
                 </span>
               </div>
               <p className="text-[11px] text-gray-500 mt-1.5">
-                {hasExemption ? 'vs Standard Required Hours' : 'Hours logged vs required'}
+                {hasExemption ? 'Standard required hours' : 'Hours logged vs required'}
               </p>
             </div>
 
-            {/* Peer Consultation — US-503 */}
-            <div className="pt-5">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-gray-800">Peer Consultation</p>
-                <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-                  hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
-                  : metrics.activeCpd.met ? 'bg-green-50 text-green-700 border-green-200'
-                  : 'bg-red-50 text-red-700 border-red-200'
-                }`}>
-                  {hasExemption ? 'Exempt' : metrics.activeCpd.met ? 'Met' : 'Not met'}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <ProgressBar pct={peerPct} exempt={hasExemption} />
-                <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                  {fmtH(metrics.activeCpd.logged)} / {fmtH(metrics.activeCpd.required)}
-                </span>
-              </div>
+            {/* Learning Needs — US-501 */}
+            <div className="sm:px-5">
+              <p className="text-sm text-gray-600 mb-3">Learning Needs</p>
+              {totalNeeds > 0 ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <ProgressBar pct={needsPct} exempt={false} />
+                    <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                      {doneNeeds}/{totalNeeds}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-1.5">
+                    {metrics.learningPlanStatus}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm font-bold text-gray-400">Not started</p>
+              )}
+            </div>
+
+            {/* Activities Logged — US-504 */}
+            <div className="sm:pl-5">
+              <p className="text-sm text-gray-600 mb-2">Activities Logged</p>
+              <p className="text-3xl font-bold text-gray-900">{activitiesCount}</p>
               <p className="text-[11px] text-gray-500 mt-1.5">
-                {hasExemption ? 'vs Standard Required Hours' : 'Hours logged vs required'}
+                Active hours: {metrics.activeHours.logged}h
               </p>
             </div>
-
-            {/* Active CPD — US-504 (total active hours; no compliance minimum per spec) */}
-            <div className="pt-5">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-800">Active CPD</p>
-                <span className="text-sm font-bold text-gray-900">
-                  {fmtH(metrics.activeHours.logged)}
-                </span>
-              </div>
-              <p className="text-[11px] text-gray-500 mt-2">Total active CPD hours logged this cycle</p>
-            </div>
-
           </div>
         </div>
       )}
@@ -433,31 +303,18 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
                 : 0;
               return (
                 <div key={row.aoPE}>
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-bold text-gray-900">{row.aoPE}</p>
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-                      hasExemption
-                        ? 'bg-gray-100 text-gray-600 border-gray-200'
-                        : row.met
-                        ? 'bg-green-50 text-green-700 border-green-200'
-                        : 'bg-red-50 text-red-700 border-red-200'
-                    }`}>
-                      {hasExemption ? 'Exempt' : row.met ? 'Met' : 'Not met'}
-                    </span>
-                  </div>
+                  <p className="text-sm font-bold text-gray-900 mb-2">{row.aoPE}</p>
                   <div className="h-3 bg-blue-200 rounded-full overflow-hidden mb-1.5">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        hasExemption ? 'bg-gray-400' : 'bg-[#185FA5]'
+                        hasExemption ? 'bg-gray-400' : row.met ? 'bg-[#185FA5]' : 'bg-[#185FA5]'
                       }`}
                       style={{ width: `${Math.min(100, pct)}%` }}
                     />
                   </div>
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{fmtH(row.logged)} logged</span>
-                    <span>
-                      {fmtH(row.required)} ({hasExemption ? 'Standard Required Hours' : 'Minimum hours required'})
-                    </span>
+                    <span>{row.logged}h active logged</span>
+                    <span>{row.required}h (Minimum hours required)</span>
                   </div>
                 </div>
               );
@@ -466,9 +323,62 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         </div>
       )}
 
-      {/* Other CPD contributes to CPD total — no separate dashboard metric per spec */}
+      {/* ── Peer Consultation — US-503 ───────────────────────────────────────── */}
+      {metrics && (
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-bold text-gray-900">Peer Consultation</p>
+            <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
+              hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
+              : metrics.peerConsultation.met ? 'bg-green-50 text-green-700 border-green-200'
+              : 'bg-red-50 text-red-700 border-red-200'
+            }`}>
+              {hasExemption ? 'Exempt' : metrics.peerConsultation.met ? 'Met' : 'Not met'}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <ProgressBar
+              pct={metrics.peerConsultation.required > 0
+                ? Math.round((metrics.peerConsultation.logged / metrics.peerConsultation.required) * 100)
+                : 0}
+              exempt={hasExemption}
+            />
+            <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
+              {metrics.peerConsultation.logged}/{metrics.peerConsultation.required}h
+            </span>
+          </div>
+        </div>
+      )}
 
-      {/* ── Linked registrar programs — show max 2 ───────────────────────────── */}
+      {/* ── Navigation cards ──────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <NavCard
+          to="/member/cpd/profile"
+          icon={User}
+          title="Manage Profile"
+          description="Update your personal details and preferences"
+        />
+        <NavCard
+          to="/member/cpd/learning-plan"
+          icon={ClipboardList}
+          title="Learning Plan"
+          description="Manage learning needs and submit reviews"
+        />
+        <NavCard
+          to="/member/cpd/activities"
+          icon={TrendingUp}
+          title="Activities"
+          description="Record, view, and edit your CPD activities"
+        />
+        <NavCard
+          to="/member/cpd/report"
+          icon={BarChart2}
+          title="Reports"
+          description="Generate progress and compliance reports"
+        />
+      </div>
+
+      {/* ── Linked registrar programs ─────────────────────────────────────────── */}
       {hasAnyRegistrar && (
         <section className="bg-white border border-gray-200 rounded-xl p-6">
           <div className="flex items-baseline justify-between mb-4">
@@ -476,14 +386,10 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               My Registrar Programs
               <span className="text-sm font-normal text-gray-400 ml-2">({myPrograms.length})</span>
             </h2>
-            {myPrograms.length > 2 && (
-              <Link to="/member/registrar" className="text-xs font-medium text-aps-blue hover:underline">
-                View all {myPrograms.length} →
-              </Link>
-            )}
+            <Link to="/member/registrar" className="text-xs font-medium text-aps-blue hover:underline">View all →</Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {myPrograms.slice(0, 2).map((p) => {
+            {myPrograms.map((p) => {
               const template = findLinkedTemplate(p, aoPEPrograms || []);
               const pct = template ? compliancePercent(p, template, cycleProfile?.activities || []) : 0;
               const barColour = pct >= 100 ? 'bg-green-500' : pct > 0 ? 'bg-amber-400' : 'bg-gray-300';
@@ -508,13 +414,6 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               );
             })}
           </div>
-          {myPrograms.length > 2 && (
-            <div className="mt-4 pt-4 border-t border-gray-100 text-center">
-              <Link to="/member/registrar" className="text-sm font-medium text-aps-blue hover:underline">
-                View all {myPrograms.length} registrar programs →
-              </Link>
-            </div>
-          )}
         </section>
       )}
 
