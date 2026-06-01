@@ -307,12 +307,13 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
                 : 0;
               return (
                 <div key={row.aoPE}>
-                  <p className="text-sm font-bold text-gray-900 mb-2">{row.aoPE}</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-bold text-gray-900">{row.aoPE}</p>
+                    <span className="text-xs font-semibold text-gray-500">{pct}%</span>
+                  </div>
                   <div className="h-3 bg-blue-200 rounded-full overflow-hidden mb-1.5">
                     <div
-                      className={`h-full rounded-full transition-all ${
-                        hasExemption ? 'bg-gray-400' : row.met ? 'bg-[#185FA5]' : 'bg-[#185FA5]'
-                      }`}
+                      className={`h-full rounded-full transition-all ${hasExemption ? 'bg-gray-400' : 'bg-[#185FA5]'}`}
                       style={{ width: `${Math.min(100, pct)}%` }}
                     />
                   </div>
@@ -342,15 +343,18 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
                 <div key={label}>
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-bold text-gray-900">{label}</p>
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-                      hasExemption
-                        ? 'bg-gray-100 text-gray-600 border-gray-200'
-                        : met
-                          ? 'bg-green-50 text-green-700 border-green-200'
-                          : 'bg-red-50 text-red-700 border-red-200'
-                    }`}>
-                      {hasExemption ? 'Exempt' : met ? 'Met' : 'Not met'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-gray-500">{pct}%</span>
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
+                        hasExemption
+                          ? 'bg-gray-100 text-gray-600 border-gray-200'
+                          : met
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
+                      }`}>
+                        {hasExemption ? 'Exempt' : met ? 'Met' : 'Not met'}
+                      </span>
+                    </div>
                   </div>
                   <div className="h-3 bg-blue-200 rounded-full overflow-hidden mb-1.5">
                     <div
