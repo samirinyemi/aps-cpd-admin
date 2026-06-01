@@ -379,32 +379,6 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               );
             })}
 
-            {/* Total row — US-502 summary */}
-            <div className="border-t border-blue-200 pt-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-bold text-gray-900">Total Hours</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-gray-500">{basePct}%</span>
-                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-                    hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
-                    : metrics.baseMin.met ? 'bg-green-50 text-green-700 border-green-200'
-                    : 'bg-red-50 text-red-700 border-red-200'
-                  }`}>
-                    {hasExemption ? 'Exempt' : metrics.baseMin.met ? 'Met' : 'Not met'}
-                  </span>
-                </div>
-              </div>
-              <div className="h-3 bg-blue-200 rounded-full overflow-hidden mb-1.5">
-                <div
-                  className={`h-full rounded-full transition-all ${hasExemption ? 'bg-gray-400' : 'bg-[#185FA5]'}`}
-                  style={{ width: `${Math.min(100, basePct)}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>{fmtH(metrics.baseMin.logged)} logged</span>
-                <span>{fmtH(metrics.baseMin.required)} required</span>
-              </div>
-            </div>
           </div>
         </div>
       )}
