@@ -72,6 +72,10 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
   const isCycleOpen = selectedCycle?.status === 'Open';
   const hasExemption = Boolean(cycleProfile?.cpdExemption);
 
+  // US-500: board registration eligibility check
+  const ELIGIBLE_BOARD_REG = ['General', 'Not Registered'];
+  const boardRegEligible = ELIGIBLE_BOARD_REG.includes(memberProfile?.boardRegistration || '');
+
   const metrics = useMemo(
     () => cycleProfile && selectedCycle
       ? computeCpdCycleMetrics({ ...memberProfile, ...cycleProfile }, selectedCycle)
@@ -193,6 +197,30 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
     );
   }
 
+  // US-500: if board registration is not General or Not Registered, redirect to Manage Profile
+  if (cycleProfile && !boardRegEligible) {
+    return (
+      <PageShell>
+        <div className="max-w-md mx-auto text-center py-16">
+          <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={24} strokeWidth={1.75} className="text-amber-600" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Profile update required</h2>
+          <p className="text-sm text-gray-500 mb-6">
+            Your board registration is currently <span className="font-medium text-gray-700">{memberProfile.boardRegistration}</span>.
+            To access the CPD dashboard you need to update your profile with your current registration details.
+          </p>
+          <Link
+            to="/member/cpd/profile"
+            className="px-5 py-2.5 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark inline-block"
+          >
+            Go to Manage Profile
+          </Link>
+        </div>
+      </PageShell>
+    );
+  }
+
   // ── Derived values for the progress cards ──────────────────────────────────
   const learningNeeds = cycleProfile?.learningNeeds || [];
   const totalNeeds    = learningNeeds.length;
@@ -222,14 +250,20 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         )}
       </div>
 
-      {/* US-807: CPD Exemption alert */}
+      {/* US-405: CPD Exemption alert — exact spec wording required */}
       {hasExemption && (
         <div className="mb-5 border border-amber-200 bg-amber-50 rounded-xl p-4 flex items-start gap-3">
           <AlertTriangle size={18} strokeWidth={1.8} className="mt-0.5 shrink-0 text-amber-700" />
           <div>
-            <p className="text-sm font-medium text-amber-900">CPD Exemption is active for this cycle</p>
-            <p className="text-xs text-amber-800 mt-0.5">
-              Your CPD requirements are waived. Metrics below show progress against standard hours.
+            <p className="text-sm font-semibold text-amber-900">CPD exemption/reduced requirements</p>
+            <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+              You have indicated that your individual CPD requirements have been reduced by the
+              PsyBA/AHPRA for this cycle. This system can only track progress to standard
+              requirements, so you will therefore need to personally monitor your progress towards
+              meeting these reduced CPD hours as you log your CPD. Change settings in your{' '}
+              <Link to="/member/cpd/profile" className="underline font-medium hover:text-amber-900">
+                Profile
+              </Link>.
             </p>
           </div>
         </div>
@@ -248,44 +282,64 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:divide-x sm:divide-blue-200">
             {/* Total Hours — US-502 */}
             <div className="sm:pr-5">
-              <p className="text-sm text-gray-600 mb-3">Total Hours</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm text-gray-600">Total Hours</p>
+                <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
+                  hasExemption
+                    ? 'bg-gray-100 text-gray-600 border-gray-200'
+                    : metrics.baseMin.met
+                    ? 'bg-green-50 text-green-700 border-green-200'
+                    : 'bg-red-50 text-red-700 border-red-200'
+                }`}>
+                  {hasExemption ? 'Exempt' : metrics.baseMin.met ? 'Met' : 'Not met'}
+                </span>
+              </div>
               <div className="flex items-center gap-3">
                 <ProgressBar pct={basePct} exempt={hasExemption} />
                 <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                  {metrics.baseMin.logged}/{metrics.baseMin.required}
+                  {metrics.baseMin.logged}/{metrics.baseMin.required}h
                 </span>
               </div>
               <p className="text-[11px] text-gray-500 mt-1.5">
-                {hasExemption ? 'Standard required hours' : 'Hours logged vs required'}
+                {hasExemption ? 'vs Standard Required Hours' : 'Hours logged vs required'}
               </p>
             </div>
 
-            {/* Learning Needs — US-501 */}
+            {/* Learning Plan compliance — US-501 */}
             <div className="sm:px-5">
-              <p className="text-sm text-gray-600 mb-3">Learning Needs</p>
-              {totalNeeds > 0 ? (
-                <>
-                  <div className="flex items-center gap-3">
-                    <ProgressBar pct={needsPct} exempt={false} />
-                    <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                      {doneNeeds}/{totalNeeds}
+              <p className="text-sm text-gray-600 mb-3">Learning Plan</p>
+              {(() => {
+                const s = metrics.learningPlanStatus;
+                const badge =
+                  s === 'Reviewed'
+                    ? { label: 'Met', cls: 'bg-green-50 text-green-700 border-green-200' }
+                    : s === 'Developed'
+                    ? { label: 'In progress', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+                    : s === 'Offline'
+                    ? { label: 'Offline', cls: 'bg-gray-100 text-gray-600 border-gray-200' }
+                    : { label: 'Not met', cls: 'bg-red-50 text-red-700 border-red-200' };
+                return (
+                  <>
+                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium border ${badge.cls} mb-2`}>
+                      {badge.label}
                     </span>
-                  </div>
-                  <p className="text-[11px] text-gray-500 mt-1.5">
-                    {metrics.learningPlanStatus}
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm font-bold text-gray-400">Not started</p>
-              )}
+                    <p className="text-[11px] text-gray-500">
+                      {s === 'Reviewed' && 'Your plan has been reviewed this cycle.'}
+                      {s === 'Developed' && `${totalNeeds} need${totalNeeds !== 1 ? 's' : ''} recorded — review pending.`}
+                      {s === 'Not Started' && 'No learning needs recorded yet.'}
+                      {s === 'Offline' && 'Documenting your plan offline.'}
+                    </p>
+                  </>
+                );
+              })()}
             </div>
 
-            {/* Activities Logged — US-504 */}
+            {/* Active Hours — US-504 */}
             <div className="sm:pl-5">
-              <p className="text-sm text-gray-600 mb-2">Activities Logged</p>
-              <p className="text-3xl font-bold text-gray-900">{activitiesCount}</p>
+              <p className="text-sm text-gray-600 mb-2">Active Hours</p>
+              <p className="text-3xl font-bold text-gray-900">{metrics.activeHours.logged}h</p>
               <p className="text-[11px] text-gray-500 mt-1.5">
-                Active hours: {metrics.activeHours.logged}h
+                {activitiesCount} activit{activitiesCount !== 1 ? 'ies' : 'y'} logged
               </p>
             </div>
           </div>
@@ -303,18 +357,31 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
                 : 0;
               return (
                 <div key={row.aoPE}>
-                  <p className="text-sm font-bold text-gray-900 mb-2">{row.aoPE}</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-bold text-gray-900">{row.aoPE}</p>
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
+                      hasExemption
+                        ? 'bg-gray-100 text-gray-600 border-gray-200'
+                        : row.met
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : 'bg-red-50 text-red-700 border-red-200'
+                    }`}>
+                      {hasExemption ? 'Exempt' : row.met ? 'Met' : 'Not met'}
+                    </span>
+                  </div>
                   <div className="h-3 bg-blue-200 rounded-full overflow-hidden mb-1.5">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        hasExemption ? 'bg-gray-400' : row.met ? 'bg-[#185FA5]' : 'bg-[#185FA5]'
+                        hasExemption ? 'bg-gray-400' : 'bg-[#185FA5]'
                       }`}
                       style={{ width: `${Math.min(100, pct)}%` }}
                     />
                   </div>
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{row.logged}h active logged</span>
-                    <span>{row.required}h (Minimum hours required)</span>
+                    <span>{row.logged}h logged</span>
+                    <span>
+                      {row.required}h ({hasExemption ? 'Standard Required Hours' : 'Minimum hours required'})
+                    </span>
                   </div>
                 </div>
               );
