@@ -222,11 +222,13 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
   }
 
   // ── Derived values for the progress cards ──────────────────────────────────
-  const learningNeeds = cycleProfile?.learningNeeds || [];
-  const totalNeeds    = learningNeeds.length;
-  const doneNeeds     = learningNeeds.filter((n) => n.status === 'Closed').length;
-  const needsPct      = totalNeeds > 0 ? Math.round((doneNeeds / totalNeeds) * 100) : 0;
-  const activitiesCount = (cycleProfile?.activities || []).length;
+  const learningNeeds    = cycleProfile?.learningNeeds || [];
+  const totalNeeds       = learningNeeds.length;
+  // Per-status breakdown for the Learning Plan progress bars
+  const notStartedNeeds  = learningNeeds.filter((n) => n.status === 'Not Started').length;
+  const inProgressNeeds  = learningNeeds.filter((n) => n.status === 'In Progress').length;
+  const completedNeeds   = learningNeeds.filter((n) => n.status === 'Completed' || n.status === 'Closed').length;
+  const activitiesCount  = (cycleProfile?.activities || []).length;
 
   const basePct = metrics && metrics.baseMin.required > 0
     ? Math.round((metrics.baseMin.logged / metrics.baseMin.required) * 100)
@@ -265,48 +267,63 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         <NavCard to="/member/cpd/report"        icon={BarChart2}     title="Reports"         description="Generate progress and compliance reports" />
       </div>
 
-      {/* ── Learning Plan Progress — US-501 (shown directly after nav cards) ── */}
+      {/* ── Learning Plan Progress — US-501 ─────────────────────────────────── */}
       {metrics && (
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-5">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <ClipboardList size={15} strokeWidth={1.75} className="text-aps-blue shrink-0" />
-                <p className="text-sm font-bold text-gray-900">Learning Plan</p>
-              </div>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                {metrics.learningPlanStatus === 'Not Started' && (
-                  'No active learning plan records exist for the selected CPD cycle. Add learning needs to get started.'
-                )}
-                {metrics.learningPlanStatus === 'Developed' && (
-                  `You have ${totalNeeds} learning need${totalNeeds !== 1 ? 's' : ''} recorded for this cycle. Your plan is yet to be reviewed.`
-                )}
-                {metrics.learningPlanStatus === 'Reviewed' && (
-                  'Your learning plan has been developed and reviewed this cycle. Your compliance requirement is met.'
-                )}
-                {metrics.learningPlanStatus === 'Offline' && (
-                  'You are documenting your learning plan offline. No active records exist in the PD Tool for this cycle.'
-                )}
-              </p>
+          {/* Header row */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <ClipboardList size={15} strokeWidth={1.75} className="text-aps-blue" />
+              <p className="text-sm font-bold text-gray-900">Learning Plan</p>
             </div>
+            {/* Overall compliance badge */}
             {(() => {
               const s = metrics.learningPlanStatus;
               const badge =
-                s === 'Reviewed'
-                  ? { label: 'Met',         cls: 'bg-green-50 text-green-700 border-green-200' }
-                  : s === 'Developed'
-                  ? { label: 'In progress', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
-                  : s === 'Offline'
-                  ? { label: 'Offline',     cls: 'bg-gray-100 text-gray-600 border-gray-200' }
-                  : { label: 'Not met',     cls: 'bg-red-50 text-red-700 border-red-200' };
+                s === 'Reviewed'  ? { label: 'Met',         cls: 'bg-green-50 text-green-700 border-green-200' }
+                : s === 'Developed' ? { label: 'In progress', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+                : s === 'Offline'   ? { label: 'Offline',     cls: 'bg-gray-100 text-gray-600 border-gray-200' }
+                :                    { label: 'Not met',      cls: 'bg-red-50 text-red-700 border-red-200' };
               return (
-                <span className={`shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold border ${badge.cls}`}>
+                <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${badge.cls}`}>
                   {badge.label}
                 </span>
               );
             })()}
           </div>
-          <div className="mt-3 pt-3 border-t border-blue-200">
+
+          {/* Per-status breakdown bars */}
+          {totalNeeds > 0 ? (
+            <div className="space-y-3">
+              {[
+                { label: 'Not Started', count: notStartedNeeds, barCls: 'bg-gray-400' },
+                { label: 'Developed',   count: inProgressNeeds, barCls: 'bg-amber-400' },
+                { label: 'Reviewed',    count: completedNeeds,  barCls: 'bg-[#185FA5]' },
+              ].map(({ label, count, barCls }) => (
+                <div key={label}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs text-gray-700">{label}</span>
+                    <span className="text-xs font-semibold text-gray-900">{count}</span>
+                  </div>
+                  <div className="h-2.5 bg-blue-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full ${barCls} rounded-full transition-all`}
+                      style={{ width: `${totalNeeds > 0 ? Math.round((count / totalNeeds) * 100) : 0}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+              <p className="text-[11px] text-gray-500 pt-0.5">
+                {totalNeeds} learning need{totalNeeds !== 1 ? 's' : ''} this cycle
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-gray-500">
+              No active learning plan records exist for the selected CPD cycle.
+            </p>
+          )}
+
+          <div className="mt-4 pt-3 border-t border-blue-200">
             <Link to="/member/cpd/learning-plan" className="text-xs font-medium text-aps-blue hover:underline">
               View learning plan →
             </Link>
