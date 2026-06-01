@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle, BookOpen, RefreshCw, User,
-  TrendingUp, BarChart2, ChevronRight, ClipboardList,
+  TrendingUp, BarChart2, ChevronRight, ClipboardList, Check,
 } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
@@ -250,12 +250,12 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         )}
       </div>
 
-      {/* ── Navigation cards — always at the top ─────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <NavCard to="/member/cpd/profile"      icon={User}         title="Manage Profile"  description="Your personal details" />
-        <NavCard to="/member/cpd/learning-plan" icon={ClipboardList} title="Learning Plan"   description="Needs and reviews" />
-        <NavCard to="/member/cpd/activities"    icon={TrendingUp}   title="Activities"      description="Log and view CPD" />
-        <NavCard to="/member/cpd/report"        icon={BarChart2}    title="Reports"         description="Progress reports" />
+      {/* ── Navigation cards — 2×2 grid ─────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <NavCard to="/member/cpd/profile"       icon={User}          title="Manage Profile"  description="Update your personal details and preferences" />
+        <NavCard to="/member/cpd/learning-plan" icon={ClipboardList} title="Learning Plan"   description="Manage learning needs and submit reviews" />
+        <NavCard to="/member/cpd/activities"    icon={TrendingUp}    title="Activities"      description="Record, view, and edit your CPD activities" />
+        <NavCard to="/member/cpd/report"        icon={BarChart2}     title="Reports"         description="Generate progress and compliance reports" />
       </div>
 
       {/* US-405: CPD Exemption alert — exact spec wording required */}
@@ -318,26 +318,35 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               <p className="text-sm text-gray-600 mb-3">Learning Plan</p>
               {(() => {
                 const s = metrics.learningPlanStatus;
-                const badge =
-                  s === 'Reviewed'
-                    ? { label: 'Met', cls: 'bg-green-50 text-green-700 border-green-200' }
-                    : s === 'Developed'
-                    ? { label: 'In progress', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
-                    : s === 'Offline'
-                    ? { label: 'Offline', cls: 'bg-gray-100 text-gray-600 border-gray-200' }
-                    : { label: 'Not met', cls: 'bg-red-50 text-red-700 border-red-200' };
+                const isDeveloped = s === 'Developed' || s === 'Reviewed';
+                const isReviewed  = s === 'Reviewed';
                 return (
-                  <>
-                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium border ${badge.cls} mb-2`}>
-                      {badge.label}
-                    </span>
-                    <p className="text-[11px] text-gray-500">
-                      {s === 'Reviewed' && 'Your plan has been reviewed this cycle.'}
-                      {s === 'Developed' && `${totalNeeds} need${totalNeeds !== 1 ? 's' : ''} recorded — review pending.`}
+                  <div className="space-y-2.5">
+                    {/* Plan Developed indicator */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded flex items-center justify-center shrink-0 ${
+                        isDeveloped ? 'bg-green-500' : 'bg-gray-200'
+                      }`}>
+                        {isDeveloped && <Check size={9} strokeWidth={3} className="text-white" />}
+                      </div>
+                      <span className="text-xs text-gray-700">Plan developed</span>
+                    </div>
+                    {/* Plan Reviewed indicator */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-4 h-4 rounded flex items-center justify-center shrink-0 ${
+                        isReviewed ? 'bg-green-500' : 'bg-gray-200'
+                      }`}>
+                        {isReviewed && <Check size={9} strokeWidth={3} className="text-white" />}
+                      </div>
+                      <span className="text-xs text-gray-700">Plan reviewed</span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 pt-0.5">
                       {s === 'Not Started' && 'No learning needs recorded yet.'}
-                      {s === 'Offline' && 'Documenting your plan offline.'}
+                      {s === 'Developed'   && `${totalNeeds} need${totalNeeds !== 1 ? 's' : ''} recorded — review pending.`}
+                      {s === 'Reviewed'    && 'Your plan has been reviewed this cycle.'}
+                      {s === 'Offline'     && 'Documenting your plan offline.'}
                     </p>
-                  </>
+                  </div>
                 );
               })()}
             </div>
@@ -434,7 +443,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         </div>
       )}
 
-      {/* ── Linked registrar programs ─────────────────────────────────────────── */}
+      {/* ── Linked registrar programs — show max 2 ───────────────────────────── */}
       {hasAnyRegistrar && (
         <section className="bg-white border border-gray-200 rounded-xl p-6">
           <div className="flex items-baseline justify-between mb-4">
@@ -442,10 +451,14 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               My Registrar Programs
               <span className="text-sm font-normal text-gray-400 ml-2">({myPrograms.length})</span>
             </h2>
-            <Link to="/member/registrar" className="text-xs font-medium text-aps-blue hover:underline">View all →</Link>
+            {myPrograms.length > 2 && (
+              <Link to="/member/registrar" className="text-xs font-medium text-aps-blue hover:underline">
+                View all {myPrograms.length} →
+              </Link>
+            )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {myPrograms.map((p) => {
+            {myPrograms.slice(0, 2).map((p) => {
               const template = findLinkedTemplate(p, aoPEPrograms || []);
               const pct = template ? compliancePercent(p, template, cycleProfile?.activities || []) : 0;
               const barColour = pct >= 100 ? 'bg-green-500' : pct > 0 ? 'bg-amber-400' : 'bg-gray-300';
@@ -470,6 +483,13 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               );
             })}
           </div>
+          {myPrograms.length > 2 && (
+            <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+              <Link to="/member/registrar" className="text-sm font-medium text-aps-blue hover:underline">
+                View all {myPrograms.length} registrar programs →
+              </Link>
+            </div>
+          )}
         </section>
       )}
 

@@ -146,12 +146,17 @@ function padLearningPlans(persona) {
 function padActivities(persona) {
   const existing = Array.isArray(persona.activities) ? persona.activities : [];
   if (existing.length >= 20) return existing;
-  const aope = (persona.aoPEs && persona.aoPEs[0]) || 'Clinical Psychology';
+  // Rotate through all AoPEs so each one gets some hours in the demo
+  const aoPEsList = (persona.aoPEs && persona.aoPEs.length > 0)
+    ? persona.aoPEs
+    : ['Clinical Psychology'];
   const templates = ACTIVITY_TEMPLATES_BY_AOPE.generic;
   const padded = [...existing];
   let idx = 1;
   while (padded.length < 20) {
     const t = templates[(padded.length) % templates.length];
+    // Rotate allocation across all AoPEs
+    const aope = aoPEsList[padded.length % aoPEsList.length];
     // Fan out completion dates across 2025
     const month = String(((padded.length * 3) % 11) + 1).padStart(2, '0');
     const day = String(((padded.length * 7) % 27) + 1).padStart(2, '0');
@@ -211,7 +216,7 @@ const rawInitialCpdProfiles = [
     boardRegistration: 'General',
     generalRegistrationDate: '2015-03-12',
     regDate: '2015-03-12',
-    aoPEs: ['Clinical Psychology'],
+    aoPEs: ['Clinical Psychology', 'Community Psychology', 'Counselling Psychology'],
 
     cycleProfiles: [
       // ── 2025–2026 Open cycle ────────────────────────────────────────────
