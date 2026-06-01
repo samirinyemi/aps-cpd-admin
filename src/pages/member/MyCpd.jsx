@@ -34,18 +34,18 @@ function NavCard({ to, icon: Icon, title, description }) {
   return (
     <Link
       to={to}
-      className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between gap-4 hover:border-aps-blue/50 hover:shadow-sm transition-all group"
+      className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2 hover:border-aps-blue/50 hover:shadow-sm transition-all group"
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center justify-between">
         <div className="w-8 h-8 rounded-lg bg-aps-blue-light flex items-center justify-center shrink-0">
           <Icon size={16} strokeWidth={1.75} className="text-aps-blue" />
         </div>
-        <div>
-          <p className="text-sm font-semibold text-gray-900">{title}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{description}</p>
-        </div>
+        <ChevronRight size={14} strokeWidth={2} className="text-gray-300 group-hover:text-aps-blue transition-colors" />
       </div>
-      <ChevronRight size={16} strokeWidth={2} className="text-gray-400 shrink-0 group-hover:text-aps-blue transition-colors" />
+      <div>
+        <p className="text-sm font-semibold text-gray-900">{title}</p>
+        <p className="text-xs text-gray-500 mt-0.5 leading-snug">{description}</p>
+      </div>
     </Link>
   );
 }
@@ -237,7 +237,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
   return (
     <PageShell>
       {/* Page header */}
-      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+      <div className="flex items-start justify-between mb-5 gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">CPD Summary</h1>
           <p className="text-sm text-gray-500 mt-0.5">Welcome back, {member.firstName}.</p>
@@ -248,6 +248,14 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
             Log CPD activity
           </button>
         )}
+      </div>
+
+      {/* ── Navigation cards — always at the top ─────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <NavCard to="/member/cpd/profile"      icon={User}         title="Manage Profile"  description="Your personal details" />
+        <NavCard to="/member/cpd/learning-plan" icon={ClipboardList} title="Learning Plan"   description="Needs and reviews" />
+        <NavCard to="/member/cpd/activities"    icon={TrendingUp}   title="Activities"      description="Log and view CPD" />
+        <NavCard to="/member/cpd/report"        icon={BarChart2}    title="Reports"         description="Progress reports" />
       </div>
 
       {/* US-405: CPD Exemption alert — exact spec wording required */}
@@ -334,12 +342,33 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               })()}
             </div>
 
-            {/* Active Hours — US-504 */}
+            {/* Active CPD — required hours metric */}
             <div className="sm:pl-5">
-              <p className="text-sm text-gray-600 mb-2">Active Hours</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics.activeHours.logged}h</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm text-gray-600">Active CPD</p>
+                <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
+                  hasExemption
+                    ? 'bg-gray-100 text-gray-600 border-gray-200'
+                    : metrics.activeCpd.met
+                    ? 'bg-green-50 text-green-700 border-green-200'
+                    : 'bg-red-50 text-red-700 border-red-200'
+                }`}>
+                  {hasExemption ? 'Exempt' : metrics.activeCpd.met ? 'Met' : 'Not met'}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <ProgressBar
+                  pct={metrics.activeCpd.required > 0
+                    ? Math.round((metrics.activeCpd.logged / metrics.activeCpd.required) * 100)
+                    : 0}
+                  exempt={hasExemption}
+                />
+                <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                  {metrics.activeCpd.logged}/{metrics.activeCpd.required}h
+                </span>
+              </div>
               <p className="text-[11px] text-gray-500 mt-1.5">
-                {activitiesCount} activit{activitiesCount !== 1 ? 'ies' : 'y'} logged
+                {hasExemption ? 'vs Standard Required Hours' : 'Hours logged vs required'}
               </p>
             </div>
           </div>
@@ -390,60 +419,20 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         </div>
       )}
 
-      {/* ── Peer Consultation — US-503 ───────────────────────────────────────── */}
+      {/* ── Other CPD ─────────────────────────────────────────────────────────── */}
       {metrics && (
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-gray-900">Peer Consultation</p>
-            <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-              hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
-              : metrics.peerConsultation.met ? 'bg-green-50 text-green-700 border-green-200'
-              : 'bg-red-50 text-red-700 border-red-200'
-            }`}>
-              {hasExemption ? 'Exempt' : metrics.peerConsultation.met ? 'Met' : 'Not met'}
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm font-bold text-gray-900">Other CPD</p>
+            <span className="text-[11px] px-2 py-0.5 rounded-full font-medium border bg-gray-100 text-gray-600 border-gray-200">
+              {metrics.otherCpd.logged}h logged
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <ProgressBar
-              pct={metrics.peerConsultation.required > 0
-                ? Math.round((metrics.peerConsultation.logged / metrics.peerConsultation.required) * 100)
-                : 0}
-              exempt={hasExemption}
-            />
-            <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-              {metrics.peerConsultation.logged}/{metrics.peerConsultation.required}h
-            </span>
-          </div>
+          <p className="text-xs text-gray-500">
+            Other CPD activities count towards your total required hours.
+          </p>
         </div>
       )}
-
-      {/* ── Navigation cards ──────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <NavCard
-          to="/member/cpd/profile"
-          icon={User}
-          title="Manage Profile"
-          description="Update your personal details and preferences"
-        />
-        <NavCard
-          to="/member/cpd/learning-plan"
-          icon={ClipboardList}
-          title="Learning Plan"
-          description="Manage learning needs and submit reviews"
-        />
-        <NavCard
-          to="/member/cpd/activities"
-          icon={TrendingUp}
-          title="Activities"
-          description="Record, view, and edit your CPD activities"
-        />
-        <NavCard
-          to="/member/cpd/report"
-          icon={BarChart2}
-          title="Reports"
-          description="Generate progress and compliance reports"
-        />
-      </div>
 
       {/* ── Linked registrar programs ─────────────────────────────────────────── */}
       {hasAnyRegistrar && (

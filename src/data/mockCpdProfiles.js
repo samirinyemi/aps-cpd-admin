@@ -72,10 +72,10 @@ const ACTIVITY_TEMPLATES_BY_AOPE = {
     { kind: 'Active CPD', title: 'Conference attendance', actionHrs: 8 },
     { kind: 'Active CPD', title: 'Case presentation', actionHrs: 2 },
     { kind: 'Active CPD', title: 'Professional masterclass', actionHrs: 4 },
-    { kind: 'Peer Consultation', peerHrs: 1.5, actionHrs: 0 },
-    { kind: 'Peer Consultation', peerHrs: 2, actionHrs: 0 },
-    { kind: 'Peer Consultation', peerHrs: 1, actionHrs: 1 },
-    { kind: 'Peer Consultation', peerHrs: 2, actionHrs: 0.5 },
+    { kind: 'Active CPD', title: 'Peer consultation session', actionHrs: 1.5 },
+    { kind: 'Active CPD', title: 'Peer consultation group', actionHrs: 2 },
+    { kind: 'Active CPD', title: 'Case discussion with peers', actionHrs: 2 },
+    { kind: 'Active CPD', title: 'Peer consultation follow-up', actionHrs: 2.5 },
     { kind: 'Other CPD', title: 'Journal article review', actionHrs: 1.5 },
     { kind: 'Other CPD', title: 'Textbook chapter reading', actionHrs: 2 },
     { kind: 'Other CPD', title: 'Evidence-based practice update', actionHrs: 2 },
@@ -168,15 +168,13 @@ function padActivities(persona) {
       journalMode: 'PD Tool',
       journalNotes: `Generated demo activity tied to ${aope}.`,
     };
-    if (t.kind === 'Peer Consultation') {
-      const focus = PEER_FOCUS_LIBRARY[padded.length % PEER_FOCUS_LIBRARY.length];
+    if (false) {
+      // Peer Consultation type removed — kept as dead branch to avoid merge conflicts
       padded.push({
         ...base,
-        focus,
-        colleagues: 'Peer group',
-        peerHrs: t.peerHrs,
-        actionHrs: t.actionHrs,
-        cpdHrs: (t.peerHrs || 0) + (t.actionHrs || 0),
+        peerHrs: 0,
+        actionHrs: 0,
+        cpdHrs: 0,
       });
     } else {
       padded.push({

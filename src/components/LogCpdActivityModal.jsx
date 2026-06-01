@@ -4,20 +4,14 @@ import { useState, useEffect } from 'react';
 // Activities are tagged with the Open cycle's id and optionally allocated to
 // an AoPE linked to the member's CPD profile.
 
-const activityKinds = ['Peer Consultation', 'Active CPD', 'Other CPD'];
+const activityKinds = ['Active CPD', 'Other CPD'];
 
 const emptyForm = {
   activityKind: '',
   completedDate: '',
   allocation: '',         // selected AoPE
-  focus: '',              // US-802 Peer Consultation
-  colleagues: '',         // US-802 Peer Consultation
-  peerHrs: '',            // US-802 Peer CPD hours
-  peerMins: '',
-  activeHrs: '',          // US-802 Active CPD hours within Peer
-  activeMins: '',
-  activityTitle: '',      // US-803 Active/Other
-  details: '',            // US-803 Active/Other
+  activityTitle: '',      // US-803
+  details: '',            // US-803
   totalHrs: '',           // US-803 Total duration
   totalMins: '',
   journalMode: 'PD Tool', // 'PD Tool' | 'Offline'
@@ -48,21 +42,13 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
         return { hrs: String(Math.floor(total / 60)), mins: String(total % 60) };
       };
       const kind = existingActivity.activityKind || existingActivity.activityType || '';
-      const peer = splitDuration(existingActivity.peerHrs);
-      const active = splitDuration(existingActivity.actionHrs);
       const total = splitDuration(existingActivity.cpdHrs);
       setForm({
-        activityKind: kind,
+        activityKind: kind === 'Peer Consultation' ? 'Active CPD' : kind,
         completedDate: existingActivity.completedDate || '',
         allocation: existingActivity.allocation || defaultAllocation || '',
-        focus: existingActivity.focus || '',
-        colleagues: existingActivity.colleagues || '',
-        peerHrs: peer.hrs,
-        peerMins: peer.mins,
-        activeHrs: active.hrs,
-        activeMins: active.mins,
-        activityTitle: existingActivity.activityTitle || '',
-        details: existingActivity.details || '',
+        activityTitle: existingActivity.activityTitle || existingActivity.focus || '',
+        details: existingActivity.details || existingActivity.colleagues || '',
         totalHrs: total.hrs,
         totalMins: total.mins,
         journalMode: existingActivity.journalMode || 'PD Tool',
@@ -81,9 +67,6 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
-  const isPeer = form.activityKind === 'Peer Consultation';
-  const isActiveOrOther = form.activityKind === 'Active CPD' || form.activityKind === 'Other CPD';
-
   function validate() {
     const errs = {};
     if (!form.activityKind) errs.activityKind = 'Required';
@@ -95,22 +78,11 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
       if (cycle.endDate && form.completedDate > cycle.endDate) errs.completedDate = 'Must fall within the cycle window';
     }
 
-    if (allocationOptions.length === 0) {
-      // Optional; no error. HLBR message is shown in UI.
-    } else if (!form.allocation) {
+    if (allocationOptions.length > 0 && !form.allocation) {
       errs.allocation = 'Allocate this activity to an AoPE';
     }
 
-    if (isPeer) {
-      if (!form.focus.trim()) errs.focus = 'Required';
-      if (!form.colleagues.trim()) errs.colleagues = 'Required';
-      if (Number(form.peerHrs) > 100) errs.peerHrs = 'Max 100 hours';
-      if (Number(form.peerMins) > 59) errs.peerMins = 'Max 59 minutes';
-      if (Number(form.activeHrs) > 100) errs.activeHrs = 'Max 100 hours';
-      if (Number(form.activeMins) > 59) errs.activeMins = 'Max 59 minutes';
-      const total = toDecimalHours(form.peerHrs, form.peerMins) + toDecimalHours(form.activeHrs, form.activeMins);
-      if (total <= 0) errs.peerHrs = 'Enter at least one non-zero duration';
-    } else if (isActiveOrOther) {
+    if (form.activityKind) {
       if (!form.activityTitle.trim()) errs.activityTitle = 'Required';
       if (!form.details.trim()) errs.details = 'Required';
       if (Number(form.totalHrs) > 100) errs.totalHrs = 'Max 100 hours';
@@ -129,27 +101,18 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
-    const peerHrs = isPeer ? toDecimalHours(form.peerHrs, form.peerMins) : 0;
-    const actionHrs = isPeer
-      ? toDecimalHours(form.activeHrs, form.activeMins)
-      : (isActiveOrOther ? toDecimalHours(form.totalHrs, form.totalMins) : 0);
-    const cpdHrs = peerHrs + actionHrs;
+    const cpdHrs = toDecimalHours(form.totalHrs, form.totalMins);
 
     const activity = {
       id: isEdit ? existingActivity.id : `a-${Date.now()}`,
       cycleId: isEdit ? (existingActivity.cycleId || cycle.id) : cycle.id,
       allocation: form.allocation || null,
       activityKind: form.activityKind,
-      // activityType retained for backward compatibility with any existing tables
       activityType: form.activityKind,
-      // Type-specific descriptive fields
-      focus: isPeer ? form.focus.trim() : null,
-      colleagues: isPeer ? form.colleagues.trim() : null,
-      activityTitle: isActiveOrOther ? form.activityTitle.trim() : null,
-      details: isActiveOrOther ? form.details.trim() : null,
-      // Hours
-      peerHrs: Math.round(peerHrs * 100) / 100,
-      actionHrs: Math.round(actionHrs * 100) / 100,
+      activityTitle: form.activityTitle.trim(),
+      details: form.details.trim(),
+      peerHrs: 0,
+      actionHrs: Math.round(cpdHrs * 100) / 100,
       cpdHrs: Math.round(cpdHrs * 100) / 100,
       completedDate: form.completedDate,
       loggedDate: isEdit ? (existingActivity.loggedDate || todayISO()) : todayISO(),
@@ -231,52 +194,8 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
             {errors.allocation && <p className="mt-1 text-sm text-red-600">{errors.allocation}</p>}
           </div>
 
-          {/* Peer Consultation fields (US-802) */}
-          {isPeer && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Focus of peer consultation</label>
-                <input
-                  type="text"
-                  maxLength={100}
-                  value={form.focus}
-                  onChange={(e) => update('focus', e.target.value)}
-                  className={inputClass('focus')}
-                />
-                {errors.focus && <p className="mt-1 text-sm text-red-600">{errors.focus}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Colleague(s) involved</label>
-                <input
-                  type="text"
-                  maxLength={250}
-                  value={form.colleagues}
-                  onChange={(e) => update('colleagues', e.target.value)}
-                  className={inputClass('colleagues')}
-                />
-                {errors.colleagues && <p className="mt-1 text-sm text-red-600">{errors.colleagues}</p>}
-              </div>
-              <fieldset>
-                <legend className="text-sm font-medium text-gray-700 mb-1.5">Duration — focus on your practice (Peer CPD)</legend>
-                <div className="grid grid-cols-2 gap-3">
-                  <input type="number" min="0" max="100" placeholder="Hours" value={form.peerHrs} onChange={(e) => update('peerHrs', e.target.value)} className={inputClass('peerHrs')} />
-                  <input type="number" min="0" max="59"  placeholder="Minutes" value={form.peerMins} onChange={(e) => update('peerMins', e.target.value)} className={inputClass('peerMins')} />
-                </div>
-                {(errors.peerHrs || errors.peerMins) && <p className="mt-1 text-sm text-red-600">{errors.peerHrs || errors.peerMins}</p>}
-              </fieldset>
-              <fieldset>
-                <legend className="text-sm font-medium text-gray-700 mb-1.5">Duration — focus on your practice (Active CPD)</legend>
-                <div className="grid grid-cols-2 gap-3">
-                  <input type="number" min="0" max="100" placeholder="Hours" value={form.activeHrs} onChange={(e) => update('activeHrs', e.target.value)} className={inputClass('activeHrs')} />
-                  <input type="number" min="0" max="59"  placeholder="Minutes" value={form.activeMins} onChange={(e) => update('activeMins', e.target.value)} className={inputClass('activeMins')} />
-                </div>
-                {(errors.activeHrs || errors.activeMins) && <p className="mt-1 text-sm text-red-600">{errors.activeHrs || errors.activeMins}</p>}
-              </fieldset>
-            </>
-          )}
-
-          {/* Active / Other CPD fields (US-803) */}
-          {isActiveOrOther && (
+          {/* Activity fields — shown for all types */}
+          {form.activityKind && (
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">CPD Activity</label>

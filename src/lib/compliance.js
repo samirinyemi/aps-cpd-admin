@@ -62,10 +62,19 @@ export function computeCpdCycleMetrics(profile, cycle) {
   const sum = (xs, pick) => xs.reduce((acc, a) => acc + (Number(pick(a)) || 0), 0);
 
   const loggedTotal = sum(activities, (a) => a.cpdHrs);
-  const loggedPeer = sum(activities, (a) => a.peerHrs);
-  // "Active Hours" per US-504 = action time + peer-consultation active portion
-  // (in our data we store peerHrs and actionHrs separately on Peer Consultation)
-  const loggedActive = sum(activities, (a) => a.actionHrs);
+
+  // Active CPD = activities of type 'Active CPD' (or legacy 'Peer Consultation')
+  const loggedActiveCpd = activities
+    .filter((a) => ['Active CPD', 'Peer Consultation'].includes(a.activityKind || a.activityType || ''))
+    .reduce((acc, a) => acc + (Number(a.cpdHrs) || 0), 0);
+
+  // Other CPD = activities of type 'Other CPD'
+  const loggedOtherCpd = activities
+    .filter((a) => (a.activityKind || a.activityType || '') === 'Other CPD')
+    .reduce((acc, a) => acc + (Number(a.cpdHrs) || 0), 0);
+
+  // US-504 Active Hours = Active CPD hours (Other CPD is passive)
+  const loggedActive = loggedActiveCpd;
 
   const aoPEs = Array.isArray(profile.aoPEs) ? profile.aoPEs : [];
   const perAoPERequired = aoPEs.length > 1
@@ -101,11 +110,17 @@ export function computeCpdCycleMetrics(profile, cycle) {
       required: cycle.minRequiredHours || 0,
       met: loggedTotal >= (cycle.minRequiredHours || 0),
     },
-    peerConsultation: {
-      logged: Math.round(loggedPeer * 100) / 100,
+    // Active CPD replaces Peer Consultation — required minimum hours tracked here
+    activeCpd: {
+      logged: Math.round(loggedActiveCpd * 100) / 100,
       required: cycle.minPeerHours || 0,
-      met: loggedPeer >= (cycle.minPeerHours || 0),
+      met: loggedActiveCpd >= (cycle.minPeerHours || 0),
     },
+    // Other CPD — tracked only, no compliance minimum
+    otherCpd: {
+      logged: Math.round(loggedOtherCpd * 100) / 100,
+    },
+    // US-504 backward compat alias
     activeHours: {
       logged: Math.round(loggedActive * 100) / 100,
     },
