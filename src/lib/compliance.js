@@ -121,9 +121,13 @@ export function computeCpdCycleMetrics(profile, cycle) {
     },
     activeCpd: {
       logged: Math.round(loggedActiveCpd * 100) / 100,
+      required: cycle.minRequiredHours || 0,
+      met: loggedActiveCpd >= (cycle.minRequiredHours || 0),
     },
     otherCpd: {
       logged: Math.round(loggedOtherCpd * 100) / 100,
+      required: cycle.minRequiredHours || 0,
+      met: loggedOtherCpd >= (cycle.minRequiredHours || 0),
     },
     perAoPE,
     cpdExemption: Boolean(profile.cpdExemption),

@@ -327,83 +327,44 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         </div>
       )}
 
-      {/* ── Peer Consultation — US-503 ───────────────────────────────────────── */}
+      {/* ── CPD Activities — US-503/802/803 ──────────────────────────────────── */}
       {metrics && (
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-gray-900">Peer Consultation</p>
-            <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-              hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
-              : metrics.peerConsultation.met ? 'bg-green-50 text-green-700 border-green-200'
-              : 'bg-red-50 text-red-700 border-red-200'
-            }`}>
-              {hasExemption ? 'Exempt' : metrics.peerConsultation.met ? 'Met' : 'Not met'}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <ProgressBar
-              pct={metrics.peerConsultation.required > 0
-                ? Math.round((metrics.peerConsultation.logged / metrics.peerConsultation.required) * 100)
-                : 0}
-              exempt={hasExemption}
-            />
-            <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-              {fmtH(metrics.peerConsultation.logged)} / {fmtH(metrics.peerConsultation.required)}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* ── Active CPD ────────────────────────────────────────────────────────── */}
-      {metrics && (
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-gray-900">Active CPD</p>
-            <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-              hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
-              : metrics.activeCpd.logged > 0 ? 'bg-green-50 text-green-700 border-green-200'
-              : 'bg-red-50 text-red-700 border-red-200'
-            }`}>
-              {hasExemption ? 'Exempt' : metrics.activeCpd.logged > 0 ? 'Logged' : 'None logged'}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <ProgressBar
-              pct={metrics.baseMin.required > 0
-                ? Math.round((metrics.activeCpd.logged / metrics.baseMin.required) * 100)
-                : 0}
-              exempt={hasExemption}
-            />
-            <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-              {fmtH(metrics.activeCpd.logged)}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* ── Other CPD ─────────────────────────────────────────────────────────── */}
-      {metrics && (
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-5">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-gray-900">Other CPD</p>
-            <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-              hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
-              : metrics.otherCpd.logged > 0 ? 'bg-green-50 text-green-700 border-green-200'
-              : 'bg-red-50 text-red-700 border-red-200'
-            }`}>
-              {hasExemption ? 'Exempt' : metrics.otherCpd.logged > 0 ? 'Logged' : 'None logged'}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <ProgressBar
-              pct={metrics.baseMin.required > 0
-                ? Math.round((metrics.otherCpd.logged / metrics.baseMin.required) * 100)
-                : 0}
-              exempt={hasExemption}
-            />
-            <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-              {fmtH(metrics.otherCpd.logged)}
-            </span>
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-5">
+          <h2 className="text-base font-bold text-gray-900 mb-5">CPD Activities</h2>
+          <div className="space-y-5">
+            {[
+              { label: 'Peer Consultation', logged: metrics.peerConsultation.logged, required: metrics.peerConsultation.required, met: metrics.peerConsultation.met },
+              { label: 'Active CPD',        logged: metrics.activeCpd.logged,        required: metrics.activeCpd.required,        met: metrics.activeCpd.met },
+              { label: 'Other CPD',         logged: metrics.otherCpd.logged,         required: metrics.otherCpd.required,         met: metrics.otherCpd.met },
+            ].map(({ label, logged, required, met }) => {
+              const pct = required > 0 ? Math.round((logged / required) * 100) : 0;
+              return (
+                <div key={label}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-bold text-gray-900">{label}</p>
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
+                      hasExemption
+                        ? 'bg-gray-100 text-gray-600 border-gray-200'
+                        : met
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : 'bg-red-50 text-red-700 border-red-200'
+                    }`}>
+                      {hasExemption ? 'Exempt' : met ? 'Met' : 'Not met'}
+                    </span>
+                  </div>
+                  <div className="h-3 bg-blue-200 rounded-full overflow-hidden mb-1.5">
+                    <div
+                      className={`h-full rounded-full transition-all ${hasExemption ? 'bg-gray-400' : 'bg-[#185FA5]'}`}
+                      style={{ width: `${Math.min(100, pct)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{fmtH(logged)} logged</span>
+                    <span>{fmtH(required)} required</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
