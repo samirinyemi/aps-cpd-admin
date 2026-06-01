@@ -2,14 +2,14 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle, BookOpen, RefreshCw, User,
-  TrendingUp, BarChart2, ChevronRight, ClipboardList, Check,
+  TrendingUp, BarChart2, ChevronRight, ClipboardList,
 } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
 import { useAuth } from '../../context/AuthContext';
 import { useSelectedCycle } from '../../context/CycleContext';
-import { compliancePercent, findLinkedTemplate, computeCpdCycleMetrics } from '../../lib/compliance';
+import { compliancePercent, findLinkedTemplate, computeCpdCycleMetrics, formatHours } from '../../lib/compliance';
 
 // HLBR §3.4.4 CPD Summary — US-500 through US-506, plus US-803/805/806/807.
 
@@ -232,6 +232,13 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
     ? Math.round((metrics.baseMin.logged / metrics.baseMin.required) * 100)
     : 0;
 
+  const peerPct = metrics && metrics.activeCpd.required > 0
+    ? Math.round((metrics.activeCpd.logged / metrics.activeCpd.required) * 100)
+    : 0;
+
+  // Helper: decimal hours → "Xh Ym" display (US-502/503/504/505 all require minute precision)
+  const fmtH = (h) => formatHours(h, { fromDecimalHours: true });
+
   const hasAnyRegistrar = myPrograms.length > 0;
 
   return (
@@ -277,27 +284,25 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         </div>
       )}
 
-      {/* ── CPD Cycle Progress card ─────────────────────────────────────────── */}
+      {/* ── CPD Cycle Progress — US-502 / US-503 / US-504 / US-501 ────────────── */}
       {metrics && (
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-5">
           <div className="flex items-center gap-2 mb-5">
             <RefreshCw size={16} strokeWidth={1.75} className="text-aps-blue" />
             <h2 className="text-base font-bold text-gray-900">
-              CPD Cycle Progress: {selectedCycle?.name}
+              CPD Cycle Progress — {selectedCycle?.name}
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:divide-x sm:divide-blue-200">
-            {/* Total Hours — US-502 */}
-            <div className="sm:pr-5">
+          <div className="space-y-5 divide-y divide-blue-200">
+            {/* CPD (Total) — US-502 */}
+            <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm text-gray-600">Total Hours</p>
+                <p className="text-sm font-semibold text-gray-800">CPD</p>
                 <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-                  hasExemption
-                    ? 'bg-gray-100 text-gray-600 border-gray-200'
-                    : metrics.baseMin.met
-                    ? 'bg-green-50 text-green-700 border-green-200'
-                    : 'bg-red-50 text-red-700 border-red-200'
+                  hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
+                  : metrics.baseMin.met ? 'bg-green-50 text-green-700 border-green-200'
+                  : 'bg-red-50 text-red-700 border-red-200'
                 }`}>
                   {hasExemption ? 'Exempt' : metrics.baseMin.met ? 'Met' : 'Not met'}
                 </span>
@@ -305,7 +310,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               <div className="flex items-center gap-3">
                 <ProgressBar pct={basePct} exempt={hasExemption} />
                 <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                  {metrics.baseMin.logged}/{metrics.baseMin.required}h
+                  {fmtH(metrics.baseMin.logged)} / {fmtH(metrics.baseMin.required)}
                 </span>
               </div>
               <p className="text-[11px] text-gray-500 mt-1.5">
@@ -313,71 +318,66 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               </p>
             </div>
 
-            {/* Learning Plan compliance — US-501 */}
-            <div className="sm:px-5">
-              <p className="text-sm text-gray-600 mb-3">Learning Plan</p>
-              {(() => {
-                const s = metrics.learningPlanStatus;
-                const isDeveloped = s === 'Developed' || s === 'Reviewed';
-                const isReviewed  = s === 'Reviewed';
-                return (
-                  <div className="space-y-2.5">
-                    {/* Plan Developed indicator */}
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded flex items-center justify-center shrink-0 ${
-                        isDeveloped ? 'bg-green-500' : 'bg-gray-200'
-                      }`}>
-                        {isDeveloped && <Check size={9} strokeWidth={3} className="text-white" />}
-                      </div>
-                      <span className="text-xs text-gray-700">Plan developed</span>
-                    </div>
-                    {/* Plan Reviewed indicator */}
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded flex items-center justify-center shrink-0 ${
-                        isReviewed ? 'bg-green-500' : 'bg-gray-200'
-                      }`}>
-                        {isReviewed && <Check size={9} strokeWidth={3} className="text-white" />}
-                      </div>
-                      <span className="text-xs text-gray-700">Plan reviewed</span>
-                    </div>
-                    <p className="text-[11px] text-gray-500 pt-0.5">
-                      {s === 'Not Started' && 'No learning needs recorded yet.'}
-                      {s === 'Developed'   && `${totalNeeds} need${totalNeeds !== 1 ? 's' : ''} recorded — review pending.`}
-                      {s === 'Reviewed'    && 'Your plan has been reviewed this cycle.'}
-                      {s === 'Offline'     && 'Documenting your plan offline.'}
-                    </p>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Active CPD — required hours metric */}
-            <div className="sm:pl-5">
+            {/* Peer Consultation — US-503 */}
+            <div className="pt-5">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm text-gray-600">Active CPD</p>
+                <p className="text-sm font-semibold text-gray-800">Peer Consultation</p>
                 <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-                  hasExemption
-                    ? 'bg-gray-100 text-gray-600 border-gray-200'
-                    : metrics.activeCpd.met
-                    ? 'bg-green-50 text-green-700 border-green-200'
-                    : 'bg-red-50 text-red-700 border-red-200'
+                  hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
+                  : metrics.activeCpd.met ? 'bg-green-50 text-green-700 border-green-200'
+                  : 'bg-red-50 text-red-700 border-red-200'
                 }`}>
                   {hasExemption ? 'Exempt' : metrics.activeCpd.met ? 'Met' : 'Not met'}
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <ProgressBar
-                  pct={metrics.activeCpd.required > 0
-                    ? Math.round((metrics.activeCpd.logged / metrics.activeCpd.required) * 100)
-                    : 0}
-                  exempt={hasExemption}
-                />
+                <ProgressBar pct={peerPct} exempt={hasExemption} />
                 <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                  {metrics.activeCpd.logged}/{metrics.activeCpd.required}h
+                  {fmtH(metrics.activeCpd.logged)} / {fmtH(metrics.activeCpd.required)}
                 </span>
               </div>
               <p className="text-[11px] text-gray-500 mt-1.5">
                 {hasExemption ? 'vs Standard Required Hours' : 'Hours logged vs required'}
+              </p>
+            </div>
+
+            {/* Active CPD — US-504 (total active hours; no compliance minimum per spec) */}
+            <div className="pt-5">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-gray-800">Active CPD</p>
+                <span className="text-sm font-bold text-gray-900">
+                  {fmtH(metrics.activeHours.logged)}
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-500 mt-2">Total active CPD hours logged this cycle</p>
+            </div>
+
+            {/* Learning Plan — US-501 */}
+            <div className="pt-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold text-gray-800">Learning Plan</p>
+                {(() => {
+                  const s = metrics.learningPlanStatus;
+                  const badge =
+                    s === 'Reviewed'
+                      ? { label: 'Met',         cls: 'bg-green-50 text-green-700 border-green-200' }
+                      : s === 'Developed'
+                      ? { label: 'In progress', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+                      : s === 'Offline'
+                      ? { label: 'Offline',     cls: 'bg-gray-100 text-gray-600 border-gray-200' }
+                      : { label: 'Not met',     cls: 'bg-red-50 text-red-700 border-red-200' };
+                  return (
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${badge.cls}`}>
+                      {badge.label}
+                    </span>
+                  );
+                })()}
+              </div>
+              <p className="text-[11px] text-gray-500">
+                {metrics.learningPlanStatus === 'Not Started' && 'No learning needs recorded yet.'}
+                {metrics.learningPlanStatus === 'Developed'   && `${totalNeeds} need${totalNeeds !== 1 ? 's' : ''} recorded — review pending.`}
+                {metrics.learningPlanStatus === 'Reviewed'    && 'Your plan has been reviewed this cycle.'}
+                {metrics.learningPlanStatus === 'Offline'     && 'Documenting your plan offline.'}
               </p>
             </div>
           </div>
@@ -416,9 +416,9 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
                     />
                   </div>
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{row.logged}h logged</span>
+                    <span>{fmtH(row.logged)} logged</span>
                     <span>
-                      {row.required}h ({hasExemption ? 'Standard Required Hours' : 'Minimum hours required'})
+                      {fmtH(row.required)} ({hasExemption ? 'Standard Required Hours' : 'Minimum hours required'})
                     </span>
                   </div>
                 </div>
@@ -428,20 +428,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         </div>
       )}
 
-      {/* ── Other CPD ─────────────────────────────────────────────────────────── */}
-      {metrics && (
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-5">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-sm font-bold text-gray-900">Other CPD</p>
-            <span className="text-[11px] px-2 py-0.5 rounded-full font-medium border bg-gray-100 text-gray-600 border-gray-200">
-              {metrics.otherCpd.logged}h logged
-            </span>
-          </div>
-          <p className="text-xs text-gray-500">
-            Other CPD activities count towards your total required hours.
-          </p>
-        </div>
-      )}
+      {/* Other CPD contributes to CPD total — no separate dashboard metric per spec */}
 
       {/* ── Linked registrar programs — show max 2 ───────────────────────────── */}
       {hasAnyRegistrar && (

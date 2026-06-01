@@ -216,7 +216,7 @@ const rawInitialCpdProfiles = [
     boardRegistration: 'General',
     generalRegistrationDate: '2015-03-12',
     regDate: '2015-03-12',
-    aoPEs: ['Clinical Psychology', 'Community Psychology', 'Counselling Psychology'],
+    aoPEs: ['Clinical Psychology', 'Community Psychology', 'Counselling Psychology', 'Health Psychology'],
 
     cycleProfiles: [
       // ── 2025–2026 Open cycle ────────────────────────────────────────────
