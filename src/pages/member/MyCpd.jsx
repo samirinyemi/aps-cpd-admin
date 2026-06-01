@@ -265,6 +265,55 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         <NavCard to="/member/cpd/report"        icon={BarChart2}     title="Reports"         description="Generate progress and compliance reports" />
       </div>
 
+      {/* ── Learning Plan Progress — US-501 (shown directly after nav cards) ── */}
+      {metrics && (
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 mb-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-2">
+                <ClipboardList size={15} strokeWidth={1.75} className="text-aps-blue shrink-0" />
+                <p className="text-sm font-bold text-gray-900">Learning Plan</p>
+              </div>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                {metrics.learningPlanStatus === 'Not Started' && (
+                  'No active learning plan records exist for the selected CPD cycle. Add learning needs to get started.'
+                )}
+                {metrics.learningPlanStatus === 'Developed' && (
+                  `You have ${totalNeeds} learning need${totalNeeds !== 1 ? 's' : ''} recorded for this cycle. Your plan is yet to be reviewed.`
+                )}
+                {metrics.learningPlanStatus === 'Reviewed' && (
+                  'Your learning plan has been developed and reviewed this cycle. Your compliance requirement is met.'
+                )}
+                {metrics.learningPlanStatus === 'Offline' && (
+                  'You are documenting your learning plan offline. No active records exist in the PD Tool for this cycle.'
+                )}
+              </p>
+            </div>
+            {(() => {
+              const s = metrics.learningPlanStatus;
+              const badge =
+                s === 'Reviewed'
+                  ? { label: 'Met',         cls: 'bg-green-50 text-green-700 border-green-200' }
+                  : s === 'Developed'
+                  ? { label: 'In progress', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+                  : s === 'Offline'
+                  ? { label: 'Offline',     cls: 'bg-gray-100 text-gray-600 border-gray-200' }
+                  : { label: 'Not met',     cls: 'bg-red-50 text-red-700 border-red-200' };
+              return (
+                <span className={`shrink-0 text-xs px-2.5 py-1 rounded-full font-semibold border ${badge.cls}`}>
+                  {badge.label}
+                </span>
+              );
+            })()}
+          </div>
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <Link to="/member/cpd/learning-plan" className="text-xs font-medium text-aps-blue hover:underline">
+              View learning plan →
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* US-405: CPD Exemption alert — exact spec wording required */}
       {hasExemption && (
         <div className="mb-5 border border-amber-200 bg-amber-50 rounded-xl p-4 flex items-start gap-3">
@@ -352,34 +401,6 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               <p className="text-[11px] text-gray-500 mt-2">Total active CPD hours logged this cycle</p>
             </div>
 
-            {/* Learning Plan — US-501 */}
-            <div className="pt-5">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-semibold text-gray-800">Learning Plan</p>
-                {(() => {
-                  const s = metrics.learningPlanStatus;
-                  const badge =
-                    s === 'Reviewed'
-                      ? { label: 'Met',         cls: 'bg-green-50 text-green-700 border-green-200' }
-                      : s === 'Developed'
-                      ? { label: 'In progress', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
-                      : s === 'Offline'
-                      ? { label: 'Offline',     cls: 'bg-gray-100 text-gray-600 border-gray-200' }
-                      : { label: 'Not met',     cls: 'bg-red-50 text-red-700 border-red-200' };
-                  return (
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${badge.cls}`}>
-                      {badge.label}
-                    </span>
-                  );
-                })()}
-              </div>
-              <p className="text-[11px] text-gray-500">
-                {metrics.learningPlanStatus === 'Not Started' && 'No learning needs recorded yet.'}
-                {metrics.learningPlanStatus === 'Developed'   && `${totalNeeds} need${totalNeeds !== 1 ? 's' : ''} recorded — review pending.`}
-                {metrics.learningPlanStatus === 'Reviewed'    && 'Your plan has been reviewed this cycle.'}
-                {metrics.learningPlanStatus === 'Offline'     && 'Documenting your plan offline.'}
-              </p>
-            </div>
           </div>
         </div>
       )}
