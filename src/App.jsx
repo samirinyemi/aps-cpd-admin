@@ -35,6 +35,7 @@ import PracticeLocationForm from './pages/admin/PracticeLocationForm';
 import MyCpd from './pages/member/MyCpd';
 import MyCpdProfile from './pages/member/MyCpdProfile';
 import MyLearningPlan from './pages/member/MyLearningPlan';
+import MyLearningPlanDetails from './pages/member/MyLearningPlanDetails';
 import MyLearningPlanDetail from './pages/member/MyLearningPlanDetail';
 import MyCpdLog from './pages/member/MyCpdLog';
 import MyCpdActivities from './pages/member/MyCpdActivities';
@@ -176,6 +177,9 @@ function AppRoutes() {
       } />
       <Route path="/member/cpd/learning-plan" element={
         <RequireAuth memberOnly><MyLearningPlan cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
+      } />
+      <Route path="/member/cpd/learning-plan/details" element={
+        <RequireAuth memberOnly><MyLearningPlanDetails cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
       } />
       <Route path="/member/cpd/learning-plan/:id" element={
         <RequireAuth memberOnly><MyLearningPlanDetail cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>

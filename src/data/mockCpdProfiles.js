@@ -231,18 +231,7 @@ const rawInitialCpdProfiles = [
         requirementsMet: true,
         learningPlanMethod: 'PD Tool',
         // US-707: plan-level review log (multiple entries)
-        learningPlanReviews: [
-          {
-            id: 'pr-1',
-            reviewDate: '2025-08-15',
-            outcomesAchieved: 'Mid-cycle check-in: trauma workshop completed and EMDR beginning with one client. Supervision skills reading underway. Cultural competence goal on track with yarning approach starting in intakes.',
-          },
-          {
-            id: 'pr-2',
-            reviewDate: '2025-11-20',
-            outcomesAchieved: 'End-of-cycle review: EMDR applied with two clients with positive outcomes. Registrar supervision commenced in October — structured well. Cultural safety framework embedded in all intakes. Adolescent IPT-A delivered to three clients with measurable symptom reduction.',
-          },
-        ],
+        learningPlanReviews: [],
         learningNeeds: [
           {
             id: 'ln1', title: 'Evidence-based trauma interventions',

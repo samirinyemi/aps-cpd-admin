@@ -198,11 +198,15 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
   }
 
   // ── Derived values for the progress cards ──────────────────────────────────
-  const learningNeeds = cycleProfile?.learningNeeds || [];
-  const totalNeeds    = learningNeeds.length;
-  const doneNeeds     = learningNeeds.filter((n) => n.status === 'Completed' || n.status === 'Closed').length;
-  const needsPct      = totalNeeds > 0 ? Math.round((doneNeeds / totalNeeds) * 100) : 0;
+  const learningNeeds   = cycleProfile?.learningNeeds || [];
+  const totalNeeds      = learningNeeds.length;
+  const hasReview       = (cycleProfile?.learningPlanReviews || []).length > 0;
   const activitiesCount = (cycleProfile?.activities || []).length;
+
+  // US-501: Learning plan status — Not started / Developed / Reviewed
+  const planStatus = hasReview ? 'Reviewed'
+    : totalNeeds > 0         ? 'Developed'
+    :                          'Not started';
 
   const basePct = metrics && metrics.baseMin.required > 0
     ? Math.round((metrics.baseMin.logged / metrics.baseMin.required) * 100)
@@ -264,32 +268,38 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
               </p>
             </div>
 
-            {/* Learning Needs — US-501 */}
+            {/* Learning Plan Status — US-501 */}
             <div className="sm:px-5">
               <p className="text-sm text-gray-600 mb-3">Learning Plan</p>
-              {totalNeeds > 0 ? (
-                <>
-                  <div className="flex items-center gap-3">
-                    <ProgressBar pct={needsPct} exempt={false} />
-                    <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
-                      {doneNeeds}/{totalNeeds}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-gray-500 mt-1.5">
-                    needs met
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm font-bold text-gray-400">Not started</p>
-              )}
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${
+                  planStatus === 'Reviewed'    ? 'bg-green-500'
+                  : planStatus === 'Developed' ? 'bg-[#185FA5]'
+                  :                             'bg-gray-300'
+                }`} />
+                <span className={`text-sm font-bold ${
+                  planStatus === 'Reviewed'    ? 'text-green-700'
+                  : planStatus === 'Developed' ? 'text-gray-900'
+                  :                             'text-gray-400'
+                }`}>
+                  {planStatus}
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-500">
+                {planStatus === 'Reviewed'
+                  ? 'Review submitted'
+                  : planStatus === 'Developed'
+                    ? `${totalNeeds} learning need${totalNeeds !== 1 ? 's' : ''} added`
+                    : 'No plan activity yet'}
+              </p>
             </div>
 
-            {/* Activities Logged — US-504 */}
+            {/* Active Hours — US-504 */}
             <div className="sm:pl-5">
-              <p className="text-sm text-gray-600 mb-2">Activities Logged</p>
-              <p className="text-3xl font-bold text-gray-900">{activitiesCount}</p>
+              <p className="text-sm text-gray-600 mb-2">Active Hours</p>
+              <p className="text-3xl font-bold text-gray-900">{fmtH(metrics.activeHours.logged)}</p>
               <p className="text-[11px] text-gray-500 mt-1.5">
-                Active hours: {fmtH(metrics.activeHours.logged)}
+                {activitiesCount} {activitiesCount === 1 ? 'activity' : 'activities'} logged
               </p>
             </div>
           </div>
