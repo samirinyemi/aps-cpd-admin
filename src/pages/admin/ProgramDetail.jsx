@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Info, Lock } from 'lucide-react';
+import { Info, Lock, List, LayoutGrid } from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import { useAuth } from '../../context/AuthContext';
 import StatusBadge from '../../components/StatusBadge';
@@ -428,6 +428,8 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
   const [logSession, setLogSession] = useState({ open: false, supervisor: null });
   const [logHours, setLogHours] = useState({ open: false, location: null });
   const [dialog, setDialog] = useState({ open: false });
+  const [activityLayout, setActivityLayout] = useState('list');
+  const [closeConfirm, setCloseConfirm] = useState(false);
 
   function handleLogSession(programId, activity) {
     setPrograms((prev) =>
@@ -456,6 +458,15 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
     const fallback = program.placesOfPractice.find((p) => p.id === placeId);
     const subject = cat || (fallback && { ...fallback, assignedPrograms: [{ programId: program.id }] });
     setLogHours({ open: true, location: subject });
+  }
+
+  function handleCloseProgram() {
+    const today = new Date().toISOString().split('T')[0];
+    setPrograms((prev) =>
+      prev.map((p) => p.id === program.id ? { ...p, status: 'Closed', closeDate: today } : p)
+    );
+    setCloseConfirm(false);
+    navigate(listPath);
   }
 
   if (!program) {
@@ -497,14 +508,24 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
             <StatusBadge status={program.status} />
           </div>
         </div>
-        {!isReadOnly && (
-          <button
-            onClick={() => navigate(editPath)}
-            className="px-4 py-2 text-sm font-medium text-aps-blue border border-aps-blue rounded-md hover:bg-aps-blue-light"
-          >
-            Edit Program
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {program.status === 'Open' && (
+            <button
+              onClick={() => setCloseConfirm(true)}
+              className="px-4 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-md hover:bg-red-50"
+            >
+              Close program
+            </button>
+          )}
+          {!isReadOnly && (
+            <button
+              onClick={() => navigate(editPath)}
+              className="px-4 py-2 text-sm font-medium text-aps-blue border border-aps-blue rounded-md hover:bg-aps-blue-light"
+            >
+              Edit Program
+            </button>
+          )}
+        </div>
       </div>
 
       {/* US-1202: Closed-program restricted actions for Members */}
@@ -658,61 +679,137 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
 
       {/* Activities */}
       <section className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
           <h2 className="text-base font-semibold text-gray-900">
             Activities
             <span className="text-sm font-normal text-gray-400 ml-2">({(program.activities || []).length})</span>
           </h2>
-          {!isReadOnly && isMemberRole && (
-            <button
-              onClick={() => navigate('/member/cpd')}
-              title="Log CPD activities on your CPD dashboard; CPD logged against this AoPE counts toward compliance."
-              className="px-2.5 py-1 text-xs font-medium text-white bg-aps-blue rounded hover:bg-aps-blue-dark"
-            >
-              Log CPD (via My CPD) →
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+              <button
+                onClick={() => setActivityLayout('list')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium ${activityLayout === 'list' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+              >
+                <List size={14} />
+                List
+              </button>
+              <button
+                onClick={() => setActivityLayout('grid')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border-l border-gray-300 ${activityLayout === 'grid' ? 'bg-aps-blue text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+              >
+                <LayoutGrid size={14} />
+                Grid
+              </button>
+            </div>
+            {!isReadOnly && isMemberRole && (
+              <button
+                onClick={() => navigate('/member/cpd')}
+                title="Log CPD activities on your CPD dashboard; CPD logged against this AoPE counts toward compliance."
+                className="px-2.5 py-1 text-xs font-medium text-white bg-aps-blue rounded hover:bg-aps-blue-dark"
+              >
+                Log CPD (via My CPD) →
+              </button>
+            )}
+          </div>
         </div>
         {(program.activities || []).length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-6">No activities logged yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Date</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Type</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Supervisor / Place</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Supervision Type</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Duration</th>
-                  <th className="text-left py-2 pr-4 font-medium text-gray-500">Direct Contact</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...(program.activities || [])].sort((a, b) => b.completionDate.localeCompare(a.completionDate)).map((a) => (
-                  <tr key={a.id} className="border-b border-gray-100">
-                    <td className="py-3 pr-4">{formatDate(a.completionDate)}</td>
-                    <td className="py-3 pr-4">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        a.activityType === 'Supervision' ? 'bg-aps-blue/10 text-aps-blue'
-                          : a.activityType === 'Practice' ? 'bg-amber-100 text-amber-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
+          <div className="py-10 text-center border border-dashed border-gray-200 rounded-lg">
+            <p className="text-sm text-gray-500">No activities logged yet.</p>
+          </div>
+        ) : (() => {
+          const sorted = [...(program.activities || [])].sort((a, b) => b.completionDate.localeCompare(a.completionDate));
+          const renderCard = (a) => {
+            const isSupervision = a.activityType === 'Supervision';
+            const isPractice = a.activityType === 'Practice';
+            const typeChip = isSupervision
+              ? 'bg-aps-blue/10 text-aps-blue'
+              : isPractice
+                ? 'bg-amber-100 text-amber-700'
+                : 'bg-gray-100 text-gray-600';
+
+            if (activityLayout === 'grid') {
+              return (
+                <div key={a.id} className="border border-gray-100 rounded-lg p-4 bg-gray-50/50">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${typeChip}`}>
+                      {a.activityType}
+                    </span>
+                    {isSupervision && a.supervisionType && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">
+                        {a.supervisionType}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 mb-1">
+                    {a.supervisorName || a.employerName || '—'}
+                  </p>
+                  <p className="text-xs text-gray-500 mb-3">{formatDate(a.completionDate)}</p>
+                  <div className="flex items-center gap-4 text-xs text-gray-600">
+                    <div>
+                      <p className="text-gray-400">Duration</p>
+                      <p className="font-medium text-gray-900 mt-0.5">{formatDuration(a.hours, a.minutes)}</p>
+                    </div>
+                    {isPractice && (
+                      <div>
+                        <p className="text-gray-400">Direct contact</p>
+                        <p className="font-medium text-gray-900 mt-0.5">
+                          {formatDuration(a.directContactHours, a.directContactMinutes)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div key={a.id} className="border border-gray-100 rounded-lg p-4 bg-gray-50/50">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${typeChip}`}>
                         {a.activityType}
                       </span>
-                    </td>
-                    <td className="py-3 pr-4">{a.supervisorName || a.employerName || '—'}</td>
-                    <td className="py-3 pr-4">{a.supervisionType || '—'}</td>
-                    <td className="py-3 pr-4">{formatDuration(a.hours, a.minutes)}</td>
-                    <td className="py-3 pr-4">
-                      {a.activityType === 'Practice' ? formatDuration(a.directContactHours, a.directContactMinutes) : '—'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      {isSupervision && a.supervisionType && (
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">
+                          {a.supervisionType}
+                        </span>
+                      )}
+                      <span className="text-xs text-gray-500">{formatDate(a.completionDate)}</span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {a.supervisorName || a.employerName || '—'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-gray-600 shrink-0">
+                    <div className="text-right">
+                      <p className="text-gray-500">Duration</p>
+                      <p className="font-medium text-gray-900 mt-0.5">{formatDuration(a.hours, a.minutes)}</p>
+                    </div>
+                    {isPractice && (
+                      <div className="text-right">
+                        <p className="text-gray-500">Direct contact</p>
+                        <p className="font-medium text-gray-900 mt-0.5">
+                          {formatDuration(a.directContactHours, a.directContactMinutes)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          return activityLayout === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {sorted.map(renderCard)}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {sorted.map(renderCard)}
+            </div>
+          );
+        })()}
       </section>
 
       <LogSessionModal
@@ -738,6 +835,14 @@ export default function ProgramDetail({ programs, setPrograms, supervisors, prac
         confirmLabel={dialog.confirmLabel}
         onConfirm={dialog.onConfirm}
         onCancel={() => setDialog({ open: false })}
+      />
+      <ConfirmDialog
+        open={closeConfirm}
+        title="Close registrar program"
+        message={`Close the registrar program for ${getMemberName(program)}? This will set the status to Closed and record today as the close date. This action cannot be undone.`}
+        confirmLabel="Close program"
+        onConfirm={handleCloseProgram}
+        onCancel={() => setCloseConfirm(false)}
       />
     </PageShell>
   );

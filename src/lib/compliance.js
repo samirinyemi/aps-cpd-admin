@@ -67,6 +67,16 @@ export function computeCpdCycleMetrics(profile, cycle) {
   // (in our data we store peerHrs and actionHrs separately on Peer Consultation)
   const loggedActive = sum(activities, (a) => a.actionHrs);
 
+  // Per-type totals for the three CPD activity types
+  const loggedActiveCpd = sum(
+    activities.filter((a) => (a.activityKind || a.activityType) === 'Active CPD'),
+    (a) => a.cpdHrs
+  );
+  const loggedOtherCpd = sum(
+    activities.filter((a) => (a.activityKind || a.activityType) === 'Other CPD'),
+    (a) => a.cpdHrs
+  );
+
   const aoPEs = Array.isArray(profile.aoPEs) ? profile.aoPEs : [];
   const perAoPERequired = aoPEs.length > 1
     ? Math.round((cycle.minRequiredHours || 0) / aoPEs.length)
@@ -109,6 +119,16 @@ export function computeCpdCycleMetrics(profile, cycle) {
     activeHours: {
       logged: Math.round(loggedActive * 100) / 100,
     },
+    activeCpd: {
+      logged: Math.round(loggedActiveCpd * 100) / 100,
+      required: cycle.minRequiredHours || 0,
+      met: loggedActiveCpd >= (cycle.minRequiredHours || 0),
+    },
+    otherCpd: {
+      logged: Math.round(loggedOtherCpd * 100) / 100,
+      required: cycle.minRequiredHours || 0,
+      met: loggedOtherCpd >= (cycle.minRequiredHours || 0),
+    },
     perAoPE,
     cpdExemption: Boolean(profile.cpdExemption),
   };
@@ -135,12 +155,19 @@ export function findLinkedTemplate(program, aoPEPrograms = []) {
 
 /**
  * Extract a member's CPD activities from the profiles store.
- * CPD activities are the unified cycle-scoped store on each CPD profile.
+ * CPD activities are stored per cycle sub-profile; this aggregates activities
+ * across ALL cycle sub-profiles for the member so registrar compliance can see
+ * the full picture. Pass a cycleId to restrict to a single cycle.
  */
-export function findMemberCpdActivities(program, cpdProfiles = []) {
+export function findMemberCpdActivities(program, cpdProfiles = [], cycleId = null) {
   if (!program || !program.memberNumber) return [];
   const profile = cpdProfiles.find((p) => p.memberNumber === program.memberNumber);
-  return profile?.activities || [];
+  if (!profile) return [];
+  const cycleProfiles = profile.cycleProfiles || [];
+  const relevant = cycleId
+    ? cycleProfiles.filter((cp) => cp.cycleId === cycleId)
+    : cycleProfiles;
+  return relevant.flatMap((cp) => cp.activities || []);
 }
 
 /**

@@ -8,8 +8,12 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 // switching once reflects everywhere.
 const CycleContext = createContext(null);
 
+// sessionStorage: selection resets to the default (Open) cycle on a fresh
+// browser session / new tab, but is preserved while the user navigates within
+// the same session (so switching to 2023-2024 and then visiting Supervisors
+// still shows 2023-2024 until they explicitly change it again).
 function readStored() {
-  try { return localStorage.getItem('aps-selected-cycle') || ''; } catch { return ''; }
+  try { return sessionStorage.getItem('aps-selected-cycle') || ''; } catch { return ''; }
 }
 
 export function CycleProvider({ children, cycles = [] }) {
@@ -31,16 +35,16 @@ export function CycleProvider({ children, cycles = [] }) {
 
   const selectedCycle = cycles.find((c) => c.id === selectedCycleId) || null;
 
-  // Keep storage in sync when effective selection changes (e.g. stale id fell back).
+  // Keep sessionStorage in sync when effective selection changes.
   useEffect(() => {
     try {
-      if (selectedCycleId) localStorage.setItem('aps-selected-cycle', selectedCycleId);
+      if (selectedCycleId) sessionStorage.setItem('aps-selected-cycle', selectedCycleId);
     } catch {}
   }, [selectedCycleId]);
 
   function selectCycle(id) {
     setRawSelectedId(id);
-    try { localStorage.setItem('aps-selected-cycle', id); } catch {}
+    try { sessionStorage.setItem('aps-selected-cycle', id); } catch {}
   }
 
   // HLBR US-803: selector list covers the last 7 years of cycles,

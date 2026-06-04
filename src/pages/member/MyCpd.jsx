@@ -1,12 +1,19 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
+import {
+  AlertTriangle, BookOpen, RefreshCw, User,
+  TrendingUp, BarChart2, ChevronRight, ClipboardList,
+} from 'lucide-react';
 import PageShell from '../../components/PageShell';
 import StatusBadge from '../../components/StatusBadge';
 import LogCpdActivityModal from '../../components/LogCpdActivityModal';
 import { useAuth } from '../../context/AuthContext';
 import { useSelectedCycle } from '../../context/CycleContext';
-import { compliancePercent, findLinkedTemplate, computeCpdCycleMetrics } from '../../lib/compliance';
+import { compliancePercent, findLinkedTemplate, computeCpdCycleMetrics, formatHours } from '../../lib/compliance';
+
+function fmtH(decimalHours) {
+  return formatHours(decimalHours, { fromDecimalHours: true });
+}
 
 // HLBR §3.4.4 CPD Summary — US-500 through US-506, plus US-803/805/806/807.
 
@@ -16,34 +23,34 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function MetricCard({ label, logged, required, met, exempt, suffix = 'h', description }) {
-  const pct = required > 0 ? Math.min(100, Math.round((logged / required) * 100)) : 0;
-  const barColour = exempt
-    ? 'bg-gray-300'
-    : met
-      ? 'bg-green-500'
-      : pct > 0 ? 'bg-amber-400' : 'bg-gray-300';
-  const badgeClass = exempt
-    ? 'bg-gray-100 text-gray-600 border-gray-200'
-    : met
-      ? 'bg-green-50 text-green-700 border-green-200'
-      : 'bg-red-50 text-red-700 border-red-200';
-  const badgeLabel = exempt ? 'Exempt' : met ? 'Met' : 'Not met';
+// ── Progress bar ─────────────────────────────────────────────────────────────
+function ProgressBar({ pct, exempt }) {
+  const fill = exempt ? 'bg-gray-400' : 'bg-[#185FA5]';
   return (
-    <div className="bg-gray-50/60 border border-gray-100 rounded-lg p-4">
-      <div className="flex items-baseline justify-between mb-1.5">
-        <p className="text-sm font-medium text-gray-900">{label}</p>
-        <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium border ${badgeClass}`}>{badgeLabel}</span>
-      </div>
-      <p className="text-xs text-gray-600 mb-2">
-        <span className="font-medium text-gray-900">{logged}{suffix}</span>
-        {required != null && <span> / {required}{suffix} {exempt ? 'standard required' : 'required'}</span>}
-      </p>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-full ${barColour}`} style={{ width: `${pct}%` }} />
-      </div>
-      {description && <p className="text-[11px] text-gray-500 mt-2">{description}</p>}
+    <div className="flex-1 h-2.5 bg-blue-200 rounded-full overflow-hidden">
+      <div className={`h-full ${fill} rounded-full transition-all`} style={{ width: `${Math.min(100, pct)}%` }} />
     </div>
+  );
+}
+
+// ── Navigation card ───────────────────────────────────────────────────────────
+function NavCard({ to, icon: Icon, title, description }) {
+  return (
+    <Link
+      to={to}
+      className="bg-white border border-gray-200 rounded-xl p-5 flex items-center justify-between gap-4 hover:border-aps-blue/50 hover:shadow-sm transition-all group"
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-8 h-8 rounded-lg bg-aps-blue-light flex items-center justify-center shrink-0">
+          <Icon size={16} strokeWidth={1.75} className="text-aps-blue" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-gray-900">{title}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        </div>
+      </div>
+      <ChevronRight size={16} strokeWidth={2} className="text-gray-400 shrink-0 group-hover:text-aps-blue transition-colors" />
+    </Link>
   );
 }
 
@@ -51,9 +58,14 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
   const { member } = useAuth();
   const { selectedCycle } = useSelectedCycle();
 
-  const profile = useMemo(
+  const memberProfile = useMemo(
     () => (cpdProfiles || []).find((p) => p.memberNumber === member?.memberNumber) || null,
     [cpdProfiles, member]
+  );
+
+  const cycleProfile = useMemo(
+    () => memberProfile?.cycleProfiles?.find((cp) => cp.cycleId === selectedCycle?.id) || null,
+    [memberProfile, selectedCycle]
   );
 
   const myPrograms = useMemo(
@@ -61,27 +73,59 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
     [programs, member]
   );
 
-  // HLBR US-806: logging only when selected cycle is Open.
   const isCycleOpen = selectedCycle?.status === 'Open';
-  const hasExemption = Boolean(profile?.cpdExemption);
+  const hasExemption = Boolean(cycleProfile?.cpdExemption);
 
-  // US-500..506 metrics
   const metrics = useMemo(
-    () => profile && selectedCycle ? computeCpdCycleMetrics(profile, selectedCycle) : null,
-    [profile, selectedCycle]
+    () => cycleProfile && selectedCycle
+      ? computeCpdCycleMetrics({ ...memberProfile, ...cycleProfile }, selectedCycle)
+      : null,
+    [memberProfile, cycleProfile, selectedCycle]
   );
 
-  // Log activity modal
   const [logOpen, setLogOpen] = useState(false);
-  function handleLogActivity(activity) {
+
+  function persistCycleProfile(patch) {
     setCpdProfiles((prev) =>
       prev.map((p) =>
-        p.memberNumber === member.memberNumber
-          ? { ...p, activities: [...(p.activities || []), activity] }
+        p.id === memberProfile.id
+          ? {
+              ...p,
+              cycleProfiles: (p.cycleProfiles || []).map((cp) =>
+                cp.id === cycleProfile.id ? { ...cp, ...patch } : cp
+              ),
+            }
           : p
       )
     );
+  }
+
+  function handleLogActivity(activity) {
+    persistCycleProfile({ activities: [...(cycleProfile?.activities || []), activity] });
     setLogOpen(false);
+  }
+
+  function handleStartCycle() {
+    if (!memberProfile || !selectedCycle) return;
+    const newCp = {
+      id: `cp-${memberProfile.id}-${selectedCycle.id}-${Date.now()}`,
+      cycleId: selectedCycle.id,
+      cpdCycle: selectedCycle.name,
+      cpdExemption: false,
+      termsOfUse: false,
+      requirementsMet: false,
+      learningPlanMethod: 'PD Tool',
+      learningPlanReviews: [],
+      learningNeeds: [],
+      activities: [],
+    };
+    setCpdProfiles((prev) =>
+      prev.map((p) =>
+        p.id === memberProfile.id
+          ? { ...p, cycleProfiles: [...(p.cycleProfiles || []), newCp] }
+          : p
+      )
+    );
   }
 
   if (!member) {
@@ -95,137 +139,189 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
     );
   }
 
+  if (!memberProfile) {
+    return (
+      <PageShell>
+        <div className="text-center py-16">
+          <div className="flex justify-center mb-4">
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+              <BookOpen size={26} strokeWidth={1.5} className="text-gray-400" />
+            </div>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">No member profile found</h2>
+          <p className="text-sm text-gray-500 max-w-sm mx-auto">No CPD profile exists for this account.</p>
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!cycleProfile && selectedCycle) {
+    if (selectedCycle.status === 'Closed') {
+      return (
+        <PageShell>
+          <div className="text-center py-16">
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+                <BookOpen size={26} strokeWidth={1.5} className="text-gray-400" />
+              </div>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">No records found for {selectedCycle.name}</h2>
+            <p className="text-sm text-gray-500 max-w-sm mx-auto">No CPD records were found for this cycle.</p>
+          </div>
+        </PageShell>
+      );
+    }
+    const isPending = selectedCycle.status === 'Pending';
+    return (
+      <PageShell>
+        <div className="text-center py-16">
+          <div className="flex justify-center mb-4">
+            <div className={`w-14 h-14 rounded-full ${isPending ? 'bg-gray-100' : 'bg-aps-blue-light'} flex items-center justify-center`}>
+              <BookOpen size={26} strokeWidth={1.5} className={isPending ? 'text-gray-400' : 'text-aps-blue'} />
+            </div>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {isPending ? `Set up your CPD for ${selectedCycle.name}` : `Start your CPD for ${selectedCycle.name}`}
+          </h2>
+          <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
+            {isPending
+              ? "This cycle hasn't opened yet, but you can set up your profile and learning plan ahead of time."
+              : "You don't have a CPD profile for this cycle yet. Create one to begin logging your professional development."}
+          </p>
+          <button type="button" onClick={handleStartCycle}
+            className="px-5 py-2.5 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark">
+            {isPending ? `Set up my CPD for ${selectedCycle.name}` : `Start my CPD for ${selectedCycle.name}`}
+          </button>
+        </div>
+      </PageShell>
+    );
+  }
+
+  // ── Derived values for the progress cards ──────────────────────────────────
+  const learningNeeds   = cycleProfile?.learningNeeds || [];
+  const totalNeeds      = learningNeeds.length;
+  const hasReview       = (cycleProfile?.learningPlanReviews || []).length > 0;
+  const activitiesCount = (cycleProfile?.activities || []).length;
+
+  // US-501: Learning plan status — Not started / Developed / Reviewed
+  const planStatus = hasReview ? 'Reviewed'
+    : totalNeeds > 0         ? 'Developed'
+    :                          'Not started';
+
+  const basePct = metrics && metrics.baseMin.required > 0
+    ? Math.round((metrics.baseMin.logged / metrics.baseMin.required) * 100)
+    : 0;
+
   const hasAnyRegistrar = myPrograms.length > 0;
 
   return (
     <PageShell>
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">CPD Summary</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Welcome back, {member.firstName}.</p>
+      {/* Page header */}
+      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-900">CPD Summary</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Welcome back, {member.firstName}.</p>
+        </div>
+        {isCycleOpen && (
+          <button type="button" onClick={() => setLogOpen(true)}
+            className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark shrink-0">
+            Log CPD activity
+          </button>
+        )}
       </div>
 
-      {/* HLBR US-807: CPD Exemption alert */}
+      {/* US-807: CPD Exemption alert */}
       {hasExemption && (
-        <section className="mb-6 border border-amber-200 bg-amber-50 rounded-lg p-4 flex items-start gap-3">
+        <div className="mb-5 border border-amber-200 bg-amber-50 rounded-xl p-4 flex items-start gap-3">
           <AlertTriangle size={18} strokeWidth={1.8} className="mt-0.5 shrink-0 text-amber-700" />
           <div>
             <p className="text-sm font-medium text-amber-900">CPD Exemption is active for this cycle</p>
             <p className="text-xs text-amber-800 mt-0.5">
-              Your CPD requirements are waived. Metric indicators show progress instead of compliance (HLBR US-506).
+              Your CPD requirements are waived. Metrics below show progress against standard hours.
             </p>
           </div>
-        </section>
-      )}
-
-      {/* Cycle selector lives in the GlobalCycleBar above — no duplicate here. */}
-      {isCycleOpen && (
-        <div className="mb-6 flex justify-end">
-          <button
-            type="button"
-            onClick={() => setLogOpen(true)}
-            className="px-4 py-2 text-sm font-medium text-white bg-aps-blue rounded-md hover:bg-aps-blue-dark"
-          >
-            Log CPD activity
-          </button>
         </div>
       )}
 
-      {/* Quick actions — sit above the metrics so members can jump to the action surface immediately */}
-      <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Quick actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Link to="/member/cpd/profile" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
-            <p className="text-sm font-medium text-gray-900">Manage Profile</p>
-            <p className="text-xs text-gray-500 mt-0.5">Manage your details</p>
-          </Link>
-          <Link to="/member/cpd/learning-plan" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
-            <p className="text-sm font-medium text-gray-900">Manage Learning Plan</p>
-            <p className="text-xs text-gray-500 mt-0.5">Record needs</p>
-          </Link>
-          <Link to="/member/cpd/activities" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
-            <p className="text-sm font-medium text-gray-900">Activities</p>
-            <p className="text-xs text-gray-500 mt-0.5">View, log, edit or delete</p>
-          </Link>
-          <Link to="/member/cpd/report" className="block text-center px-3 py-3 border border-gray-200 rounded-md hover:border-aps-blue/50 hover:bg-aps-blue-light/40 transition">
-            <p className="text-sm font-medium text-gray-900">Report</p>
-            <p className="text-xs text-gray-500 mt-0.5">Generate PDF</p>
-          </Link>
-        </div>
-      </section>
-
-      {/* Metric cards US-501..504 */}
+      {/* ── CPD Cycle Progress card ─────────────────────────────────────────── */}
       {metrics && (
-        <>
-          <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Compliance metrics</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Learning Plan — US-501 */}
-              <div className="bg-gray-50/60 border border-gray-100 rounded-lg p-4">
-                <div className="flex items-baseline justify-between mb-1.5">
-                  <p className="text-sm font-medium text-gray-900">Learning Plan</p>
-                  <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium border ${
-                    metrics.learningPlanStatus === 'Reviewed' ? 'bg-green-50 text-green-700 border-green-200'
-                    : metrics.learningPlanStatus === 'Developed' ? 'bg-amber-50 text-amber-700 border-amber-200'
-                    : metrics.learningPlanStatus === 'Offline' ? 'bg-gray-100 text-gray-600 border-gray-200'
-                    : 'bg-red-50 text-red-700 border-red-200'
-                  }`}>
-                    {metrics.learningPlanStatus}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-600">
-                  {metrics.learningPlanStatus === 'Reviewed' && 'Your plan has been reviewed this cycle.'}
-                  {metrics.learningPlanStatus === 'Developed' && 'You have learning needs recorded but have not yet reviewed your plan.'}
-                  {metrics.learningPlanStatus === 'Not Started' && 'Add learning needs to develop your plan.'}
-                  {metrics.learningPlanStatus === 'Offline' && 'You are documenting your plan offline.'}
-                </p>
-                <Link to="/member/cpd/learning-plan" className="inline-block mt-3 text-xs font-medium text-aps-blue hover:underline">Manage learning plan →</Link>
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-5">
+          <div className="flex items-center gap-2 mb-5">
+            <RefreshCw size={16} strokeWidth={1.75} className="text-aps-blue" />
+            <h2 className="text-base font-bold text-gray-900">
+              CPD Cycle Progress: {selectedCycle?.name}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:divide-x sm:divide-blue-200">
+            {/* Total Hours — US-502 */}
+            <div className="sm:pr-5">
+              <p className="text-sm text-gray-600 mb-3">Total Hours</p>
+              <div className="flex items-center gap-3">
+                <ProgressBar pct={basePct} exempt={hasExemption} />
+                <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                  {fmtH(metrics.baseMin.logged)} / {fmtH(metrics.baseMin.required)}
+                </span>
               </div>
-
-              {/* Base Minimum CPD — US-502 */}
-              <MetricCard
-                label="Base Minimum CPD"
-                logged={metrics.baseMin.logged}
-                required={metrics.baseMin.required}
-                met={metrics.baseMin.met}
-                exempt={hasExemption}
-              />
-
-              {/* Peer Consultation — US-503 */}
-              <MetricCard
-                label="Peer Consultation"
-                logged={metrics.peerConsultation.logged}
-                required={metrics.peerConsultation.required}
-                met={metrics.peerConsultation.met}
-                exempt={hasExemption}
-              />
-
-              {/* Active Hours — US-504 */}
-              <div className="bg-gray-50/60 border border-gray-100 rounded-lg p-4">
-                <div className="flex items-baseline justify-between mb-1.5">
-                  <p className="text-sm font-medium text-gray-900">Active Hours</p>
-                </div>
-                <p className="text-xs text-gray-600 mb-2">
-                  <span className="font-medium text-gray-900">{metrics.activeHours.logged}h</span> logged
-                </p>
-                <p className="text-[11px] text-gray-500">Total Active CPD time + active portions of Peer Consultation.</p>
-              </div>
-            </div>
-          </section>
-
-          {/* PsyBA Endorsements — US-505 */}
-          {metrics.perAoPE.length > 0 && (
-            <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-              <h2 className="text-base font-semibold text-gray-900 mb-4">PsyBA Endorsements</h2>
-              <p className="text-xs text-gray-500 mb-3">
-                Per-AoPE compliance. Required hours per AoPE = {metrics.perAoPE[0]?.required}h
-                {metrics.perAoPE.length === 1 ? ' (minimum floor for a single AoPE)' : ` (cycle minimum ${selectedCycle?.minRequiredHours}h ÷ ${metrics.perAoPE.length} AoPEs)`}.
+              <p className="text-[11px] text-gray-500 mt-1.5">
+                {hasExemption ? 'Standard required hours' : 'Hours logged vs required'}
               </p>
-              <div className="space-y-2">
-                {metrics.perAoPE.map((row) => (
-                  <div key={row.aoPE} className="border border-gray-100 rounded-md p-3 bg-gray-50/50">
-                    <div className="flex items-baseline justify-between mb-1.5">
-                      <p className="text-sm font-medium text-gray-900">{row.aoPE}</p>
-                      <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-medium border ${
+            </div>
+
+            {/* Learning Plan Status — US-501 */}
+            <div className="sm:px-5">
+              <p className="text-sm text-gray-600 mb-3">Learning Plan</p>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${
+                  planStatus === 'Reviewed'    ? 'bg-green-500'
+                  : planStatus === 'Developed' ? 'bg-[#185FA5]'
+                  :                             'bg-gray-300'
+                }`} />
+                <span className={`text-sm font-bold ${
+                  planStatus === 'Reviewed'    ? 'text-green-700'
+                  : planStatus === 'Developed' ? 'text-gray-900'
+                  :                             'text-gray-400'
+                }`}>
+                  {planStatus}
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-500">
+                {planStatus === 'Reviewed'
+                  ? 'Review submitted'
+                  : planStatus === 'Developed'
+                    ? `${totalNeeds} learning need${totalNeeds !== 1 ? 's' : ''} added`
+                    : 'No plan activity yet'}
+              </p>
+            </div>
+
+            {/* Active Hours — US-504 */}
+            <div className="sm:pl-5">
+              <p className="text-sm text-gray-600 mb-2">Active Hours</p>
+              <p className="text-3xl font-bold text-gray-900">{fmtH(metrics.activeHours.logged)}</p>
+              <p className="text-[11px] text-gray-500 mt-1.5">
+                {activitiesCount} {activitiesCount === 1 ? 'activity' : 'activities'} logged
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Active Area of Practice (PsyBA Endorsements) — US-505 ───────────── */}
+      {metrics && metrics.perAoPE.length > 0 && (
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-5">
+          <h2 className="text-base font-bold text-gray-900 mb-5">Active Area of Practice</h2>
+          <div className="space-y-5">
+            {metrics.perAoPE.map((row) => {
+              const pct = row.required > 0
+                ? Math.round((row.logged / row.required) * 100)
+                : 0;
+              return (
+                <div key={row.aoPE}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-bold text-gray-900">{row.aoPE}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-gray-500">{pct}%</span>
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
                         hasExemption ? 'bg-gray-100 text-gray-600 border-gray-200'
                         : row.met ? 'bg-green-50 text-green-700 border-green-200'
                         : 'bg-red-50 text-red-700 border-red-200'
@@ -233,23 +329,101 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
                         {hasExemption ? 'Exempt' : row.met ? 'Met' : 'Not met'}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600 mb-1.5">
-                      <span className="font-medium text-gray-900">{row.logged}h</span> / {row.required}h {hasExemption ? 'standard required' : 'required'}
-                    </p>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full ${hasExemption ? 'bg-gray-300' : row.met ? 'bg-green-500' : row.logged > 0 ? 'bg-amber-400' : 'bg-gray-300'}`} style={{ width: `${Math.min(100, Math.round((row.logged / Math.max(row.required, 1)) * 100))}%` }} />
-                    </div>
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
-        </>
+                  <div className="h-3 bg-blue-200 rounded-full overflow-hidden mb-1.5">
+                    <div
+                      className={`h-full rounded-full transition-all ${hasExemption ? 'bg-gray-400' : 'bg-[#185FA5]'}`}
+                      style={{ width: `${Math.min(100, pct)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{fmtH(row.logged)} logged</span>
+                    <span>{fmtH(row.required)} required</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
-      {/* Linked registrar programs (only shown when member has any) */}
+      {/* ── CPD Activities — US-503/802/803 ──────────────────────────────────── */}
+      {metrics && (
+        <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 mb-5">
+          <h2 className="text-base font-bold text-gray-900 mb-5">CPD Activities</h2>
+          <div className="space-y-5">
+            {[
+              { label: 'Peer Consultation', logged: metrics.peerConsultation.logged, required: metrics.peerConsultation.required, met: metrics.peerConsultation.met },
+              { label: 'Active CPD',        logged: metrics.activeCpd.logged,        required: metrics.activeCpd.required,        met: metrics.activeCpd.met },
+              { label: 'Other CPD',         logged: metrics.otherCpd.logged,         required: metrics.otherCpd.required,         met: metrics.otherCpd.met },
+            ].map(({ label, logged, required, met }) => {
+              const pct = required > 0 ? Math.round((logged / required) * 100) : 0;
+              return (
+                <div key={label}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-bold text-gray-900">{label}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-gray-500">{pct}%</span>
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
+                        hasExemption
+                          ? 'bg-gray-100 text-gray-600 border-gray-200'
+                          : met
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
+                      }`}>
+                        {hasExemption ? 'Exempt' : met ? 'Met' : 'Not met'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-3 bg-blue-200 rounded-full overflow-hidden mb-1.5">
+                    <div
+                      className={`h-full rounded-full transition-all ${hasExemption ? 'bg-gray-400' : 'bg-[#185FA5]'}`}
+                      style={{ width: `${Math.min(100, pct)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{fmtH(logged)} logged</span>
+                    <span>{fmtH(required)} required</span>
+                  </div>
+                </div>
+              );
+            })}
+
+          </div>
+        </div>
+      )}
+
+      {/* ── Navigation cards ──────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <NavCard
+          to="/member/cpd/profile"
+          icon={User}
+          title="Manage Profile"
+          description="Update your personal details and preferences"
+        />
+        <NavCard
+          to="/member/cpd/learning-plan"
+          icon={ClipboardList}
+          title="Learning Plan"
+          description="Manage learning needs and submit reviews"
+        />
+        <NavCard
+          to="/member/cpd/activities"
+          icon={TrendingUp}
+          title="Activities"
+          description="Record, view, and edit your CPD activities"
+        />
+        <NavCard
+          to="/member/cpd/report"
+          icon={BarChart2}
+          title="Reports"
+          description="Generate progress and compliance reports"
+        />
+      </div>
+
+      {/* ── Linked registrar programs ─────────────────────────────────────────── */}
       {hasAnyRegistrar && (
-        <section className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+        <section className="bg-white border border-gray-200 rounded-xl p-6">
           <div className="flex items-baseline justify-between mb-4">
             <h2 className="text-base font-semibold text-gray-900">
               My Registrar Programs
@@ -260,10 +434,11 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {myPrograms.map((p) => {
               const template = findLinkedTemplate(p, aoPEPrograms || []);
-              const pct = template ? compliancePercent(p, template, profile?.activities || []) : 0;
+              const pct = template ? compliancePercent(p, template, cycleProfile?.activities || []) : 0;
               const barColour = pct >= 100 ? 'bg-green-500' : pct > 0 ? 'bg-amber-400' : 'bg-gray-300';
               return (
-                <Link key={p.id} to={`/member/registrar/${p.id}`} className="block bg-gray-50/60 border border-gray-100 rounded-lg p-4 hover:border-aps-blue/40 hover:bg-white transition">
+                <Link key={p.id} to={`/member/registrar/${p.id}`}
+                  className="block bg-gray-50 border border-gray-100 rounded-lg p-4 hover:border-aps-blue/40 hover:bg-white transition">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{p.areaOfPractice}</p>
@@ -275,7 +450,7 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
                     <span>Compliance</span>
                     <span className="font-medium text-gray-900">{pct}%</span>
                   </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                     <div className={`h-full ${barColour}`} style={{ width: `${Math.min(100, pct)}%` }} />
                   </div>
                 </Link>
@@ -285,12 +460,12 @@ export default function MyCpd({ cpdProfiles, setCpdProfiles, programs, aoPEProgr
         </section>
       )}
 
-      {/* Log CPD activity modal (US-801/802/803) */}
+      {/* Log CPD activity modal */}
       {selectedCycle && isCycleOpen && (
         <LogCpdActivityModal
           open={logOpen}
           cycle={selectedCycle}
-          allocationOptions={(profile?.aoPEs || []).map((a) => ({ value: a, label: a }))}
+          allocationOptions={(memberProfile?.aoPEs || []).map((a) => ({ value: a, label: a }))}
           onSave={handleLogActivity}
           onCancel={() => setLogOpen(false)}
         />

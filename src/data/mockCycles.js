@@ -6,14 +6,12 @@ export const initialCycles = [
     endDate: '2022-06-30',
     minRequiredHours: 30,
     minPeerHours: 10,
+    minAoPEHoursSingle: 10,
+    minAoPEHoursMultiple: 20,
     status: 'Closed',
-    schedules: [
-      { id: 'sch-0a-1', action: 'Open',  dateTime: '2021-07-01T00:00', status: 'Executed' },
-      { id: 'sch-0a-2', action: 'Close', dateTime: '2022-06-30T23:59', status: 'Executed' },
-    ],
     statusHistory: [
-      { action: 'Opened', date: '2021-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
-      { action: 'Closed', date: '2022-06-30T23:59:00', triggeredBy: 'System (Scheduled)' },
+      { action: 'Opened',   date: '2021-07-01T00:00:00', triggeredBy: 'Admin (Manual)' },
+      { action: 'Closed',   date: '2022-06-30T23:59:00', triggeredBy: 'Admin (Manual)' },
     ],
   },
   {
@@ -24,13 +22,9 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 10,
     status: 'Closed',
-    schedules: [
-      { id: 'sch-0b-1', action: 'Open',  dateTime: '2022-07-01T00:00', status: 'Executed' },
-      { id: 'sch-0b-2', action: 'Close', dateTime: '2023-06-30T23:59', status: 'Executed' },
-    ],
     statusHistory: [
-      { action: 'Opened', date: '2022-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
-      { action: 'Closed', date: '2023-06-30T23:59:00', triggeredBy: 'System (Scheduled)' },
+      { action: 'Opened',   date: '2022-07-01T00:00:00', triggeredBy: 'Admin (Manual)' },
+      { action: 'Closed',   date: '2023-06-30T23:59:00', triggeredBy: 'Admin (Manual)' },
     ],
   },
   {
@@ -41,16 +35,14 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 10,
     status: 'Closed',
-    schedules: [
-      { id: 'sch-0c-1', action: 'Open',  dateTime: '2023-07-01T00:00', status: 'Executed' },
-      { id: 'sch-0c-2', action: 'Close', dateTime: '2024-06-30T23:59', status: 'Executed' },
-    ],
     statusHistory: [
-      { action: 'Opened', date: '2023-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
-      { action: 'Closed', date: '2024-06-30T23:59:00', triggeredBy: 'System (Scheduled)' },
+      { action: 'Opened',   date: '2023-07-01T00:00:00', triggeredBy: 'Admin (Manual)' },
+      { action: 'Closed',   date: '2024-06-30T23:59:00', triggeredBy: 'Admin (Manual)' },
     ],
   },
   {
+    // 2024–2025 has a richer history to demonstrate the multi-entry display:
+    // Opened → Closed early → Reopened → Closed again on the proper date.
     id: '1',
     name: '2024–2025 CPD Cycle',
     startDate: '2024-07-01',
@@ -58,13 +50,11 @@ export const initialCycles = [
     minRequiredHours: 30,
     minPeerHours: 10,
     status: 'Closed',
-    schedules: [
-      { id: 'sch-1-1', action: 'Open',  dateTime: '2024-07-01T00:00', status: 'Executed' },
-      { id: 'sch-1-2', action: 'Close', dateTime: '2025-06-30T23:59', status: 'Executed' },
-    ],
     statusHistory: [
-      { action: 'Opened', date: '2024-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
-      { action: 'Closed', date: '2025-06-30T23:59:00', triggeredBy: 'System (Scheduled)' },
+      { action: 'Opened',   date: '2024-07-01T08:00:00', triggeredBy: 'Admin (Manual)' },
+      { action: 'Closed',   date: '2025-04-15T17:30:00', triggeredBy: 'Admin (Manual)' },
+      { action: 'Reopened', date: '2025-05-02T09:15:00', triggeredBy: 'Admin (Manual)' },
+      { action: 'Closed',   date: '2025-06-30T23:59:00', triggeredBy: 'Admin (Manual)' },
     ],
   },
   {
@@ -74,13 +64,11 @@ export const initialCycles = [
     endDate: '2026-06-30',
     minRequiredHours: 30,
     minPeerHours: 10,
+    minAoPEHoursSingle: 10,
+    minAoPEHoursMultiple: 20,
     status: 'Open',
-    schedules: [
-      { id: 'sch-2-1', action: 'Open',  dateTime: '2025-07-01T00:00', status: 'Executed' },
-      { id: 'sch-2-2', action: 'Close', dateTime: '2026-06-30T23:59', status: 'Pending' },
-    ],
     statusHistory: [
-      { action: 'Opened', date: '2025-07-01T00:00:00', triggeredBy: 'System (Scheduled)' },
+      { action: 'Opened',   date: '2025-07-01T08:00:00', triggeredBy: 'Admin (Manual)' },
     ],
   },
   {
@@ -90,11 +78,9 @@ export const initialCycles = [
     endDate: '2027-06-30',
     minRequiredHours: 30,
     minPeerHours: 12,
+    minAoPEHoursSingle: 10,
+    minAoPEHoursMultiple: 20,
     status: 'Pending',
-    schedules: [
-      { id: 'sch-3-1', action: 'Open',  dateTime: '2026-07-01T00:00', status: 'Pending' },
-      { id: 'sch-3-2', action: 'Close', dateTime: '2027-06-30T23:59', status: 'Pending' },
-    ],
     statusHistory: [],
   },
   {
@@ -104,8 +90,9 @@ export const initialCycles = [
     endDate: '2028-06-30',
     minRequiredHours: 35,
     minPeerHours: 12,
+    minAoPEHoursSingle: 12,
+    minAoPEHoursMultiple: 24,
     status: 'Pending',
-    schedules: [],
     statusHistory: [],
   },
 ];

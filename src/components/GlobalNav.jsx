@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import CycleSwitcher from './CycleSwitcher';
 
 export default function GlobalNav() {
   const { role, member } = useAuth();
@@ -16,7 +17,10 @@ export default function GlobalNav() {
           <span className="text-sm text-white/70">PD Logging Tool</span>
         </div>
         {role && (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {/* Global CPD cycle selector — Members only */}
+            {role === 'Member' && <CycleSwitcher variant="nav" />}
+
             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20">
               {pillLabel}
             </span>

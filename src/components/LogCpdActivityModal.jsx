@@ -4,22 +4,26 @@ import { useState, useEffect } from 'react';
 // Activities are tagged with the Open cycle's id and optionally allocated to
 // an AoPE linked to the member's CPD profile.
 
+// Three valid activity types per US-801.
 const activityKinds = ['Peer Consultation', 'Active CPD', 'Other CPD'];
 
 const emptyForm = {
   activityKind: '',
   completedDate: '',
-  allocation: '',         // selected AoPE
-  focus: '',              // US-802 Peer Consultation
-  colleagues: '',         // US-802 Peer Consultation
-  peerHrs: '',            // US-802 Peer CPD hours
-  peerMins: '',
-  activeHrs: '',          // US-802 Active CPD hours within Peer
-  activeMins: '',
-  activityTitle: '',      // US-803 Active/Other
-  details: '',            // US-803 Active/Other
-  totalHrs: '',           // US-803 Total duration
-  totalMins: '',
+  allocation: '',         // selected AoPE (US-801)
+  // Peer Consultation fields (US-802)
+  focus: '',              // focus of peer consultation — free text up to 100 chars
+  colleagues: '',         // colleague(s) involved — free text up to 250 chars
+  peerHrs: '',            // Duration focused on your practice (Peer CPD) — hours
+  peerMins: '',           // Duration focused on your practice (Peer CPD) — minutes
+  activeHrs: '',          // Duration focused on your practice (Active CPD) — hours
+  activeMins: '',         // Duration focused on your practice (Active CPD) — minutes
+  // Active CPD / Other CPD fields (US-803)
+  activityTitle: '',      // CPD activity — free text up to 100 chars
+  details: '',            // Activity details — free text up to 250 chars
+  totalHrs: '',           // Total duration — hours
+  totalMins: '',          // Total duration — minutes
+  // Shared
   journalMode: 'PD Tool', // 'PD Tool' | 'Offline'
   journalNotes: '',
 };
@@ -32,6 +36,11 @@ function toDecimalHours(hrs, mins) {
   return (Number(hrs) || 0) + (Number(mins) || 0) / 60;
 }
 
+function splitDecimalHours(decimal) {
+  const total = Math.round(Number(decimal || 0) * 60);
+  return { hrs: String(Math.floor(total / 60)), mins: String(total % 60) };
+}
+
 // When `existingActivity` is passed, the modal acts in edit mode:
 // form state is prefilled and the saved payload retains the same id.
 export default function LogCpdActivityModal({ open, cycle, allocationOptions = [], defaultAllocation = '', existingActivity, onSave, onCancel }) {
@@ -42,32 +51,39 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
   useEffect(() => {
     if (!open) return;
     if (existingActivity) {
-      // Map existing activity back to the form shape. Hours carried as decimals in storage.
-      const splitDuration = (decimal) => {
-        const total = Math.round(Number(decimal || 0) * 60);
-        return { hrs: String(Math.floor(total / 60)), mins: String(total % 60) };
-      };
       const kind = existingActivity.activityKind || existingActivity.activityType || '';
-      const peer = splitDuration(existingActivity.peerHrs);
-      const active = splitDuration(existingActivity.actionHrs);
-      const total = splitDuration(existingActivity.cpdHrs);
-      setForm({
-        activityKind: kind,
-        completedDate: existingActivity.completedDate || '',
-        allocation: existingActivity.allocation || defaultAllocation || '',
-        focus: existingActivity.focus || '',
-        colleagues: existingActivity.colleagues || '',
-        peerHrs: peer.hrs,
-        peerMins: peer.mins,
-        activeHrs: active.hrs,
-        activeMins: active.mins,
-        activityTitle: existingActivity.activityTitle || '',
-        details: existingActivity.details || '',
-        totalHrs: total.hrs,
-        totalMins: total.mins,
-        journalMode: existingActivity.journalMode || 'PD Tool',
-        journalNotes: existingActivity.journalNotes || '',
-      });
+      if (kind === 'Peer Consultation') {
+        const peer = splitDecimalHours(existingActivity.peerHrs);
+        const active = splitDecimalHours(existingActivity.actionHrs);
+        setForm({
+          ...emptyForm,
+          activityKind: 'Peer Consultation',
+          completedDate: existingActivity.completedDate || '',
+          allocation: existingActivity.allocation || defaultAllocation || '',
+          focus: existingActivity.focus || '',
+          colleagues: existingActivity.colleagues || '',
+          peerHrs: peer.hrs,
+          peerMins: peer.mins,
+          activeHrs: active.hrs,
+          activeMins: active.mins,
+          journalMode: existingActivity.journalMode || 'PD Tool',
+          journalNotes: existingActivity.journalNotes || '',
+        });
+      } else {
+        const total = splitDecimalHours(existingActivity.cpdHrs);
+        setForm({
+          ...emptyForm,
+          activityKind: kind,
+          completedDate: existingActivity.completedDate || '',
+          allocation: existingActivity.allocation || defaultAllocation || '',
+          activityTitle: existingActivity.activityTitle || existingActivity.focus || '',
+          details: existingActivity.details || existingActivity.colleagues || '',
+          totalHrs: total.hrs,
+          totalMins: total.mins,
+          journalMode: existingActivity.journalMode || 'PD Tool',
+          journalNotes: existingActivity.journalNotes || '',
+        });
+      }
     } else {
       setForm({ ...emptyForm, allocation: defaultAllocation || '' });
     }
@@ -81,9 +97,6 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   }
 
-  const isPeer = form.activityKind === 'Peer Consultation';
-  const isActiveOrOther = form.activityKind === 'Active CPD' || form.activityKind === 'Other CPD';
-
   function validate() {
     const errs = {};
     if (!form.activityKind) errs.activityKind = 'Required';
@@ -95,22 +108,20 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
       if (cycle.endDate && form.completedDate > cycle.endDate) errs.completedDate = 'Must fall within the cycle window';
     }
 
-    if (allocationOptions.length === 0) {
-      // Optional; no error. HLBR message is shown in UI.
-    } else if (!form.allocation) {
+    if (allocationOptions.length > 0 && !form.allocation) {
       errs.allocation = 'Allocate this activity to an AoPE';
     }
 
-    if (isPeer) {
+    if (form.activityKind === 'Peer Consultation') {
       if (!form.focus.trim()) errs.focus = 'Required';
       if (!form.colleagues.trim()) errs.colleagues = 'Required';
       if (Number(form.peerHrs) > 100) errs.peerHrs = 'Max 100 hours';
       if (Number(form.peerMins) > 59) errs.peerMins = 'Max 59 minutes';
       if (Number(form.activeHrs) > 100) errs.activeHrs = 'Max 100 hours';
       if (Number(form.activeMins) > 59) errs.activeMins = 'Max 59 minutes';
-      const total = toDecimalHours(form.peerHrs, form.peerMins) + toDecimalHours(form.activeHrs, form.activeMins);
-      if (total <= 0) errs.peerHrs = 'Enter at least one non-zero duration';
-    } else if (isActiveOrOther) {
+      const totalDuration = toDecimalHours(form.peerHrs, form.peerMins) + toDecimalHours(form.activeHrs, form.activeMins);
+      if (totalDuration <= 0) errs.peerHrs = 'Enter at least one duration (Peer or Active CPD)';
+    } else if (form.activityKind) {
       if (!form.activityTitle.trim()) errs.activityTitle = 'Required';
       if (!form.details.trim()) errs.details = 'Required';
       if (Number(form.totalHrs) > 100) errs.totalHrs = 'Max 100 hours';
@@ -129,38 +140,48 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
-    const peerHrs = isPeer ? toDecimalHours(form.peerHrs, form.peerMins) : 0;
-    const actionHrs = isPeer
-      ? toDecimalHours(form.activeHrs, form.activeMins)
-      : (isActiveOrOther ? toDecimalHours(form.totalHrs, form.totalMins) : 0);
-    const cpdHrs = peerHrs + actionHrs;
-
-    const activity = {
+    const baseActivity = {
       id: isEdit ? existingActivity.id : `a-${Date.now()}`,
       cycleId: isEdit ? (existingActivity.cycleId || cycle.id) : cycle.id,
       allocation: form.allocation || null,
       activityKind: form.activityKind,
-      // activityType retained for backward compatibility with any existing tables
       activityType: form.activityKind,
-      // Type-specific descriptive fields
-      focus: isPeer ? form.focus.trim() : null,
-      colleagues: isPeer ? form.colleagues.trim() : null,
-      activityTitle: isActiveOrOther ? form.activityTitle.trim() : null,
-      details: isActiveOrOther ? form.details.trim() : null,
-      // Hours
-      peerHrs: Math.round(peerHrs * 100) / 100,
-      actionHrs: Math.round(actionHrs * 100) / 100,
-      cpdHrs: Math.round(cpdHrs * 100) / 100,
       completedDate: form.completedDate,
       loggedDate: isEdit ? (existingActivity.loggedDate || todayISO()) : todayISO(),
       journalMode: form.journalMode,
       journalNotes: form.journalNotes.trim(),
     };
+
+    let activity;
+    if (form.activityKind === 'Peer Consultation') {
+      const peerHrsVal = toDecimalHours(form.peerHrs, form.peerMins);
+      const activeHrsVal = toDecimalHours(form.activeHrs, form.activeMins);
+      activity = {
+        ...baseActivity,
+        focus: form.focus.trim(),
+        colleagues: form.colleagues.trim(),
+        peerHrs: Math.round(peerHrsVal * 100) / 100,
+        actionHrs: Math.round(activeHrsVal * 100) / 100,
+        cpdHrs: Math.round((peerHrsVal + activeHrsVal) * 100) / 100,
+      };
+    } else {
+      const cpdHrs = toDecimalHours(form.totalHrs, form.totalMins);
+      activity = {
+        ...baseActivity,
+        activityTitle: form.activityTitle.trim(),
+        details: form.details.trim(),
+        peerHrs: 0,
+        actionHrs: Math.round(cpdHrs * 100) / 100,
+        cpdHrs: Math.round(cpdHrs * 100) / 100,
+      };
+    }
     onSave(activity);
   }
 
   const inputClass = (field) =>
     `w-full h-12 px-3 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-aps-blue/30 focus:border-aps-blue ${errors[field] ? 'border-red-400' : 'border-gray-300'}`;
+
+  const isPeerConsultation = form.activityKind === 'Peer Consultation';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -232,7 +253,7 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
           </div>
 
           {/* Peer Consultation fields (US-802) */}
-          {isPeer && (
+          {isPeerConsultation && (
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Focus of peer consultation</label>
@@ -242,6 +263,7 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
                   value={form.focus}
                   onChange={(e) => update('focus', e.target.value)}
                   className={inputClass('focus')}
+                  placeholder="e.g. Complex trauma case conceptualisation"
                 />
                 {errors.focus && <p className="mt-1 text-sm text-red-600">{errors.focus}</p>}
               </div>
@@ -253,11 +275,12 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
                   value={form.colleagues}
                   onChange={(e) => update('colleagues', e.target.value)}
                   className={inputClass('colleagues')}
+                  placeholder="e.g. Dr Mitchell, Dr Patel"
                 />
                 {errors.colleagues && <p className="mt-1 text-sm text-red-600">{errors.colleagues}</p>}
               </div>
               <fieldset>
-                <legend className="text-sm font-medium text-gray-700 mb-1.5">Duration — focus on your practice (Peer CPD)</legend>
+                <legend className="text-sm font-medium text-gray-700 mb-1.5">Duration focused on your practice (Peer CPD)</legend>
                 <div className="grid grid-cols-2 gap-3">
                   <input type="number" min="0" max="100" placeholder="Hours" value={form.peerHrs} onChange={(e) => update('peerHrs', e.target.value)} className={inputClass('peerHrs')} />
                   <input type="number" min="0" max="59"  placeholder="Minutes" value={form.peerMins} onChange={(e) => update('peerMins', e.target.value)} className={inputClass('peerMins')} />
@@ -265,7 +288,7 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
                 {(errors.peerHrs || errors.peerMins) && <p className="mt-1 text-sm text-red-600">{errors.peerHrs || errors.peerMins}</p>}
               </fieldset>
               <fieldset>
-                <legend className="text-sm font-medium text-gray-700 mb-1.5">Duration — focus on your practice (Active CPD)</legend>
+                <legend className="text-sm font-medium text-gray-700 mb-1.5">Duration focused on your practice (Active CPD)</legend>
                 <div className="grid grid-cols-2 gap-3">
                   <input type="number" min="0" max="100" placeholder="Hours" value={form.activeHrs} onChange={(e) => update('activeHrs', e.target.value)} className={inputClass('activeHrs')} />
                   <input type="number" min="0" max="59"  placeholder="Minutes" value={form.activeMins} onChange={(e) => update('activeMins', e.target.value)} className={inputClass('activeMins')} />
@@ -275,8 +298,8 @@ export default function LogCpdActivityModal({ open, cycle, allocationOptions = [
             </>
           )}
 
-          {/* Active / Other CPD fields (US-803) */}
-          {isActiveOrOther && (
+          {/* Active CPD / Other CPD fields (US-803) */}
+          {form.activityKind && !isPeerConsultation && (
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">CPD Activity</label>

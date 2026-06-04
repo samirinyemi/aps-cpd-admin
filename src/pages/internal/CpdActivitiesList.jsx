@@ -3,15 +3,17 @@ import PageShell from '../../components/PageShell';
 import DataTable from '../../components/DataTable';
 
 export default function CpdActivitiesList({ profiles }) {
-  // Flatten all activities from all profiles, attaching member info
+  // Flatten all activities from all cycle sub-profiles, attaching member info
   const allActivities = useMemo(() => {
     return profiles.flatMap((p) =>
-      p.activities.map((a) => ({
-        ...a,
-        memberName: p.memberName,
-        memberNumber: p.memberNumber,
-        grade: p.grade,
-      }))
+      (p.cycleProfiles || []).flatMap((cp) =>
+        (cp.activities || []).map((a) => ({
+          ...a,
+          memberName: p.memberName,
+          memberNumber: p.memberNumber,
+          grade: p.grade,
+        }))
+      )
     );
   }, [profiles]);
 

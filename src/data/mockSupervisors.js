@@ -6,6 +6,7 @@ export const initialSupervisors = [
   {
     id: 's1',
     title: 'Dr',
+    titleOther: '',
     firstName: 'James',
     lastName: 'Mitchell',
     ahpraNumber: 'PSY0001234567',
@@ -13,12 +14,15 @@ export const initialSupervisors = [
     email: 'j.mitchell@melbournepsych.com.au',
     phone: '03 9347 1200',
     assignedPrograms: [
-      { programId: '1', supervisionType: 'Primary' },
+      { programId: '1',  supervisionType: 'Primary' },   // 2024–2025
+      { programId: '6',  supervisionType: 'Primary' },   // 2025–2026
+      { programId: '13', supervisionType: 'Primary' },   // 2023–2024
     ],
   },
   {
     id: 's2',
     title: 'Prof',
+    titleOther: '',
     firstName: 'Linda',
     lastName: 'Nguyen',
     ahpraNumber: 'PSY0009876543',
@@ -26,12 +30,14 @@ export const initialSupervisors = [
     email: 'l.nguyen@unimelb.edu.au',
     phone: '03 8344 6300',
     assignedPrograms: [
-      { programId: '1', supervisionType: 'Secondary' },
+      { programId: '1',  supervisionType: 'Secondary' }, // 2024–2025
+      { programId: '11', supervisionType: 'Primary' },   // 2022–2023
     ],
   },
   {
     id: 's3',
     title: 'Dr',
+    titleOther: '',
     firstName: 'Karen',
     lastName: 'Patel',
     ahpraNumber: 'PSY0002345678',
@@ -39,12 +45,16 @@ export const initialSupervisors = [
     email: 'k.patel@orgpsych.com.au',
     phone: '02 9267 4455',
     assignedPrograms: [
-      { programId: '2', supervisionType: 'Primary' },
+      { programId: '2',  supervisionType: 'Primary' },   // 2024–2025
+      { programId: '8',  supervisionType: 'Primary' },   // 2025–2026
+      { programId: '9',  supervisionType: 'Primary' },   // 2021–2022
+      { programId: '14', supervisionType: 'Primary' },   // 2023–2024
     ],
   },
   {
     id: 's4',
     title: 'Dr',
+    titleOther: '',
     firstName: 'Michael',
     lastName: "O'Brien",
     ahpraNumber: 'PSY0003456789',
@@ -52,12 +62,15 @@ export const initialSupervisors = [
     email: 'michael.obrien@forensicpsych.com.au',
     phone: '07 3221 8899',
     assignedPrograms: [
-      { programId: '3', supervisionType: 'Primary' },
+      { programId: '3',  supervisionType: 'Primary' },   // 2023–2024
+      { programId: '7',  supervisionType: 'Primary' },   // 2025–2026
+      { programId: '15', supervisionType: 'Primary' },   // 2024–2025
     ],
   },
   {
     id: 's5',
     title: 'Dr',
+    titleOther: '',
     firstName: 'Amanda',
     lastName: 'Foster',
     ahpraNumber: 'PSY0004567890',
@@ -65,12 +78,13 @@ export const initialSupervisors = [
     email: 'a.foster@brisbaneclinic.com.au',
     phone: '07 3009 2211',
     assignedPrograms: [
-      { programId: '3', supervisionType: 'Secondary' },
+      { programId: '3', supervisionType: 'Secondary' },  // 2023–2024
     ],
   },
   {
     id: 's6',
     title: 'Prof',
+    titleOther: '',
     firstName: 'Robert',
     lastName: 'Shaw',
     ahpraNumber: 'PSY0005678901',
@@ -78,23 +92,29 @@ export const initialSupervisors = [
     email: 'r.shaw@adelaide.edu.au',
     phone: '08 8313 5200',
     assignedPrograms: [
-      { programId: '4', supervisionType: 'Primary' },
+      { programId: '4',  supervisionType: 'Primary' },   // 2022–2023
+      { programId: '10', supervisionType: 'Primary' },   // 2021–2022
     ],
   },
   {
     id: 's7',
     title: 'Dr',
+    titleOther: '',
     firstName: 'Priya',
     lastName: 'Sharma',
     ahpraNumber: 'PSY0006789012',
     supervisorAoPE: 'Health Psychology',
     email: 'p.sharma@healthpsych.com.au',
     phone: '03 9654 3300',
-    assignedPrograms: [],
+    assignedPrograms: [
+      { programId: '5',  supervisionType: 'Primary' },   // 2021–2022
+      { programId: '12', supervisionType: 'Primary' },   // 2022–2023
+    ],
   },
   {
     id: 's8',
     title: 'Mr',
+    titleOther: '',
     firstName: 'Daniel',
     lastName: 'Kovacs',
     ahpraNumber: 'PSY0007890123',

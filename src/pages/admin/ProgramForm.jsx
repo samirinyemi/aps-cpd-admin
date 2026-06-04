@@ -274,11 +274,6 @@ function ExistingPickerModal({ open, type, items, onSelect, onCreate, onCancel }
                       </p>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-xs text-gray-500">AHPRA: {item.ahpraNumber}</span>
-                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
-                          item.supervisionType === 'Primary' ? 'bg-aps-blue/10 text-aps-blue' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {item.supervisionType}
-                        </span>
                         <span className="text-xs text-gray-500">{item.supervisorAoPE}</span>
                       </div>
                     </>
@@ -552,13 +547,12 @@ export default function ProgramForm({ programs, setPrograms, aoPEPrograms = [], 
     setPrimaryConflict({ open: false, incoming: null, existing: null });
   }
 
-  // Select existing from pool
+  // Select existing from pool — open form pre-filled so user explicitly picks supervision type
   function handleSelectExistingSupervisor(poolItem) {
-    const { _poolKey, id, ...rest } = poolItem;
-    const newSup = { ...rest, id: `s-${Date.now()}` };
-    if (checkPrimaryConflict({ ...newSup, _poolKey }, true)) return;
-    setSupervisors((prev) => [...prev, newSup]);
+    const { _poolKey, id, supervisionType: _oldType, ...rest } = poolItem;
+    // Clear supervisionType so the user must choose Primary or Secondary for THIS program
     setSupervisorPicker(false);
+    setSupervisorModal({ open: true, data: { ...rest, supervisionType: '', id: null } });
   }
 
   function handleSelectExistingPlace(poolItem) {

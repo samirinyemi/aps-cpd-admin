@@ -19,6 +19,7 @@ function formatDuration(h, m) {
 
 const emptyForm = {
   title: 'Dr',
+  titleOther: '',
   firstName: '',
   lastName: '',
   ahpraNumber: '',
@@ -127,6 +128,7 @@ export default function SupervisorForm({ supervisors, setSupervisors, programs, 
     existing
       ? {
           title: existing.title,
+          titleOther: existing.titleOther || '',
           firstName: existing.firstName,
           lastName: existing.lastName,
           ahpraNumber: existing.ahpraNumber,
@@ -199,6 +201,7 @@ export default function SupervisorForm({ supervisors, setSupervisors, programs, 
 
   function validate() {
     const errs = {};
+    if (form.title === 'Other' && !form.titleOther.trim()) errs.titleOther = 'Required';
     if (!form.firstName.trim()) errs.firstName = 'Required';
     if (!form.lastName.trim()) errs.lastName = 'Required';
     if (!form.ahpraNumber.trim()) errs.ahpraNumber = 'Required';
@@ -228,6 +231,7 @@ export default function SupervisorForm({ supervisors, setSupervisors, programs, 
               ? {
                   ...ps,
                   title: form.title,
+                  titleOther: form.titleOther,
                   firstName: form.firstName,
                   lastName: form.lastName,
                   ahpraNumber: form.ahpraNumber,
@@ -251,6 +255,7 @@ export default function SupervisorForm({ supervisors, setSupervisors, programs, 
     if (existing) {
       setForm({
         title: existing.title,
+        titleOther: existing.titleOther || '',
         firstName: existing.firstName,
         lastName: existing.lastName,
         ahpraNumber: existing.ahpraNumber,
@@ -284,6 +289,7 @@ export default function SupervisorForm({ supervisors, setSupervisors, programs, 
                 {
                   id,
                   title: form.title,
+                  titleOther: form.titleOther,
                   firstName: form.firstName,
                   lastName: form.lastName,
                   ahpraNumber: form.ahpraNumber,
@@ -340,7 +346,7 @@ export default function SupervisorForm({ supervisors, setSupervisors, programs, 
         </button>
         <span className="mx-2">/</span>
         <span className="text-gray-900">
-          {isNew ? 'New Supervisor' : `${form.firstName} ${form.lastName}`}
+          {isNew ? 'New Supervisor' : `${form.title === 'Other' ? (form.titleOther || 'Other') : form.title} ${form.firstName} ${form.lastName}`}
         </span>
       </nav>
 
@@ -368,7 +374,7 @@ export default function SupervisorForm({ supervisors, setSupervisors, programs, 
               <div>
                 <dt className="text-xs text-gray-500">Full Name</dt>
                 <dd className="text-sm font-medium text-gray-900 mt-0.5">
-                  {form.title} {form.firstName} {form.lastName}
+                  {form.title === 'Other' ? (form.titleOther || 'Other') : form.title} {form.firstName} {form.lastName}
                 </dd>
               </div>
               <div>
@@ -395,13 +401,16 @@ export default function SupervisorForm({ supervisors, setSupervisors, programs, 
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Title</label>
               <select
                 value={form.title}
-                onChange={(e) => update('title', e.target.value)}
+                onChange={(e) => {
+                  update('title', e.target.value);
+                  if (e.target.value !== 'Other') update('titleOther', '');
+                }}
                 className={inputClass('title') + ' bg-white'}
               >
                 {titleOptions.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
-            <div className="sm:col-span-1.5 sm:col-span-2">
+            <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1.5">First name</label>
               <input
                 type="text"
@@ -422,6 +431,22 @@ export default function SupervisorForm({ supervisors, setSupervisors, programs, 
               {errors.lastName && <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>}
             </div>
           </div>
+
+          {form.title === 'Other' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Other title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.titleOther}
+                onChange={(e) => update('titleOther', e.target.value)}
+                className={inputClass('titleOther')}
+                placeholder="e.g. A/Prof, Rev, Sir"
+              />
+              {errors.titleOther && <p className="mt-1 text-sm text-red-600">{errors.titleOther}</p>}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

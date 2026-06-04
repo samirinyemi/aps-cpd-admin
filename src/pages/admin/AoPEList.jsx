@@ -92,6 +92,7 @@ function AoPECard({ program, layout, onNavigate }) {
 export default function AoPEList({ aoPEPrograms }) {
   const navigate = useNavigate();
   const [layout, setLayout] = useState('list');
+  const filtered = aoPEPrograms;
 
   function handleNavigate(program, mode) {
     if (mode === 'edit') {
@@ -106,7 +107,9 @@ export default function AoPEList({ aoPEPrograms }) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">AoPE Compliance Configuration</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{aoPEPrograms.length} program{aoPEPrograms.length !== 1 ? 's' : ''} configured</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {filtered.length} of {aoPEPrograms.length} program{aoPEPrograms.length !== 1 ? 's' : ''} configured
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
@@ -142,13 +145,13 @@ export default function AoPEList({ aoPEPrograms }) {
         <EmptyState message="No AoPE compliance programs have been configured yet." />
       ) : layout === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {aoPEPrograms.map((p) => (
+          {filtered.map((p) => (
             <AoPECard key={p.id} program={p} layout="grid" onNavigate={handleNavigate} />
           ))}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {aoPEPrograms.map((p) => (
+          {filtered.map((p) => (
             <AoPECard key={p.id} program={p} layout="list" onNavigate={handleNavigate} />
           ))}
         </div>

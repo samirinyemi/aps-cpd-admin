@@ -6,6 +6,7 @@ export const initialRegistrarProfiles = [
     grade: 'Associate Member',
     program: 'Clinical Psychology Registrar Program',
     programStatus: 'Open',
+    boardRegistration: 'General',
     commencementDate: '2024-02-01',
     qualification: 'Master of Clinical Psychology',
     supervisors: [
@@ -31,6 +32,7 @@ export const initialRegistrarProfiles = [
     grade: 'Associate Member',
     program: 'Organisational Psychology Registrar Program',
     programStatus: 'Open',
+    boardRegistration: 'General',
     commencementDate: '2023-07-01',
     qualification: 'Master of Organisational Psychology',
     supervisors: [
@@ -54,6 +56,7 @@ export const initialRegistrarProfiles = [
     grade: 'Associate Member',
     program: 'Forensic Psychology Registrar Program',
     programStatus: 'Closed',
+    boardRegistration: 'General',
     commencementDate: '2021-01-15',
     qualification: 'Master of Forensic Psychology',
     supervisors: [
@@ -75,6 +78,7 @@ export const initialRegistrarProfiles = [
     grade: 'Associate Member',
     program: 'Clinical Psychology Registrar Program',
     programStatus: 'Open',
+    boardRegistration: 'Not Registered',
     commencementDate: '2024-07-01',
     qualification: 'Doctor of Clinical Psychology',
     supervisors: [
@@ -98,7 +102,8 @@ export const initialRegistrarProfiles = [
     memberNumber: 'APS-20700',
     grade: 'Associate Member',
     program: 'Organisational Psychology Registrar Program',
-    programStatus: 'Open',
+    programStatus: 'Pending',
+    boardRegistration: 'Provisional',
     commencementDate: '2024-01-15',
     qualification: 'Master of Organisational Psychology',
     supervisors: [
@@ -120,6 +125,7 @@ export const initialRegistrarProfiles = [
     grade: 'Associate Member',
     program: 'Clinical Psychology Registrar Program',
     programStatus: 'Open',
+    boardRegistration: 'General',
     commencementDate: '2023-02-01',
     qualification: 'Master of Clinical Psychology',
     supervisors: [

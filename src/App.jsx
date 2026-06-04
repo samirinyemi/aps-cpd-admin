@@ -13,6 +13,7 @@ import { initialPracticeLocations } from './data/mockPracticeLocations';
 import Login from './pages/Login';
 import CycleList from './pages/admin/CycleList';
 import CycleForm from './pages/admin/CycleForm';
+import CycleMembersList from './pages/admin/CycleMembersList';
 import ProgramList from './pages/admin/ProgramList';
 import ProgramForm from './pages/admin/ProgramForm';
 import ProgramDetail from './pages/admin/ProgramDetail';
@@ -24,6 +25,7 @@ import RegistrarProfilesList from './pages/internal/RegistrarProfilesList';
 import RegistrarProfileDetail from './pages/internal/RegistrarProfileDetail';
 import RegistrarActivitiesList from './pages/internal/RegistrarActivitiesList';
 import AoPEList from './pages/admin/AoPEList';
+import LogCpdHours from './pages/admin/LogCpdHours';
 import AoPEDetail from './pages/admin/AoPEDetail';
 import AoPEForm from './pages/admin/AoPEForm';
 import SupervisorList from './pages/admin/SupervisorList';
@@ -33,6 +35,7 @@ import PracticeLocationForm from './pages/admin/PracticeLocationForm';
 import MyCpd from './pages/member/MyCpd';
 import MyCpdProfile from './pages/member/MyCpdProfile';
 import MyLearningPlan from './pages/member/MyLearningPlan';
+import MyLearningPlanDetails from './pages/member/MyLearningPlanDetails';
 import MyLearningPlanDetail from './pages/member/MyLearningPlanDetail';
 import MyCpdLog from './pages/member/MyCpdLog';
 import MyCpdActivities from './pages/member/MyCpdActivities';
@@ -62,7 +65,7 @@ function AppRoutes() {
   const [programs, setPrograms] = useState(initialPrograms);
   const [cpdProfiles, setCpdProfiles] = useState(initialCpdProfiles);
   const [aoPEPrograms, setAoPEPrograms] = useState(initialAoPEPrograms);
-  const [registrarProfiles] = useState(initialRegistrarProfiles);
+  const [registrarProfiles, setRegistrarProfiles] = useState(initialRegistrarProfiles);
   const [supervisors, setSupervisors] = useState(initialSupervisors);
   const [practiceLocations, setPracticeLocations] = useState(initialPracticeLocations);
 
@@ -80,6 +83,9 @@ function AppRoutes() {
       } />
       <Route path="/admin/cpd/cycles/:id/edit" element={
         <RequireAuth adminOnly><CycleForm cycles={cycles} setCycles={setCycles} /></RequireAuth>
+      } />
+      <Route path="/admin/cpd/cycles/:id/members" element={
+        <RequireAuth adminOnly><CycleMembersList cycles={cycles} cpdProfiles={cpdProfiles} /></RequireAuth>
       } />
       <Route path="/admin/cpd/cycles/:id" element={
         <RequireAuth adminOnly><CycleDetail cycles={cycles} setCycles={setCycles} /></RequireAuth>
@@ -121,9 +127,14 @@ function AppRoutes() {
         <RequireAuth adminOnly><PracticeLocationForm locations={practiceLocations} setLocations={setPracticeLocations} programs={programs} setPrograms={setPrograms} /></RequireAuth>
       } />
 
+      {/* Admin: Log CPD Hours */}
+      <Route path="/admin/registrar/log-cpd" element={
+        <RequireAuth adminOnly><LogCpdHours programs={programs} setPrograms={setPrograms} /></RequireAuth>
+      } />
+
       {/* Admin: AoPE Compliance Configuration */}
       <Route path="/admin/registrar/aope" element={
-        <RequireAuth adminOnly><AoPEList aoPEPrograms={aoPEPrograms} /></RequireAuth>
+        <RequireAuth adminOnly><AoPEList aoPEPrograms={aoPEPrograms} programs={programs} /></RequireAuth>
       } />
       <Route path="/admin/registrar/aope/new" element={
         <RequireAuth adminOnly><AoPEForm aoPEPrograms={aoPEPrograms} setAoPEPrograms={setAoPEPrograms} /></RequireAuth>
@@ -151,7 +162,7 @@ function AppRoutes() {
         <RequireAuth><RegistrarProfilesList profiles={registrarProfiles} /></RequireAuth>
       } />
       <Route path="/internal/registrar/profiles/:id" element={
-        <RequireAuth><RegistrarProfileDetail profiles={registrarProfiles} /></RequireAuth>
+        <RequireAuth><RegistrarProfileDetail profiles={registrarProfiles} setProfiles={setRegistrarProfiles} /></RequireAuth>
       } />
       <Route path="/internal/registrar/activities" element={
         <RequireAuth><RegistrarActivitiesList profiles={registrarProfiles} /></RequireAuth>
@@ -162,10 +173,13 @@ function AppRoutes() {
         <RequireAuth memberOnly><MyCpd cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} programs={programs} aoPEPrograms={aoPEPrograms} /></RequireAuth>
       } />
       <Route path="/member/cpd/profile" element={
-        <RequireAuth memberOnly><MyCpdProfile cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
+        <RequireAuth memberOnly><MyCpdProfile cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} registrarProfiles={registrarProfiles} setRegistrarProfiles={setRegistrarProfiles} /></RequireAuth>
       } />
       <Route path="/member/cpd/learning-plan" element={
         <RequireAuth memberOnly><MyLearningPlan cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
+      } />
+      <Route path="/member/cpd/learning-plan/details" element={
+        <RequireAuth memberOnly><MyLearningPlanDetails cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>
       } />
       <Route path="/member/cpd/learning-plan/:id" element={
         <RequireAuth memberOnly><MyLearningPlanDetail cpdProfiles={cpdProfiles} setCpdProfiles={setCpdProfiles} /></RequireAuth>

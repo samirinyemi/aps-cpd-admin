@@ -98,6 +98,7 @@ function ProgramCard({ program, layout, onNavigate }) {
 export default function ProgramList({ programs }) {
   const navigate = useNavigate();
   const [layout, setLayout] = useState('list');
+  const filtered = programs;
 
   function handleNavigate(program, mode) {
     if (mode === 'edit') {
@@ -109,10 +110,12 @@ export default function ProgramList({ programs }) {
 
   return (
     <PageShell>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Registrar Programs</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{programs.length} program{programs.length !== 1 ? 's' : ''} found</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {programs.length} program{programs.length !== 1 ? 's' : ''}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
@@ -148,13 +151,13 @@ export default function ProgramList({ programs }) {
         <EmptyState message="No registrar programs have been created yet." />
       ) : layout === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {programs.map((p) => (
+          {filtered.map((p) => (
             <ProgramCard key={p.id} program={p} layout="grid" onNavigate={handleNavigate} />
           ))}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {programs.map((p) => (
+          {filtered.map((p) => (
             <ProgramCard key={p.id} program={p} layout="list" onNavigate={handleNavigate} />
           ))}
         </div>

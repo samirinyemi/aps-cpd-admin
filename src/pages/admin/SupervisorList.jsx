@@ -5,7 +5,8 @@ import PageShell from '../../components/PageShell';
 import EmptyState from '../../components/EmptyState';
 
 function fullName(s) {
-  return `${s.title} ${s.firstName} ${s.lastName}`;
+  const displayTitle = s.title === 'Other' ? (s.titleOther || 'Other') : s.title;
+  return `${displayTitle} ${s.firstName} ${s.lastName}`;
 }
 
 const EditIcon = () => <Pencil size={14} strokeWidth={1.5} />;
@@ -123,7 +124,6 @@ export default function SupervisorList({ supervisors, programs }) {
   const [aoPEFilter, setAoPEFilter] = useState('');
   const [assignmentFilter, setAssignmentFilter] = useState('all');
   const [layout, setLayout] = useState('list');
-
   const aoPEs = useMemo(
     () => Array.from(new Set(supervisors.map((s) => s.supervisorAoPE))).sort(),
     [supervisors]

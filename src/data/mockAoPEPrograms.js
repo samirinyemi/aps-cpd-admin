@@ -55,4 +55,18 @@ export const initialAoPEPrograms = [
     requiredPracticeHours: 1000,
     requiredCPDHours: 500,
   },
+  {
+    id: 'aope-5',
+    name: 'Health Psychology Registrar Program',
+    areaOfPractice: 'Health Psychology',
+    totalRequiredHours: 2400,
+    requiredSupervisionHours: 1200,
+    minPrimaryHours: 840,
+    maxSecondaryHours: 360,
+    maxSecondaryNonAoPEHours: 180,
+    maxGroupHours: 300,
+    directClientContactHours: 400,
+    requiredPracticeHours: 800,
+    requiredCPDHours: 400,
+  },
 ];
